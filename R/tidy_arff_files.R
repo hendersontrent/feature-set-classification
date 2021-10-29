@@ -24,13 +24,16 @@ tidy_arff_files <- function(){
   
   # Remove non-folders
   
-  directories <- directories[!directories %in% c("data/Univariate_arff")]
+  directories <- directories[!directories %in% c("data/Univariate_arff", "data/Univariate_arff/Pictures",
+                                                 "data/Univariate_arff/Pictures/fall_2018_datasets_crop_jpg")]
   
   #------------ Parse problems ---------
   
   TimeSeriesData <- list()
   
   for(d in directories){
+    
+    message(paste0("Doing ",d," --- (",(round(match(d, directories) / length(directories), digits = 2)*100),"%)"))
     
     tryCatch({
       
@@ -53,11 +56,45 @@ tidy_arff_files <- function(){
       test <- foreign::read.arff(paste0(d,"/",probName,"_TEST.arff")) %>%
         mutate(id = row_number()+themax) %>% # Adjust relative to train set to stop double-ups
         mutate(set_split = "Test")
+      
+      #----------------------------
+      # Wrangle data to long format
+      #----------------------------
+      
+      # Train
+      
+      thecolstr <- colnames(train)
+      keepcolstr <- thecolstr[!thecolstr %in% c("target", "id", "set_split")]
+      
+      train2 <- train %>%
+        mutate(problem = probName) %>%
+        pivot_longer(cols = all_of(keepcolstr), names_to = "timepoint", values_to = "values") %>%
+        mutate(timepoint = as.numeric(gsub(".*?([0-9]+).*", "\\1", timepoint)))
+      
+      # Test
+      
+      thecolste <- colnames(test)
+      keepcolste <- thecolste[!thecolste %in% c("target", "id", "set_split")]
+      
+      test2 <- test %>%
+        mutate(problem = probName) %>%
+        pivot_longer(cols = all_of(keepcolste), names_to = "timepoint", values_to = "values") %>%
+        mutate(timepoint = as.numeric(gsub(".*?([0-9]+).*", "\\1", timepoint)))
+      
+      #------------
+      # Merge files
+      #------------
+      
+      tmp <- bind_rows(train2, test2)
+      TimeSeriesData[[d]] <- tmp
     
     }, error = function(e){cat("ERROR :",conditionMessage(e), "\n")})
   }
   
-  #------------ Save output ------------
-  
+  TimeSeriesData <- rbindlist(TimeSeriesData, use.names = TRUE)
   save(TimeSeriesData, file = "data/TimeSeriesData.Rda")
 }
+
+# Run the function
+
+tidy_arff_files()
