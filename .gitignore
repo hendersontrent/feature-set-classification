@@ -41,3 +41,11 @@ vignettes/*.pdf
 # Mac files
 
 .DS_Store
+
+# Data files
+
+data/*
+data/*.csv
+data/*.arff
+data/*.txt
+data/*.Rda
