@@ -85,7 +85,9 @@ tidy_arff_files <- function(){
       # Merge files
       #------------
       
-      tmp <- bind_rows(train2, test2)
+      tmp <- bind_rows(train2, test2) %>%
+        mutate(id = paste0(id, "_", problem))
+      
       TimeSeriesData[[d]] <- tmp
     
     }, error = function(e){cat("ERROR :",conditionMessage(e), "\n")})
