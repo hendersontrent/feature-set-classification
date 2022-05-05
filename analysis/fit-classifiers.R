@@ -18,7 +18,7 @@ load("data/FeatureMatrix.Rda")
 
 #---------------- Classification accuracy -----------------
 
-#' Function to map classification performance clauclations over datasets
+#' Function to map classification performance calculations over datasets/problems
 #' @param data the dataset containing all raw time series
 #' @param theproblem string specifying the problem to calculate features for
 #' @returns an object of class list
@@ -26,6 +26,8 @@ load("data/FeatureMatrix.Rda")
 #' 
 
 calculate_accuracy_by_problem <- function(data, theproblem){
+  
+  message("Doing problem ", match(theproblem, data$problem), "/", length(unique(data$problem)))
   
   tmp <- data %>%
     filter(problem == theproblem)
