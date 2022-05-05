@@ -53,8 +53,10 @@ calculate_accuracy_by_problem <- function(data, theproblem){
 
 # Run function
 
+calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
+
 outputs <- unique(FeatureMatrix$problem) %>%
-  purrr::map(~ calculate_accuracy_by_problem(data = FeatureMatrix, theproblem = .x))
+  purrr::map(~ calculate_accuracy_by_problem_safe(data = FeatureMatrix, theproblem = .x))
 
 # Name list entries for easier viewing
 

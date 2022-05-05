@@ -60,8 +60,10 @@ extract_features_by_problem <- function(data, theproblem){
 
 # Run the function
 
+extract_features_by_problem_safe <- purrr::possibly(extract_features_by_problem, otherwise = NULL)
+
 unique(TimeSeriesData$problem) %>%
-  purrr::map(~ extract_features_by_problem(data = TimeSeriesData, theproblem = .x))
+  purrr::map(~ extract_features_by_problem_safe(data = TimeSeriesData, theproblem = .x))
 
 #------------- Bind all and store --------------
 
