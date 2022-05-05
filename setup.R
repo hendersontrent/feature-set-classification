@@ -8,6 +8,7 @@
 # Author: Trent Henderson, 29 October 2021
 #-----------------------------------------
 
+library(data.table)
 library(dplyr)
 library(purrr)
 library(tidyr)
