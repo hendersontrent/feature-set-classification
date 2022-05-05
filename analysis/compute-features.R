@@ -37,7 +37,7 @@ extract_features_by_problem <- function(data, theproblem){
   tmp <- data %>%
     filter(problem == theproblem)
   
-  # Do feature calculations in multiple parts to avoid crashes
+  # Calculate features
   
   outs <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
                              values_var = "values", group_var = "target", 
