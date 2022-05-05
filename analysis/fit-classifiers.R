@@ -39,13 +39,13 @@ calculate_accuracy_by_problem <- function(data, theproblem){
                                           group_var = "group",
                                           by_set = TRUE, 
                                           test_method = "svmLinear", 
-                                          use_balanced_accuracy = FALSE,
+                                          use_balanced_accuracy = TRUE,
                                           use_k_fold = TRUE, 
                                           num_folds = 10, 
                                           use_empirical_null = TRUE, 
                                           null_testing_method = "model free shuffles",
                                           p_value_method = "gaussian", 
-                                          num_permutations = 10000, 
+                                          num_permutations = 1000, 
                                           seed = 123)
   
   return(results)
