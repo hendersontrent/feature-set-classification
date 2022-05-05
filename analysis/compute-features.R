@@ -15,7 +15,7 @@
 
 load("data/TimeSeriesData.Rda")
 
-# Fix Python environment
+# Fix Python environment to where the Python libraries are installed on my machine
 
 init_theft("~/opt/anaconda3/bin/python")
 
