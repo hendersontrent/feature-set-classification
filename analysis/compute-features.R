@@ -7,68 +7,72 @@
 # first
 #-----------------------------------------
 
-#-----------------------------------------
-# Author: Trent Henderson, 29 October 2021
-#-----------------------------------------
+#------------------------------------
+# Author: Trent Henderson, 5 May 2022
+#------------------------------------
 
 # Load time series data
 
 load("data/TimeSeriesData.Rda")
 
-# Fix my Python environment
+# Fix Python environment to where the Python libraries are installed on my machine
 
-reticulate::use_python("~/opt/anaconda3/bin/python", required = TRUE)
+init_theft("~/opt/anaconda3/bin/python")
 
 #------------- Feature extraction --------------
 
-# Need to do each set individually to avoid computer crashes
+#' Function to map over datasets to avoid massive dataframe processing times / crashes
+#' @param data the dataset containing all raw time series
+#' @param theproblem string specifying the problem to calculate features for
+#' @returns an object of class dataframe
+#' @author Trent Henderson
+#' 
 
-outs_22 <- calculate_features(TimeSeriesData, id_var = "id", time_var = "timepoint", values_var = "values", group_var = "target", feature_set = "catch22", catch24 = TRUE)
-save(outs_22, file = "data/outs_22.Rda")
-rm(outs_22)
+extract_features_by_problem <- function(data, theproblem){
+  
+  message("Doing problem ", match(theproblem, data$problem), "/", length(unique(data$problem)))
+  
+  # Filter to problem of interest
+  
+  tmp <- data %>%
+    filter(problem == theproblem)
+  
+  # Calculate features
+  
+  outs <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
+                             values_var = "values", group_var = "target", 
+                             feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "tsfel", "kats"), 
+                             catch24 = TRUE, tsfresh_cleanup = FALSE, seed = 123)
+  
+  save(outs, file = paste0("data/feature-calcs/", theproblem, ".Rda"))
+}
 
-outs_feasts <- calculate_features(TimeSeriesData, id_var = "id", time_var = "timepoint", values_var = "values", group_var = "target", feature_set = "feasts")
-save(outs_feasts, file = "data/outs_feasts.Rda")
-rm(outs_feasts)
+# Run the function
 
-outs_tsfeatures <- calculate_features(TimeSeriesData, id_var = "id", time_var = "timepoint", values_var = "values", group_var = "target", feature_set = "tsfeatures")
-save(outs_tsfeatures, file = "data/outs_tsfeatures.Rda")
-rm(outs_tsfeatures)
+extract_features_by_problem_safe <- purrr::possibly(extract_features_by_problem, otherwise = NULL)
 
-outs_kats <- calculate_features(TimeSeriesData, id_var = "id", time_var = "timepoint", values_var = "values", group_var = "target", feature_set = "kats")
-save(outs_kats, file = "data/outs_kats.Rda")
-rm(outs_kats)
-
-outs_tsfresh <- calculate_features(TimeSeriesData, id_var = "id", time_var = "timepoint", values_var = "values", group_var = "target", feature_set = "tsfresh", tsfresh_cleanup = FALSE)
-save(outs_tsfresh, file = "data/outs_tsfresh.Rda")
-rm(outs_tsfresh)
-
-outs_TSFEL <- calculate_features(TimeSeriesData, id_var = "id", time_var = "timepoint", values_var = "values", group_var = "target", feature_set = "tsfel")
-save(outs_TSFEL, file = "data/outs_TSFEL.Rda")
-rm(outs_TSFEL)
+unique(TimeSeriesData$problem) %>%
+  purrr::map(~ extract_features_by_problem_safe(data = TimeSeriesData, theproblem = .x))
 
 #------------- Bind all and store --------------
 
-features <- c("data/outs_22.Rda", "data/outs_feasts.Rda", "data/outs_tsfeatures.Rda",
-              "data/outs_kats.Rda", "data/outs_tsfresh.Rda", "data/outs_TSFEL.Rda")
+# Load all .Rda files containing features and row bind together
 
-for(f in features){
-  load(f)
+data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
+
+#' Function to load a dataset
+#' @param x filepath to the .Rda file
+#' @returns an object of class dataframe
+#' @author Trent Henderson
+#' 
+
+load_extracted_features <- function(x){
+  load(x)
 }
 
-# Bind features
+FeatureMatrix <- data_files %>%
+  purrr::map_df(~ load_extracted_features(x = .x))
 
-FeatureMatrix <- bind_rows(outs_22, outs_feasts, outs_tsfeatures, outs_kats, outs_tsfresh, outs_TSFEL)
-
-# Re-join problem labels
-
-problems <- TimeSeriesData %>%
-  dplyr::select(c(id, problem)) %>%
-  distinct()
-
-FeatureMatrix <- FeatureMatrix %>%
-  left_join(problems, by = c("id" = "id"))
-
-# Save
+# Save as a single file
 
 save(FeatureMatrix, file = "data/FeatureMatrix.Rda")
