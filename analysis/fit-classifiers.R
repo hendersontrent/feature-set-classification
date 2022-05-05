@@ -27,7 +27,7 @@ load("data/FeatureMatrix.Rda")
 
 calculate_accuracy_by_problem <- function(data, theproblem){
   
-  message("Doing problem ", match(theproblem, data$problem), "/", length(unique(data$problem)))
+  message("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem)))
   
   tmp <- data %>%
     filter(problem == theproblem)
