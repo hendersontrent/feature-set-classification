@@ -30,7 +30,7 @@ init_theft("~/opt/anaconda3/bin/python")
 
 extract_features_by_problem <- function(data, theproblem){
   
-  message("Doing problem ", match(theproblem, data$problem), "/", length(unique(data$problem)))
+  message("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem)))
   
   # Filter to problem of interest
   
