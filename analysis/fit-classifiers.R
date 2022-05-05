@@ -32,7 +32,7 @@ calculate_accuracy_by_problem <- function(data, theproblem){
   
   # Fit multi-feature classifiers by feature set
   
-  results <- fit_multi_feature_classifier(all_features, 
+  results <- fit_multi_feature_classifier(tmp, 
                                           id_var = "id", 
                                           group_var = "group",
                                           by_set = TRUE, 
