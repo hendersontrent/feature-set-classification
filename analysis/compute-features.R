@@ -69,7 +69,20 @@ unique(TimeSeriesData$problem) %>%
 
 # Load all .Rda files containing features and row bind together
 
+data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
 
+#' Function to load a dataset
+#' @param x filepath to the .Rda file
+#' @returns an object of class dataframe
+#' @author Trent Henderson
+#' 
+
+load_extracted_features <- function(x){
+  load(x)
+}
+
+FeatureMatrix <- data_files %>%
+  purrr::map_df(~ load_extracted_features(x = .x))
 
 # Save as a single file
 
