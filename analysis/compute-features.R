@@ -7,9 +7,9 @@
 # first
 #-----------------------------------------
 
-#-----------------------------------------
+#------------------------------------
 # Author: Trent Henderson, 5 May 2022
-#-----------------------------------------
+#------------------------------------
 
 # Load time series data
 
@@ -39,21 +39,10 @@ extract_features_by_problem <- function(data, theproblem){
   
   # Do feature calculations in multiple parts to avoid crashes
   
-  outs1 <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
-                              values_var = "values", group_var = "target", 
-                              feature_set = c("catch22", "feasts", "tsfeatures"), 
-                              catch24 = TRUE)
-  
-  outs2 <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
-                              values_var = "values", group_var = "target", 
-                              feature_set = c("tsfresh", "kats"))
-  
-  outs3 <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
-                              values_var = "values", group_var = "target", 
-                              feature_set = c("tsfel"))
-  
-  outs <- bind_rows(outs1, outs2, outs3) %>%
-    mutate(problem = theproblem)
+  outs <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
+                             values_var = "values", group_var = "target", 
+                             feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "tsfel", "kats"), 
+                             catch24 = TRUE, tsfresh_cleanup = FALSE, seed = 123)
   
   save(outs, file = paste0("data/feature-calcs/", theproblem, ".Rda"))
 }
