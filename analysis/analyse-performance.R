@@ -4,7 +4,8 @@
 # and problem
 #
 # NOTE: This script requires setup.R and
-# analysis/compute-features.R to have been 
+# analysis/compute-features.R and
+# analysis/fit-classifiers.R to have been 
 # run first
 #-----------------------------------------
 
