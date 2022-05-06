@@ -22,7 +22,8 @@
 
 calculate_accuracy_by_problem <- function(theproblem){
   
-  message(paste0("Doing problem ", match(theproblem, data_files), "/", length(data_files)))
+  files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
+  message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
   
   tmp <- data %>%
     filter(problem == theproblem)
