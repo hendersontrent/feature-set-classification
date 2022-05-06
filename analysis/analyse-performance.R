@@ -137,6 +137,8 @@ ggsave("output/complexity-scatter.pdf", p2)
 # Barplot
 #--------
 
+# Calculate mean and +- 1 SD for each unique class numbers and plot results
+
 p3 <- main_models %>%
   left_join(classes, by = c("problem" = "problem")) %>%
   group_by(problem, num_classes, method) %>%
