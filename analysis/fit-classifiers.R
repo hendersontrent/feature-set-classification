@@ -58,6 +58,7 @@ calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_prob
 outputs <- data_files %>%
   purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x))
 
-# Name list entries for easier viewing
+# Name list entries for easier viewing and save
 
 names(outputs) <- unique(FeatureMatrix$problem)
+save(outputs, file = "data/outputs.Rda")
