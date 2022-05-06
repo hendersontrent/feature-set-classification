@@ -12,22 +12,17 @@
 # Author: Trent Henderson, 5 May 2022
 #------------------------------------
 
-# Load feature data
-
-load("data/FeatureMatrix.Rda")
-
 #---------------- Classification accuracy -----------------
 
 #' Function to map classification performance calculations over datasets/problems
-#' @param data the dataset containing all raw time series
-#' @param theproblem string specifying the problem to calculate features for
+#' @param theproblem filepath to the feature data
 #' @returns an object of class list
 #' @author Trent Henderson
 #' 
 
-calculate_accuracy_by_problem <- function(data, theproblem){
+calculate_accuracy_by_problem <- function(theproblem){
   
-  message("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem)))
+  message(paste0("Doing problem ", match(theproblem, data_files), "/", length(data_files)))
   
   tmp <- data %>%
     filter(problem == theproblem)
@@ -51,12 +46,16 @@ calculate_accuracy_by_problem <- function(data, theproblem){
   return(results)
 }
 
+# List all .Rda files containing features
+
+data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
+
 # Run function
 
 calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
 
-outputs <- unique(FeatureMatrix$problem) %>%
-  purrr::map(~ calculate_accuracy_by_problem_safe(data = FeatureMatrix, theproblem = .x))
+outputs <- data_files %>%
+  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x))
 
 # Name list entries for easier viewing
 
