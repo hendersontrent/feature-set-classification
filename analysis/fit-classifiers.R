@@ -25,12 +25,11 @@ calculate_accuracy_by_problem <- function(theproblem){
   files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
   
-  tmp <- data %>%
-    filter(problem == theproblem)
+  load(theproblem)
   
   # Fit multi-feature classifiers by feature set
   
-  results <- fit_multi_feature_classifier(tmp, 
+  results <- fit_multi_feature_classifier(outs, 
                                           id_var = "id", 
                                           group_var = "group",
                                           by_set = TRUE, 
