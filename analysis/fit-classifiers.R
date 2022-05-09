@@ -59,5 +59,8 @@ outputs <- data_files %>%
 
 # Name list entries for easier viewing and save
 
-names(outputs) <- unique(FeatureMatrix$problem)
+load("data/TimeSeriesData.Rda")
+classes <- unique(TimeSeriesData$problem)
+rm(TimeSeriesData)
+names(outputs) <- classes
 save(outputs, file = "data/outputs.Rda")
