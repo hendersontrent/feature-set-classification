@@ -59,8 +59,7 @@ outputs <- data_files %>%
 
 # Name list entries for easier viewing and save
 
-load("data/TimeSeriesData.Rda")
-classes <- unique(TimeSeriesData$problem)
-rm(TimeSeriesData)
+classes <- gsub("data/feature-calcs/", "\\1", data_files)
+classes <- gsub(".Rda", "\\1", classes)
 names(outputs) <- classes
 save(outputs, file = "data/outputs.Rda")
