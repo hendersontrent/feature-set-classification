@@ -97,6 +97,26 @@ p1 <- main_models %>%
 print(p1)
 ggsave("output/violin.pdf", p1)
 
+#----------
+# Histogram
+#----------
+
+p2 <- main_models %>%
+  ggplot(aes(x = accuracy, fill = method)) +
+  geom_histogram(aes(y = ..density..), binwidth = 5) +
+  labs(title = "Classification accuracy by feature set across UCR/UEA repository univariate problems",
+       x = "Classification accuracy (%)",
+       y = "Density") +
+  scale_x_continuous(labels = function(x)paste0(x, "%")) + 
+  scale_colour_brewer(palette = "Dark2") +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "none") +
+  facet_wrap(~method)
+
+print(p2)
+ggsave("output/histogram.pdf", p2)
+
 #------------------ Analysis II: Accuracy by problem complexity ------------
 
 # GOAL: Understand performance relative to the "difficulty" of the problem
@@ -110,7 +130,7 @@ ggsave("output/violin.pdf", p1)
 load("data/TimeSeriesData.Rda")
 
 classes <- TimeSeriesData %>%
-  group_by(problem, target) %>%
+  dplyr::select(c(problem, target)) %>%
   distinct() %>%
   group_by(problem) %>%
   summarise(num_classes = n()) %>%
@@ -131,10 +151,10 @@ classes <- classes %>%
 
 # Join class numbers to classification results and draw plot
 
-p2 <- main_models %>%
+p3 <- main_models %>%
   left_join(classes, by = c("problem" = "problem")) %>%
   ggplot(aes(x = num_classes, y = accuracy, colour = method)) +
-  geom_point(alpha = 0.6) +
+  geom_jitter(alpha = 0.6) +
   labs(title = "Classification accuracy by number of classes across UCR/UEA repository univariate problems",
        x = "Number of classes",
        y = "Classification accuracy (%)",
@@ -145,8 +165,8 @@ p2 <- main_models %>%
   theme(panel.grid.minor = element_blank(),
         legend.position = "bottom")
 
-print(p2)
-ggsave("output/complexity-scatter.pdf", p2)
+print(p3)
+ggsave("output/complexity-scatter.pdf", p3)
 
 #--------
 # Barplot
@@ -154,9 +174,9 @@ ggsave("output/complexity-scatter.pdf", p2)
 
 # Calculate mean and +- 1 SD for each unique class numbers and plot results
 
-p3 <- main_models %>%
+p4 <- main_models %>%
   left_join(classes, by = c("problem" = "problem")) %>%
-  group_by(problem, num_classes, method) %>%
+  group_by(num_classes, method) %>%
   summarise(avg = mean(accuracy, na.rm = TRUE),
             lower = avg - sd(accuracy, na.rm = TRUE),
             upper = avg + sd(accuracy, na.rm = TRUE)) %>%
@@ -168,13 +188,13 @@ p3 <- main_models %>%
        subtitle = "Error bars represent +- 1 SD",
        x = "Feature set",
        y = "Classification accuracy (%)",
-       colour = NULL) +
+       fill = NULL) +
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
   theme_bw() +
   theme(panel.grid.minor = element_blank(),
         legend.position = "bottom") +
-  facet_wrap(~num_classes)
+  facet_wrap(~method)
 
-print(p3)
-ggsave("output/complexity-bar.pdf", p3)
+print(p4)
+ggsave("output/complexity-bar.pdf", p4)
