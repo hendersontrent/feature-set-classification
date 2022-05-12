@@ -17,6 +17,11 @@
 
 load("data/outputs.Rda")
 
+# Remove NULL entries that errored
+
+outputs_filtered <- outputs[!sapply(outputs, is.null)]
+rm(outputs)
+
 #' Pull only main results for every problem and feature set
 #' @param results the list containing classification results
 #' @param x the index of the problem to get results for
@@ -41,8 +46,12 @@ pull_main_models <- function(results, x){
 
 # Run the function
 
-main_models <- 1:length(outputs) %>%
-  purrr::map_df(~ pull_main_models(results = outputs, x = .x))
+main_models <- 1:length(outputs_filtered) %>%
+  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x)) %>%
+  mutate(accuracy = accuracy * 100,
+         balanced_accuracy = balanced_accuracy * 100,
+         accuracy_sd = accuracy_sd * 100,
+         balanced_accuracy_sd = balanced_accuracy_sd * 100) # Just to make the plots nicer
 
 #------------------ Analysis I: Distribution of accuracies -----------------
 
@@ -53,7 +62,7 @@ main_models <- 1:length(outputs) %>%
 #--------
 
 p <- main_models %>%
-  ggplot(aes(x = x, y = accuracy, colour = method)) +
+  ggplot(aes(x = method, y = accuracy, colour = method)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.6) +
   labs(title = "Classification accuracy by feature set across UCR/UEA repository univariate problems",
@@ -73,7 +82,7 @@ ggsave("output/boxplot.pdf", p)
 #------------
 
 p1 <- main_models %>%
-  ggplot(aes(x = x, y = accuracy, colour = method)) +
+  ggplot(aes(x = method, y = accuracy, colour = method)) +
   geom_violin() +
   geom_jitter(alpha = 0.6) +
   labs(title = "Classification accuracy by feature set across UCR/UEA repository univariate problems",
@@ -110,6 +119,11 @@ classes <- TimeSeriesData %>%
 # Free up memory as file is large
 
 rm(TimeSeriesData)
+
+# Filter to just problems that finished
+
+classes <- classes %>%
+  filter(problem %in% main_models$problem)
 
 #------------
 # Scatterplot
