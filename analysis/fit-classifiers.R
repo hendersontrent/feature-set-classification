@@ -12,29 +12,24 @@
 # Author: Trent Henderson, 5 May 2022
 #------------------------------------
 
-# Load feature data
-
-load("data/FeatureMatrix.Rda")
-
 #---------------- Classification accuracy -----------------
 
 #' Function to map classification performance calculations over datasets/problems
-#' @param data the dataset containing all raw time series
-#' @param theproblem string specifying the problem to calculate features for
+#' @param theproblem filepath to the feature data
 #' @returns an object of class list
 #' @author Trent Henderson
 #' 
 
-calculate_accuracy_by_problem <- function(data, theproblem){
+calculate_accuracy_by_problem <- function(theproblem){
   
-  message("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem)))
+  files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
+  message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
   
-  tmp <- data %>%
-    filter(problem == theproblem)
+  load(theproblem)
   
   # Fit multi-feature classifiers by feature set
   
-  results <- fit_multi_feature_classifier(tmp, 
+  results <- fit_multi_feature_classifier(outs, 
                                           id_var = "id", 
                                           group_var = "group",
                                           by_set = TRUE, 
@@ -51,13 +46,20 @@ calculate_accuracy_by_problem <- function(data, theproblem){
   return(results)
 }
 
+# List all .Rda files containing features
+
+data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
+
 # Run function
 
 calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
 
-outputs <- unique(FeatureMatrix$problem) %>%
-  purrr::map(~ calculate_accuracy_by_problem_safe(data = FeatureMatrix, theproblem = .x))
+outputs <- data_files %>%
+  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x))
 
-# Name list entries for easier viewing
+# Name list entries for easier viewing and save
 
-names(outputs) <- unique(FeatureMatrix$problem)
+classes <- gsub("data/feature-calcs/", "\\1", data_files)
+classes <- gsub(".Rda", "\\1", classes)
+names(outputs) <- classes
+save(outputs, file = "data/outputs.Rda")

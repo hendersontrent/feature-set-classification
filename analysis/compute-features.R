@@ -30,7 +30,7 @@ init_theft("~/opt/anaconda3/bin/python")
 
 extract_features_by_problem <- function(data, theproblem){
   
-  message("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem)))
+  message(paste0("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem))))
   
   # Filter to problem of interest
   
@@ -53,26 +53,3 @@ extract_features_by_problem_safe <- purrr::possibly(extract_features_by_problem,
 
 unique(TimeSeriesData$problem) %>%
   purrr::map(~ extract_features_by_problem_safe(data = TimeSeriesData, theproblem = .x))
-
-#------------- Bind all and store --------------
-
-# Load all .Rda files containing features and row bind together
-
-data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
-
-#' Function to load a dataset
-#' @param x filepath to the .Rda file
-#' @returns an object of class dataframe
-#' @author Trent Henderson
-#' 
-
-load_extracted_features <- function(x){
-  load(x)
-}
-
-FeatureMatrix <- data_files %>%
-  purrr::map_df(~ load_extracted_features(x = .x))
-
-# Save as a single file
-
-save(FeatureMatrix, file = "data/FeatureMatrix.Rda")
