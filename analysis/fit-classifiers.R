@@ -16,23 +16,31 @@
 
 #' Function to map classification performance calculations over datasets/problems
 #' @param theproblem filepath to the feature data
+#' @param set Boolean whether to fit by set or not
 #' @returns an object of class list
 #' @author Trent Henderson
 #' 
 
-calculate_accuracy_by_problem <- function(theproblem){
+calculate_accuracy_by_problem <- function(theproblem, set = TRUE, remove_catch24 = TRUE){
   
   files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
   
   load(theproblem)
   
+  # Remove Mean and SD from catch22 if specified (e.g., for un-normalised data)
+  
+  if(remove_catch24){
+    outs <- outs %>%
+      filter(names %ni% c("DN_Mean", "DN_Spread_Std"))
+  }
+  
   # Fit multi-feature classifiers by feature set
   
   results <- fit_multi_feature_classifier(outs, 
                                           id_var = "id", 
                                           group_var = "group",
-                                          by_set = TRUE, 
+                                          by_set = set, 
                                           test_method = "svmLinear", 
                                           use_balanced_accuracy = TRUE,
                                           use_k_fold = TRUE, 
@@ -50,16 +58,23 @@ calculate_accuracy_by_problem <- function(theproblem){
 
 data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
 
-# Run function
+# Run function by set
 
 calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
 
 outputs <- data_files %>%
-  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x))
+  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x, set = TRUE, remove_catch24 = TRUE))
+
+# Run function using all features at once to form an aggregate comparison later
+
+outputs_aggregate <- data_files %>%
+  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x, set = FALSE, remove_catch24 = TRUE))
 
 # Name list entries for easier viewing and save
 
 classes <- gsub("data/feature-calcs/", "\\1", data_files)
 classes <- gsub(".Rda", "\\1", classes)
 names(outputs) <- classes
+names(outputs_aggregate) <- classes
 save(outputs, file = "data/outputs.Rda")
+save(outputs_aggregate, file = "data/outputs_aggregate.Rda")
