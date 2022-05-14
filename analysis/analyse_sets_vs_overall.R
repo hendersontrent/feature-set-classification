@@ -111,8 +111,8 @@ p <- all_mains %>%
   annotate("text", x = 25, y = 90, label = "All features better") +
   labs(title = "Comparison of top classifier across UCR/UEA repository univariate problems",
        subtitle = "Error bars are +- 1 SD obtained through 10-fold CV",
-       x = "Classification accuracy individual set (%)",
-       y = "Classification accuracy all features (%)",
+       x = "Balanced classification accuracy individual set (%)",
+       y = "Balanced classification accuracy all features (%)",
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
