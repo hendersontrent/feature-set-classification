@@ -16,13 +16,13 @@
 # Load classification results
 
 load("data/outputs.Rda")
-load("data/outputs_aggregated.Rda")
+load("data/outputs_aggregate.Rda")
 
 # Remove NULL entries that errored
 
 outputs_filtered <- outputs[!sapply(outputs, is.null)]
-outputs_aggregated_filtered <- outputs_aggregated[!sapply(outputs_aggregated, is.null)]
-rm(outputs, outputs_aggregated)
+outputs_aggregate_filtered <- outputs_aggregate[!sapply(outputs_aggregate, is.null)]
+rm(outputs, outputs_aggregate)
 
 #' Pull only main results for every problem and feature set
 #' @param results the list containing classification results
@@ -55,9 +55,15 @@ main_models <- 1:length(outputs_filtered) %>%
          accuracy_sd = accuracy_sd * 100,
          balanced_accuracy_sd = balanced_accuracy_sd * 100) # Just to make the plots nicer
 
-main_models_aggregated <- 1:length(outputs_aggregated_filtered) %>%
-  purrr::map_df(~ pull_main_models(results = outputs_aggregated_filtered, x = .x)) %>%
+main_models_aggregate <- 1:length(outputs_aggregate_filtered) %>%
+  purrr::map_df(~ pull_main_models(results = outputs_aggregate_filtered, x = .x)) %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100,
          accuracy_sd = accuracy_sd * 100,
          balanced_accuracy_sd = balanced_accuracy_sd * 100) # Just to make the plots nicer
+
+#------------------ Analysis I: Top performer per problem -----------------
+
+# Draw scatterplot
+
+
