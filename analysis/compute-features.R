@@ -11,9 +11,12 @@
 # Author: Trent Henderson, 5 May 2022
 #------------------------------------
 
-# Load time series data
+# Load time-series data and row bind
 
-load("data/TimeSeriesData.Rda")
+TimeSeriesData <- directories %>%
+  purrr::map_df(~ tidy_arff_files(x = .x))
+
+save(TimeSeriesData, file = "data/TimeSeriesData.Rda")
 
 # Fix Python environment to where the Python libraries are installed on my machine
 

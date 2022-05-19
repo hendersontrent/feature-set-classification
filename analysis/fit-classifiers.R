@@ -12,6 +12,16 @@
 # Author: Trent Henderson, 5 May 2022
 #------------------------------------
 
+# Load in data and summarise to just problem, ID, and train-test set indicator
+
+load("data/TimeSeriesData.Rda")
+
+train_test_ids <- TimeSeriesData %>%
+  dplyr::select(c(problem, id, set_split)) %>%
+  distinct()
+
+rm(TimeSeriesData) # Clean up environment as dataframe is large
+
 #---------------- Classification accuracy -----------------
 
 #' Function to map classification performance calculations over datasets/problems
@@ -35,21 +45,27 @@ calculate_accuracy_by_problem <- function(theproblem, set = TRUE, remove_catch24
       filter(names %ni% c("DN_Mean", "DN_Spread_Std"))
   }
   
+  # Join in train-test indicator
+  
+  outs <- outs %>%
+    inner_join(train_test_ids, by = c("id" = "id")) %>%
+    dplyr::select(-c(problem))
+  
   # Fit multi-feature classifiers by feature set
   
-  results <- fit_multi_feature_classifier(outs, 
-                                          id_var = "id", 
-                                          group_var = "group",
-                                          by_set = set, 
-                                          test_method = "svmLinear", 
-                                          use_balanced_accuracy = TRUE,
-                                          use_k_fold = TRUE, 
-                                          num_folds = 10, 
-                                          use_empirical_null = TRUE, 
-                                          null_testing_method = "model free shuffles",
-                                          p_value_method = "gaussian", 
-                                          num_permutations = 1000, 
-                                          seed = 123)
+  results <- fit_multi_feature_classifier_tt(outs, 
+                                             id_var = "id", 
+                                             group_var = "group",
+                                             by_set = set, 
+                                             test_method = "svmLinear", 
+                                             use_balanced_accuracy = TRUE,
+                                             use_k_fold = TRUE, 
+                                             num_folds = 10, 
+                                             use_empirical_null = TRUE, 
+                                             null_testing_method = "model free shuffles",
+                                             p_value_method = "gaussian", 
+                                             num_permutations = 1000, 
+                                             seed = 123)
   
   return(results)
 }

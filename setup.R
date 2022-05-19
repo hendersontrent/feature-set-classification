@@ -28,3 +28,11 @@ if(!dir.exists('R')) dir.create('R')
 # Re-usable "not in" operator
 
 '%ni%' <- Negate('%in%')
+
+# Load re-usable functions
+
+r_files <- list.files("R", full.names = TRUE, pattern = "\\.[Rr]")
+
+for(f in r_files){
+  source(f)
+}

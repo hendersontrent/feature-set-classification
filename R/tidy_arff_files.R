@@ -93,10 +93,3 @@ tidy_arff_files <- function(x){
   
   return(tmp)
 }
-
-# Run the function and rowbind into one dataframe
-
-TimeSeriesData <- directories %>%
-  purrr::map_df(~ tidy_arff_files(x = .x))
-
-save(TimeSeriesData, file = "data/TimeSeriesData.Rda")
