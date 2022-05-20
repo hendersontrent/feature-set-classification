@@ -36,3 +36,5 @@ r_files <- list.files("R", full.names = TRUE, pattern = "\\.[Rr]")
 for(f in r_files){
   source(f)
 }
+
+rm(r_files)
