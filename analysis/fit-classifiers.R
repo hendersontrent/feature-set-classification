@@ -62,11 +62,7 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, rem
                                              use_balanced_accuracy = TRUE,
                                              use_k_fold = TRUE, 
                                              num_folds = 10, 
-                                             use_empirical_null = TRUE, 
-                                             null_testing_method = "model free shuffles",
-                                             p_value_method = "gaussian", 
-                                             num_permutations = 1000, 
-                                             seed = 123)
+                                             num_resamples = 30)
   
   return(results)
 }

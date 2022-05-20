@@ -121,7 +121,7 @@ draw_lollipops <- function(set1, set2, alpha = 0.05, correct = FALSE){
     labs(title = paste0("Comparative accuracy between ", set1_name, " and ", set2_name),
          subtitle = paste0(results$big_string[1], ", ", results$big_string[2]),
          x = "Problem",
-         y = "Balanced classification accuracy (%) difference",
+         y = "Classification accuracy (%) difference",
          colour = NULL) +
     scale_colour_manual(values = mypal) +
     scale_y_continuous(limits = c(-60, 60),
