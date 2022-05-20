@@ -47,7 +47,7 @@ draw_lollipops <- function(set1, set2){
   
   upper_half <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
   
-  # Filter to sets of interest, compute difference, and draw plot
+  # Filter to sets of interest and compute differences
   
   p <- main_models %>%
     filter(method %in% c(set1, set2)) %>%
@@ -57,7 +57,18 @@ draw_lollipops <- function(set1, set2){
     rename(set1 = 2,
            set2 = 3) %>%
     mutate(difference = set1 - set2,
-           winner = ifelse(difference > 0, paste0(set1_name, " better"), paste0(set2_name, " better"))) %>%
+           winner = ifelse(difference > 0, paste0(set1_name, " better"), paste0(set2_name, " better")))
+  
+  # Table summary for subtitle
+  
+  results <- as.data.frame(table(p$winner)) %>%
+    arrange(-Freq) %>%
+    mutate(Var1 = gsub(" .*", "\\1", Var1),
+           big_string = paste0(Var1, " wins ", Freq, "/", sum(Freq), " (", (round(Freq / sum(Freq), digits = 2) * 100) ,"%)"))
+  
+  # Draw plot
+  
+  p <- p %>%
     ggplot(aes(x = problem, y = difference, colour = winner)) +
     annotate(geom = "rect", xmin = -Inf, xmax = Inf, ymax = 60, ymin = 0,
              fill = "steelblue2", alpha = 0.2) +
@@ -67,6 +78,7 @@ draw_lollipops <- function(set1, set2){
     geom_segment(aes(x = problem, xend = problem, y = 0, yend = difference)) +
     geom_point(size = 2) +
     labs(title = paste0("Comparative balanced accuracy between ", set1_name, " and ", set2_name),
+         subtitle = paste0(results$big_string[1], ", ", results$big_string[2]),
          x = "Problem",
          y = "Balanced classification accuracy (%) difference",
          colour = NULL) +
@@ -78,8 +90,6 @@ draw_lollipops <- function(set1, set2){
     theme(axis.text.x = element_text(angle = 90),
           panel.grid.minor = element_blank(),
           legend.position = "bottom")
-  
-  print(p)
   
   ggsave(paste0("output/lollipop_", set1, "_vs_", set2, ".pdf"), p)
 }
