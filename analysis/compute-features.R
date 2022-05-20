@@ -11,7 +11,20 @@
 # Author: Trent Henderson, 5 May 2022
 #------------------------------------
 
-# Load time-series data and row bind
+# List all directories
+
+directories <- list.dirs(path = "data/Univariate_arff", full.names = TRUE, recursive = TRUE)
+
+# Remove non-folders
+
+directories <- directories[!directories %in% c("data/Univariate_arff", "data/Univariate_arff/Pictures",
+                                               "data/Univariate_arff/Pictures/fall_2018_datasets_crop_jpg")]
+
+# Set up progress bar for {purrr}
+
+pb <- dplyr::progress_estimated(length(directories))
+
+# Get time-series data
 
 TimeSeriesData <- directories %>%
   purrr::map_df(~ tidy_arff_files(x = .x))
