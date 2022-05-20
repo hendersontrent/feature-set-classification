@@ -15,7 +15,7 @@
 
 pull_benchmark_results <- function(){
   
-  # Download results file
+  # Download results files
   
   url <- "https://www.timeseriesclassification.com/results/AllAccuracies.zip"
   temp <- tempfile()
@@ -25,20 +25,19 @@ pull_benchmark_results <- function(){
   path <- "MegaComparison/ACC/TEST/TESTACC_MEANS.csv"
   vals <- "accuracy"
   
-  # Pull file and tidy up
+  # Extract .csv files and tidy up
   
   tmp_bal <- readr::read_csv(unz(temp, filename = path_bal)) %>%
     rename(problem = 1) %>%
-    pivot_longer(cols = !problem, names_to = "method", values_to = vals_bal) %>%
-    mutate(method = ifelse(method == "Catch22", "catch22", method))
+    pivot_longer(cols = !problem, names_to = "method", values_to = vals_bal)
   
   tmp_acc <- readr::read_csv(unz(temp, filename = path)) %>%
     rename(problem = 1) %>%
-    pivot_longer(cols = !problem, names_to = "method", values_to = vals) %>%
-    mutate(method = ifelse(method == "Catch22", "catch22", method))
+    pivot_longer(cols = !problem, names_to = "method", values_to = vals)
   
   tmp <- tmp_acc %>%
-    left_join(tmp_bal, by = c("problem" = "problem", "method" = "method"))
+    left_join(tmp_bal, by = c("problem" = "problem", "method" = "method")) %>%
+    mutate(method = ifelse(method == "Catch22", "catch22", method)) # Formatting with {theft}
   
   return(tmp)
 }
