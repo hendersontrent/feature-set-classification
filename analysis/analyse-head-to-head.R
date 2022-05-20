@@ -12,6 +12,16 @@
 
 load("data/outputs.Rda")
 
+# Remove NULL entries that errored
+
+outputs_filtered <- outputs[!sapply(outputs, is.null)]
+rm(outputs)
+
+# Get main results by problem and rowbind
+
+main_models <- 1:length(outputs_filtered) %>%
+  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x, raw = FALSE)) 
+
 #----------------- Scatterplots -------------------
 
 
@@ -27,7 +37,7 @@ load("data/outputs.Rda")
 
 draw_lollipops <- function(set1, set2){
   
-  xx
+  # Filter to sets of interest
   
   p
   
