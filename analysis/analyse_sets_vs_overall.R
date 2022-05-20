@@ -24,32 +24,10 @@ outputs_filtered <- outputs[!sapply(outputs, is.null)]
 outputs_aggregate_filtered <- outputs_aggregate[!sapply(outputs_aggregate, is.null)]
 rm(outputs, outputs_aggregate)
 
-#' Pull only main results for every problem and feature set
-#' @param results the list containing classification results
-#' @param x the index of the problem to get results for
-#' @returns an object of class dataframe
-#' @author Trent Henderson
-#' 
-
-pull_main_models <- function(results, x){
-  
-  # Filter list
-  
-  tmp <- results[[x]]
-  
-  # Extract relevant dataframe and filter to main models
-  
-  tmp <- tmp$RawClassificationResults %>%
-    filter(category == "Main") %>%
-    mutate(problem = names(results)[[x]])
-  
-  return(tmp)
-}
-
 # Run the function
 
 main_models <- 1:length(outputs_filtered) %>%
-  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x)) %>%
+  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x, raw = TRUE)) %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100,
          accuracy_sd = accuracy_sd * 100,

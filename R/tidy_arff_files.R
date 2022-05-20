@@ -13,19 +13,6 @@
 # Author: Trent Henderson, 06 May 2022
 #-------------------------------------
 
-# List all directories
-
-directories <- list.dirs(path = "data/Univariate_arff", full.names = TRUE, recursive = TRUE)
-
-# Remove non-folders
-
-directories <- directories[!directories %in% c("data/Univariate_arff", "data/Univariate_arff/Pictures",
-                                               "data/Univariate_arff/Pictures/fall_2018_datasets_crop_jpg")]
-
-# Set up progress bar for {purrr}
-
-pb <- dplyr::progress_estimated(length(directories))
-
 #------------------ Processing function -----------------
 
 #' Function to load and process files into a single tidy dataframe
@@ -93,10 +80,3 @@ tidy_arff_files <- function(x){
   
   return(tmp)
 }
-
-# Run the function and rowbind into one dataframe
-
-TimeSeriesData <- directories %>%
-  purrr::map_df(~ tidy_arff_files(x = .x))
-
-save(TimeSeriesData, file = "data/TimeSeriesData.Rda")

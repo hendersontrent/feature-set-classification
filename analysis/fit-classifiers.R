@@ -12,16 +12,27 @@
 # Author: Trent Henderson, 5 May 2022
 #------------------------------------
 
+# Load in data and summarise to just problem, ID, and train-test set indicator as I didn't bind initially
+
+load("data/TimeSeriesData.Rda")
+
+train_test_ids <- TimeSeriesData %>%
+  dplyr::select(c(problem, id, set_split)) %>%
+  distinct()
+
+rm(TimeSeriesData) # Clean up environment as dataframe is large
+
 #---------------- Classification accuracy -----------------
 
 #' Function to map classification performance calculations over datasets/problems
 #' @param theproblem filepath to the feature data
+#' @param tt_labels the dataframe containing train-test labels
 #' @param set Boolean whether to fit by set or not
 #' @returns an object of class list
 #' @author Trent Henderson
 #' 
 
-calculate_accuracy_by_problem <- function(theproblem, set = TRUE, remove_catch24 = TRUE){
+calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, remove_catch24 = TRUE){
   
   files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
@@ -35,21 +46,27 @@ calculate_accuracy_by_problem <- function(theproblem, set = TRUE, remove_catch24
       filter(names %ni% c("DN_Mean", "DN_Spread_Std"))
   }
   
+  # Join in train-test indicator
+  
+  outs <- outs %>%
+    inner_join(tt_labels, by = c("id" = "id")) %>%
+    dplyr::select(-c(problem))
+  
   # Fit multi-feature classifiers by feature set
   
-  results <- fit_multi_feature_classifier(outs, 
-                                          id_var = "id", 
-                                          group_var = "group",
-                                          by_set = set, 
-                                          test_method = "svmLinear", 
-                                          use_balanced_accuracy = TRUE,
-                                          use_k_fold = TRUE, 
-                                          num_folds = 10, 
-                                          use_empirical_null = TRUE, 
-                                          null_testing_method = "model free shuffles",
-                                          p_value_method = "gaussian", 
-                                          num_permutations = 1000, 
-                                          seed = 123)
+  results <- fit_multi_feature_classifier_tt(outs, 
+                                             id_var = "id", 
+                                             group_var = "group",
+                                             by_set = set, 
+                                             test_method = "svmLinear", 
+                                             use_balanced_accuracy = TRUE,
+                                             use_k_fold = TRUE, 
+                                             num_folds = 10, 
+                                             use_empirical_null = TRUE, 
+                                             null_testing_method = "model free shuffles",
+                                             p_value_method = "gaussian", 
+                                             num_permutations = 1000, 
+                                             seed = 123)
   
   return(results)
 }
@@ -63,12 +80,12 @@ data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.
 calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
 
 outputs <- data_files %>%
-  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x, set = TRUE, remove_catch24 = TRUE))
+  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE, remove_catch24 = TRUE))
 
 # Run function using all features at once to form an aggregate comparison later
 
 outputs_aggregate <- data_files %>%
-  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x, set = FALSE, remove_catch24 = TRUE))
+  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = FALSE, remove_catch24 = TRUE))
 
 # Name list entries for easier viewing and save
 
