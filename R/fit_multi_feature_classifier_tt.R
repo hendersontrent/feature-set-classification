@@ -511,51 +511,6 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
     stop("id_var should be a string specifying a variable in the input data that uniquely identifies each observation.")
   }
   
-  # Null testing options
-  
-  theoptions <- c("model free shuffles", "null model fits")
-  
-  if(is.null(null_testing_method) || missing(null_testing_method)){
-    null_testing_method <- "model free shuffles"
-    message("No argument supplied to null_testing_method. Using 'model free shuffles' as default.")
-  }
-  
-  if(length(null_testing_method) != 1){
-    stop("null_testing_method should be a single string of either 'model free shuffles' or 'null model fits'.")
-  }
-  
-  if(null_testing_method %ni% theoptions){
-    stop("null_testing_method should be a single string of either 'model free shuffles' or 'null model fits'.")
-  }
-  
-  if(null_testing_method == "model free shuffles" && num_permutations < 1000){
-    message("Null testing method 'model free shuffles' is fast. Consider running more permutations for more reliable results. N = 10000 is recommended.")
-  }
-  
-  # p-value options
-  
-  theoptions_p <- c("empirical", "gaussian")
-  
-  if(is.null(p_value_method) || missing(p_value_method)){
-    p_value_method <- "gaussian"
-    message("No argument supplied to p_value_method Using 'gaussian' as default.")
-  }
-  
-  if(length(p_value_method) != 1){
-    stop("p_value_method should be a single string of either 'empirical' or 'gaussian'.")
-  }
-  
-  if(p_value_method %ni% theoptions_p){
-    stop("p_value_method should be a single string of either 'empirical' or 'gaussian'.")
-  }
-  
-  # Seed
-  
-  if(is.null(seed) || missing(seed)){
-    seed <- 123
-    message("No argument supplied to seed, using 123 as default.")
-  }
-  
   # Resamples
   
   if(is.null(num_resamples) || missing(num_resamples)){
@@ -593,18 +548,10 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
     stop("test_method should be a single string specification of a classification model available in the `caret` package. 'svmLinear' or 'gaussprRadial' are recommended as starting points.")
   }
   
-  # Splits and shuffles
+  # k-fold
   
   if(use_k_fold == TRUE && !is.numeric(num_folds)){
     stop("num_folds should be a positive integer. 10 folds is recommended.")
-  }
-  
-  if(use_empirical_null == TRUE && !is.numeric(num_permutations)){
-    stop("num_permutations should be a postive integer. A minimum of 50 permutations is recommended.")
-  }
-  
-  if(use_empirical_null == TRUE && num_permutations < 3){
-    stop("num_permutations should be a positive integer >= 3 for empirical null calculations. A minimum of 50 permutations is recommended.")
   }
   
   if(use_k_fold == TRUE && num_folds < 1){
@@ -635,12 +582,6 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
   
   classifier_name <- test_method
   statistic_name <- ifelse(use_balanced_accuracy, "Mean classification accuracy and balanced classification accuracy", "Mean classification accuracy")
-  
-  # Very important coffee console message
-  
-  if(null_testing_method == "null model fits" & num_permutations > 50){
-    message("This will take a while. Great reason to go grab a coffee and relax ^_^")
-  }
   
   if(by_set){
     
