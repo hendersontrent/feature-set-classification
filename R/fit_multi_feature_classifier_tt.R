@@ -266,8 +266,7 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
       mainOuts <- data.frame(accuracy = accuracy)
     }
     
-    mainOuts <- mainOuts %>%
-      dplyr::mutate(category = "Main")
+    mainOuts <- mainOuts
   }
   
   mainOuts <- mainOuts %>%
@@ -288,22 +287,22 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
     
     message(paste0("\nCalculating models for ", set))
     
-    tmp <- data %>%
+    tmp_mods <- data %>%
       dplyr::filter(.data$method == set)
     
   } else{
-    tmp <- data
+    tmp_mods <- data
   }
   
   # Get number of cases in each set
   
-  train_rows <- tmp %>%
+  train_rows <- tmp_mods %>%
     dplyr::filter(.data$set_split == "Train") %>%
     dplyr::select(c(.data$id)) %>%
     dplyr::distinct() %>%
     nrow()
   
-  test_rows <- tmp %>%
+  test_rows <- tmp_mods %>%
     dplyr::filter(.data$set_split == "Test") %>%
     dplyr::select(c(.data$id)) %>%
     dplyr::distinct() %>%
@@ -311,7 +310,7 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
   
   # Get proportion per class in train and test to use for resample procedure
   
-  train_props <- tmp %>%
+  train_props <- tmp_mods %>%
     dplyr::filter(.data$set_split == "Train") %>%
     dplyr::select(c(.data$id, .data$group)) %>%
     dplyr::distinct() %>%
@@ -319,7 +318,7 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
     dplyr::summarise(counter = dplyr::n()) %>%
     dplyr::ungroup()
   
-  test_props <- tmp %>%
+  test_props <- tmp_mods %>%
     dplyr::filter(.data$set_split == "Test") %>%
     dplyr::select(c(.data$id, .data$group)) %>%
     dplyr::distinct() %>%
@@ -330,7 +329,7 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
   # Run model fitting via resampling
   
   finalOuts <- 1:num_resamples %>%
-    purrr::map_df(~ fit_resamples(data = tmp, 
+    purrr::map_df(~ fit_resamples(data = tmp_mods, 
                                   train_rows = train_rows, 
                                   test_rows = test_rows, 
                                   train_groups = train_props, 
@@ -346,7 +345,7 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
   if(!is.null(set)){
     finalOuts <- finalOuts %>%
       dplyr::mutate(method = set,
-                    num_features_used = (ncol(tmp_train) - 1))
+                    num_features_used = length(unique(tmp_mods$names)))
   }
   
   return(finalOuts)
@@ -669,30 +668,14 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
                                        set = NULL)
   }
   
-  #--------------- Evaluate results ---------------
+  #--------------- Return results ---------------
   
-  # NOTE: Removed barplot functionality here in {theft} as we don't need it for this project
-  # It just shortens the code up!
+  # NOTE: Removed barplot and statistical testing functionality here in {theft} as we don't need it for this project
+  # Just shortens the code up since we are doing different comparative testing later on
   
-  if(by_set){
-    
-    output <- output %>%
-        dplyr::mutate(classifier_name = classifier_name,
-                      statistic_name = statistic_name) %>%
-        dplyr::select(-c(.data$category))
+  output <- output %>%
+    dplyr::mutate(classifier_name = classifier_name,
+                  statistic_name = statistic_name)
       
-      myList <- list(output)
-      names(myList) <- c("RawClassificationResults")
-      
-  } else{
-    
-    output <- output %>%
-        dplyr::mutate(classifier_name = classifier_name,
-                      statistic_name = statistic_name) %>%
-        dplyr::select(-c(.data$category))
-      
-      myList <- list(output)
-      names(myList) <- c("RawClassificationResults")
-  }
-  return(myList)
+  return(output)
 }
