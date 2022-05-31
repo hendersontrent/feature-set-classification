@@ -27,28 +27,28 @@ rm(outputs, outputs_aggregate)
 # Run the function
 
 main_models <- 1:length(outputs_filtered) %>%
-  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x, raw = TRUE)) %>%
+  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x)) %>%
   mutate(accuracy = accuracy * 100,
-         balanced_accuracy = balanced_accuracy * 100,
-         accuracy_sd = accuracy_sd * 100,
-         balanced_accuracy_sd = balanced_accuracy_sd * 100) %>%
+         balanced_accuracy = balanced_accuracy * 100) %>%
   group_by(problem) %>%
   mutate(ranker = dense_rank(-balanced_accuracy)) %>%
   ungroup() %>%
   filter(ranker == 1) %>%
-  dplyr::select(problem, method, balanced_accuracy, balanced_accuracy_sd) %>%
+  group_by(problem, method) %>%
+  summarise(balanced_accuracy = mean(balanced_accuracy, na.rm = TRUE),
+            balanced_accuracy_sd = sd(balanced_accuracy, na.rm = TRUE)) %>%
+  ungroup() %>%
   rename(method_set = method)
 
 main_models_aggregate <- 1:length(outputs_aggregate_filtered) %>%
   purrr::map_df(~ pull_main_models(results = outputs_aggregate_filtered, x = .x)) %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100,
-         accuracy_sd = accuracy_sd * 100,
-         balanced_accuracy_sd = balanced_accuracy_sd * 100,
          method = "All Features") %>%
-  dplyr::select(problem, method, balanced_accuracy, balanced_accuracy_sd) %>%
-  rename(balanced_accuracy_all = balanced_accuracy,
-         balanced_accuracy_sd_all = balanced_accuracy_sd)
+  group_by(problem, method) %>%
+  summarise(balanced_accuracy_all = mean(balanced_accuracy, na.rm = TRUE),
+            balanced_accuracy_sd_all = sd(balanced_accuracy, na.rm = TRUE)) %>%
+  ungroup()
 
 # Join the datasets and compute bars for plot + the top overall performer
 

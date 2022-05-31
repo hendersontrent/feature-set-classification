@@ -28,7 +28,7 @@ rm(TimeSeriesData) # Clean up environment as dataframe is large
 #' @param theproblem filepath to the feature data
 #' @param tt_labels the dataframe containing train-test labels
 #' @param set Boolean whether to fit by set or not
-#' @returns an object of class list
+#' @returns an object of class dataframe
 #' @author Trent Henderson
 #' 
 
@@ -62,36 +62,20 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, rem
                                              use_balanced_accuracy = TRUE,
                                              use_k_fold = TRUE, 
                                              num_folds = 10, 
-                                             use_empirical_null = TRUE, 
-                                             null_testing_method = "model free shuffles",
-                                             p_value_method = "gaussian", 
-                                             num_permutations = 1000, 
-                                             seed = 123)
+                                             num_resamples = 30)
   
   return(results)
 }
 
-# List all .Rda files containing features
-
-data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
-
-# Run function by set
-
-calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
+data_files <- list.files("data/feature-calcs/z_score", full.names = TRUE, pattern = "\\.Rda")
 
 outputs <- data_files %>%
-  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE, remove_catch24 = TRUE))
-
+  purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE, remove_catch24 = TRUE))
+  
 # Run function using all features at once to form an aggregate comparison later
-
+  
 outputs_aggregate <- data_files %>%
-  purrr::map(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = FALSE, remove_catch24 = TRUE))
+  purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = FALSE, remove_catch24 = TRUE))
 
-# Name list entries for easier viewing and save
-
-classes <- gsub("data/feature-calcs/", "\\1", data_files)
-classes <- gsub(".Rda", "\\1", classes)
-names(outputs) <- classes
-names(outputs_aggregate) <- classes
 save(outputs, file = "data/outputs.Rda")
-save(outputs_aggregate, file = "data/outputs_aggregate.Rda")
+save(outputs_aggregate, file = "data/outputs_aggregate.Rda") 
