@@ -70,7 +70,7 @@ extract_features_by_problem <- function(data, theproblem, z_score = TRUE){
   
   outs <- calculate_features(tmp2, id_var = "id", time_var = "timepoint", 
                              values_var = "values", group_var = "target", 
-                             feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "tsfel", "kats"), 
+                             feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL", "Kats"), 
                              catch24 = TRUE, tsfresh_cleanup = FALSE, seed = 123)
   
   save(outs, file = paste0("data/feature-calcs/", theproblem, ".Rda"))
