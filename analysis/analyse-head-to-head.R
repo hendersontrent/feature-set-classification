@@ -79,7 +79,7 @@ draw_lollipops <- function(set1, set2, alpha = 0.05, correct = FALSE){
     filter(method %in% c(set1, set2)) %>%
     dplyr::select(c(problem, method, accuracy)) %>%
     mutate(accuracy = accuracy * 100) %>%
-    pivot_wider(id_cols = "problem", names_from = "method", values_from = "accuracy") %>%
+    pivot_wider(id_cols = c("problem", "resample"), names_from = "method", values_from = "accuracy") %>%
     rename(set1 = 2,
            set2 = 3)
   
@@ -98,8 +98,8 @@ draw_lollipops <- function(set1, set2, alpha = 0.05, correct = FALSE){
     ungroup() %>%
     pivot_wider(id_cols = "problem", names_from = "method", values_from = "accuracy") %>%
     mutate(difference = set1 - set2,
-           winner = ifelse(difference > 0, paste0(set1_name, " better"), paste0(set2_name, " better")))
-  left_join(p_vals, by = c("problem" = "problem"))
+           winner = ifelse(difference > 0, paste0(set1_name, " better"), paste0(set2_name, " better"))) %>%
+    left_join(p_vals, by = c("problem" = "problem"))
   
   # Table summary for subtitle
   
