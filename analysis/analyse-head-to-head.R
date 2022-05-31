@@ -19,7 +19,7 @@ outputs_filtered <- outputs[!sapply(outputs, is.null)]
 # Get main results by problem and rowbind
 
 main_models <- 1:length(outputs_filtered) %>%
-  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x, raw = FALSE))
+  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x))
 
 rm(outputs, outputs_filtered)
 
@@ -75,27 +75,31 @@ draw_lollipops <- function(set1, set2, alpha = 0.05, correct = FALSE){
   
   # Filter to sets of interest and compute differences
   
-  p <- main_models %>%
+  p_val_prep <- main_models %>%
     filter(method %in% c(set1, set2)) %>%
     dplyr::select(c(problem, method, accuracy)) %>%
     mutate(accuracy = accuracy * 100) %>%
     pivot_wider(id_cols = "problem", names_from = "method", values_from = "accuracy") %>%
     rename(set1 = 2,
-           set2 = 3) %>%
-    mutate(difference = set1 - set2,
-           winner = ifelse(difference > 0, paste0(set1_name, " better"), paste0(set2_name, " better")))
+           set2 = 3)
   
   # Calculate p-value for each problem
   
-  p_vals <- unique(p$problem) %>%
+  p_vals <- unique(p_val_prep$problem) %>%
     purrr::map_df(~ calculate_p_value(data = main_models, 
                                       x = .x, 
                                       alpha = 0.05, 
                                       correct = FALSE, 
                                       num_probs = length(unique(p$problem))))
   
-  p <- p %>%
-    left_join(p_vals, by = c("problem" = "problem"))
+  p <- main_models %>%
+    group_by(problem, method) %>%
+    summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(id_cols = "problem", names_from = "method", values_from = "accuracy") %>%
+    mutate(difference = set1 - set2,
+           winner = ifelse(difference > 0, paste0(set1_name, " better"), paste0(set2_name, " better")))
+  left_join(p_vals, by = c("problem" = "problem"))
   
   # Table summary for subtitle
   
@@ -137,7 +141,7 @@ draw_lollipops <- function(set1, set2, alpha = 0.05, correct = FALSE){
 
 # Get all pairwise combinations to map over
 
-combns <- crossing(unique(outputs$Adiac$TestStatistics$method), unique(outputs$Adiac$TestStatistics$method),
+combns <- crossing(unique(main_models$method), unique(main_models$method),
                    .name_repair = "minimal") %>%
   rename(set1 = 1,
          set2 = 2) %>%

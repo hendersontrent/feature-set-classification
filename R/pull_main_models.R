@@ -22,10 +22,9 @@ pull_main_models <- function(results, x){
   
   # Extract relevant dataframe
   
-  tmp$RawClassificationResults
-  
-  tmp <- tmp %>%
-    mutate(problem = names(results)[[x]])
+  tmp <- tmp$RawClassificationResults %>%
+    mutate(problem = names(results)[[x]]) %>%
+    filter(category == "Main")
   
   return(tmp)
 }

@@ -67,21 +67,15 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, rem
   return(results)
 }
 
-# List all .Rda files containing features
-
-data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
-
-# Run function by set
-
-calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
+data_files <- list.files("data/feature-calcs/z_score", full.names = TRUE, pattern = "\\.Rda")
 
 outputs <- data_files %>%
   purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE, remove_catch24 = TRUE))
-
+  
 # Run function using all features at once to form an aggregate comparison later
-
+  
 outputs_aggregate <- data_files %>%
   purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = FALSE, remove_catch24 = TRUE))
 
 save(outputs, file = "data/outputs.Rda")
-save(outputs_aggregate, file = "data/outputs_aggregate.Rda")
+save(outputs_aggregate, file = "data/outputs_aggregate.Rda") 

@@ -40,11 +40,12 @@ init_theft("~/opt/anaconda3/bin/python")
 #' Function to map over datasets to avoid massive dataframe processing times / crashes
 #' @param data the dataset containing all raw time series
 #' @param theproblem string specifying the problem to calculate features for
+#' @param z_score Boolean whether to z-score each time series prior to calculating features. Defaults to \code{FALSE}
 #' @returns an object of class dataframe
 #' @author Trent Henderson
 #' 
 
-extract_features_by_problem <- function(data, theproblem){
+extract_features_by_problem <- function(data, theproblem, z_score = TRUE){
   
   message(paste0("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem))))
   
@@ -52,6 +53,17 @@ extract_features_by_problem <- function(data, theproblem){
   
   tmp <- data %>%
     filter(problem == theproblem)
+  
+  if(z_score){
+    tmp2 <- tmp %>%
+      group_by(id) %>%
+      mutate(values = (values - mean(values, na.rm = TRUE)) / sd(values, na.rm = TRUE)) %>%
+      ungroup()
+  }
+  
+  if(tmp2$values[1] != tmp$values[1]){
+    print(paste0("z-score applied to problem: ", theproblem))
+  }
   
   # Calculate features
   
