@@ -61,8 +61,8 @@ extract_features_by_problem <- function(data, theproblem, z_score = TRUE){
       ungroup()
   }
   
-  if(tmp2$values[1] != tmp$values[1]){
-    print(paste0("z-score applied to problem: ", theproblem))
+  if(!all.equal(tmp2$values[1], tmp$values[1])){
+    print(paste0("z-score applied to problem: ", theproblem, ". e.g., ", tmp2$values[1], " != ", tmp$values[1]))
     z_tracker <<- append(z_tracker, theproblem) # Keep track of which problems were not z-scored
   }
   
@@ -82,4 +82,4 @@ extract_features_by_problem_safe <- purrr::possibly(extract_features_by_problem,
 z_tracker <- c()
 
 unique(TimeSeriesData$problem) %>%
-  purrr::map(~ extract_features_by_problem_safe(data = TimeSeriesData, theproblem = .x))
+  purrr::map(~ extract_features_by_problem_safe(data = TimeSeriesData, theproblem = .x, z_score = TRUE))
