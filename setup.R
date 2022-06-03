@@ -16,6 +16,7 @@ library(ggplot2)
 library(scales)
 library(foreign)
 library(theft)
+library(Cairo)
 
 # Create important folders if none exist
 

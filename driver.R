@@ -10,6 +10,11 @@
 
 source("setup.R")
 
+#---------------- Time series preparation ------------
+
+source("analysis/prepare-time-series-data.R")
+source("analysis/check-z-score.R")
+
 #---------------- Feature calculation ----------------
 
 source("analysis/compute-features.R")
