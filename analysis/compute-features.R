@@ -48,14 +48,20 @@ extract_features_by_problem <- function(data, theproblem, z_score = TRUE){
       print(paste0("z-score applied to problem: ", theproblem, ". e.g., ", tmp2$values[1], " != ", tmp$values[1]))
       z_tracker <<- append(z_tracker, theproblem) # Keep track of which problems were not z-scored
     }
+    
+    # Calculate features
+    
+    outs <- calculate_features(tmp2, id_var = "id", time_var = "timepoint", 
+                               values_var = "values", group_var = "target", 
+                               feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL", "Kats"), 
+                               catch24 = TRUE, tsfresh_cleanup = FALSE, seed = 123)
+  } else{
+    
+    outs <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
+                               values_var = "values", group_var = "target", 
+                               feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL", "Kats"), 
+                               catch24 = TRUE, tsfresh_cleanup = FALSE, seed = 123)
   }
-  
-  # Calculate features
-  
-  outs <- calculate_features(tmp2, id_var = "id", time_var = "timepoint", 
-                             values_var = "values", group_var = "target", 
-                             feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL", "Kats"), 
-                             catch24 = TRUE, tsfresh_cleanup = FALSE, seed = 123)
   
   save(outs, file = paste0("data/feature-calcs/", theproblem, ".Rda"))
 }
