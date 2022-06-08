@@ -166,6 +166,9 @@ rm(TimeSeriesData)
 
 # Analysis I : Resamples version
 
+mypal <- c("< chance" = "#7570B3",
+           ">= chance" = "#1B9E77")
+
 p <- mean_sd_outputs %>%
   dplyr::select(-c(category, classifier_name, statistic_name)) %>%
   pivot_longer(cols = accuracy:balanced_accuracy, names_to = "metric", values_to = "values") %>%
@@ -176,27 +179,33 @@ p <- mean_sd_outputs %>%
   ungroup() %>%
   mutate(metric = ifelse(metric == "accuracy", "Accuracy", "Balanced accuracy")) %>%
   left_join(num_classes, by = c("problem" = "problem")) %>%
-  mutate(performance = ifelse(values >= chance, ">= chance", "< chance")) %>%
-  ggplot(aes(x = reorder(problem, mu), y = mu, colour = performance)) +
-  geom_errorbar(aes(ymin = lower, ymax = upper)) +
-  geom_point() +
+  mutate(performance = ifelse(mu >= chance, ">= chance", "< chance")) %>%
+  ggplot() +
+  geom_errorbar(aes(ymin = lower, ymax = upper, x = reorder(problem, mu), y = mu, colour = performance)) +
+  geom_point(aes(x = reorder(problem, mu), y = mu, colour = performance)) +
+  geom_point(aes(x = reorder(problem, mu), y = chance), colour = "black", shape = 3, size = 1) +
   labs(title = "Classification performance of mean and SD using 30 resamples",
-       subtitle = "Bars indicate 95% quantile",
+       subtitle = "Points indicate mean accuracy, bars indicate 95% quantile. Black crosses indicate chance",
        x = "Problem",
        y = "Accuracy",
        colour = NULL) +
-  scale_colour_brewer(palette = "Dark2") +
+  scale_colour_manual(values = mypal) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid.minor = element_blank(),
         legend.position = "bottom",
         strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
+        strip.text = element_text(face = "bold"),
+        axis.text.y = element_text(size = 5)) +
   facet_wrap(~metric)
 
 print(p)
+ggsave("output/mean-and-sd-resamples.pdf", plot = p)
 
 # Analysis II: Model free version
+
+mypal2 <- c("Not significant" = "#7570B3",
+            "Significant" = "#1B9E77")
 
 accuracies <- mean_sd_outputs_model_free %>%
   dplyr::select(-c(classifier_name, statistic_name, p_value_accuracy, p_value_balanced_accuracy)) %>%
@@ -212,20 +221,24 @@ significance_stats <- mean_sd_outputs_model_free %>%
   mutate(significance = factor(significance, levels = c("Not significant", "Significant")))
   
 p1 <- significance_stats %>%
-  ggplot(aes(x = reorder(problem, values), y = values, colour = significance)) +
-  geom_point() +
+  left_join(num_classes, by = c("problem" = "problem")) %>%
+  ggplot() +
+  geom_point(aes(x = reorder(problem, values), y = values, colour = significance)) +
+  geom_point(aes(x = reorder(problem, values), y = chance), colour = "black", shape = 3, size = 1) +
   labs(title = "Classification performance of mean and SD against 1000 model-free shuffles",
-       subtitle = "p-values corrected using Bonferroni correction with original alpha = 0.05",
+       subtitle = "p-values corrected using Bonferroni correction with original alpha = 0.05. Black crosses indicate chance",
        x = "Problem",
        y = "Accuracy",
        colour = "Statistical significance") +
-  scale_colour_brewer(palette = "Dark2") +
+  scale_colour_manual(values = mypal2) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid.minor = element_blank(),
         legend.position = "bottom",
         strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
+        strip.text = element_text(face = "bold"),
+        axis.text.y = element_text(size = 5)) +
   facet_wrap(~metric)
 
 print(p1)
+ggsave("output/mean-and-sd-model-free.pdf", plot = p1)
