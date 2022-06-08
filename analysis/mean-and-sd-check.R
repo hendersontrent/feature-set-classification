@@ -145,3 +145,87 @@ mean_sd_outputs_model_free <- unique(mean_sd_test$problem) %>%
   purrr::map_df(~ calculate_accuracy_model_free_safe(data = mean_sd_test, theproblem = .x))
 
 save(mean_sd_outputs_model_free, file = "data/mean_sd_outputs_model_free.Rda")
+
+#----------------------
+# Results visualisation
+#----------------------
+
+# Get chance probabilities
+
+load("data/TimeSeriesData.Rda")
+
+num_classes <- TimeSeriesData %>%
+  dplyr::select(c(target, problem)) %>%
+  distinct() %>%
+  group_by(problem) %>%
+  summarise(classes = n()) %>%
+  ungroup() %>%
+  mutate(chance = 1 / classes)
+
+rm(TimeSeriesData)
+
+# Analysis I : Resamples version
+
+p <- mean_sd_outputs %>%
+  dplyr::select(-c(category, classifier_name, statistic_name)) %>%
+  pivot_longer(cols = accuracy:balanced_accuracy, names_to = "metric", values_to = "values") %>%
+  group_by(problem, metric) %>%
+  summarise(mu = mean(values, na.rm = TRUE),
+            lower = quantile(values, prob = 0.025),
+            upper = quantile(values, prob = 0.975)) %>%
+  ungroup() %>%
+  mutate(metric = ifelse(metric == "accuracy", "Accuracy", "Balanced accuracy")) %>%
+  left_join(num_classes, by = c("problem" = "problem")) %>%
+  mutate(performance = ifelse(values >= chance, ">= chance", "< chance")) %>%
+  ggplot(aes(x = reorder(problem, mu), y = mu, colour = performance)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper)) +
+  geom_point() +
+  labs(title = "Classification performance of mean and SD using 30 resamples",
+       subtitle = "Bars indicate 95% quantile",
+       x = "Problem",
+       y = "Accuracy",
+       colour = NULL) +
+  scale_colour_brewer(palette = "Dark2") +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "bottom",
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold")) +
+  facet_wrap(~metric)
+
+print(p)
+
+# Analysis II: Model free version
+
+accuracies <- mean_sd_outputs_model_free %>%
+  dplyr::select(-c(classifier_name, statistic_name, p_value_accuracy, p_value_balanced_accuracy)) %>%
+  pivot_longer(cols = accuracy:balanced_accuracy, names_to = "metric", values_to = "values") %>%
+  mutate(metric = ifelse(metric == "accuracy", "Accuracy", "Balanced accuracy"))
+
+significance_stats <- mean_sd_outputs_model_free %>%
+  dplyr::select(-c(classifier_name, statistic_name, accuracy, balanced_accuracy)) %>%
+  pivot_longer(cols = p_value_accuracy:p_value_balanced_accuracy, names_to = "metric", values_to = "values_p") %>%
+  mutate(metric = ifelse(metric == "p_value_accuracy", "Accuracy", "Balanced accuracy")) %>%
+  inner_join(accuracies, by = c("problem" = "problem", "metric" = "metric")) %>%
+  mutate(significance = ifelse(values_p <= (0.05 / (nrow(accuracies) / 2)), "Significant", "Not significant")) %>%
+  mutate(significance = factor(significance, levels = c("Not significant", "Significant")))
+  
+p1 <- significance_stats %>%
+  ggplot(aes(x = reorder(problem, values), y = values, colour = significance)) +
+  geom_point() +
+  labs(title = "Classification performance of mean and SD against 1000 model-free shuffles",
+       subtitle = "p-values corrected using Bonferroni correction with original alpha = 0.05",
+       x = "Problem",
+       y = "Accuracy",
+       colour = "Statistical significance") +
+  scale_colour_brewer(palette = "Dark2") +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "bottom",
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold")) +
+  facet_wrap(~metric)
+
+print(p1)
