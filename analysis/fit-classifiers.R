@@ -28,6 +28,7 @@ rm(TimeSeriesData) # Clean up environment as dataframe is large
 #' @param theproblem filepath to the feature data
 #' @param tt_labels the dataframe containing train-test labels
 #' @param set Boolean whether to fit by set or not
+#' @param remove_catch24 Boolean whether to remove mean and SD from catch22 feature set
 #' @returns an object of class dataframe
 #' @author Trent Henderson
 #' 
@@ -66,6 +67,8 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, rem
   
   return(results)
 }
+
+calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
 
 data_files <- list.files("data/feature-calcs/z_score", full.names = TRUE, pattern = "\\.Rda")
 
