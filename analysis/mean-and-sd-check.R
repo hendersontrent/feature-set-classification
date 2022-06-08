@@ -226,7 +226,7 @@ p1 <- significance_stats %>%
   geom_point(aes(x = reorder(problem, values), y = values, colour = significance)) +
   geom_point(aes(x = reorder(problem, values), y = chance), colour = "black", shape = 3, size = 1) +
   labs(title = "Classification performance of mean and SD against 1000 model-free shuffles",
-       subtitle = "p-values corrected using Bonferroni correction with original alpha = 0.05. Black crosses indicate chance",
+       subtitle = "Bonferroni correction applied with original alpha = 0.05. Black crosses indicate chance",
        x = "Problem",
        y = "Accuracy",
        colour = "Statistical significance") +
