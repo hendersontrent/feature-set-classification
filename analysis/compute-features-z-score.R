@@ -21,7 +21,7 @@ load("data/TimeSeriesData.Rda")
 load("data/problem_cats.Rda")
 
 z_probs <- problem_cats %>%
-  filter() %>%
+  filter(z_score) %>%
   dplyr::select(c(problem)) %>%
   pull(problem)
 
