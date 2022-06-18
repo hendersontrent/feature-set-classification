@@ -22,6 +22,7 @@ source("analysis/mean-and-sd-check.R")
 #---------------- Feature calculation ----------------
 
 source("analysis/compute-features.R")
+source("analysis/compute-features-z-score.R")
 
 #---------------- Classifier model fits --------------
 
