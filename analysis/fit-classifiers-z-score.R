@@ -4,13 +4,14 @@
 # set by problem
 #
 # NOTE: This script requires setup.R and
-# analysis/compute-features.R to have been 
-# run first
+# analysis/compute-features.R and
+# analysis/compute-features-z-score.R to 
+# have been run first
 #-----------------------------------------
 
-#------------------------------------
-# Author: Trent Henderson, 5 May 2022
-#------------------------------------
+#--------------------------------------
+# Author: Trent Henderson, 18 June 2022
+#--------------------------------------
 
 # Load in data and summarise to just problem, ID, and train-test set indicator as I didn't bind initially
 
@@ -70,15 +71,15 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, rem
 
 calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
 
-data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
+data_files <- list.files("data/feature-calcs/z-score", full.names = TRUE, pattern = "\\.Rda")
 
-outputs <- data_files %>%
+outputs_z <- data_files %>%
   purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE, remove_catch24 = TRUE))
-  
+
 # Run function using all features at once to form an aggregate comparison later
-  
-outputs_aggregate <- data_files %>%
+
+outputs_aggregate_z <- data_files %>%
   purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = FALSE, remove_catch24 = TRUE))
 
-save(outputs, file = "data/outputs.Rda")
-save(outputs_aggregate, file = "data/outputs_aggregate.Rda") 
+save(outputs_z, file = "data/outputs_z.Rda")
+save(outputs_aggregate_z, file = "data/outputs_aggregate_z.Rda") 
