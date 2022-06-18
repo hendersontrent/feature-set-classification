@@ -64,7 +64,7 @@ extract_features_by_problem_z <- function(data, theproblem, z_score = TRUE){
                                  feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL", "Kats"), 
                                  tsfresh_cleanup = FALSE, seed = 123)
   
-  save(outs_z, file = paste0("data/feature-calcs/z-score/", theproblem, ".Rda"))
+  save(outs_z, file = paste0("data/feature-calcs/z-scored/", theproblem, ".Rda"))
 }
 
 # Run the function

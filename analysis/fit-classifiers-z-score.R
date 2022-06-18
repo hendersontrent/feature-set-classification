@@ -71,7 +71,7 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, rem
 
 calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
 
-data_files <- list.files("data/feature-calcs/z-score", full.names = TRUE, pattern = "\\.Rda")
+data_files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
 
 outputs_z <- data_files %>%
   purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE, remove_catch24 = TRUE))
