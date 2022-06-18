@@ -245,8 +245,6 @@ ggsave("output/mean-and-sd-model-free.pdf", plot = p1)
 
 #------------- Final list of problems --------------
 
-load("data/mean_sd_outputs_model_free.Rda")
-
 # Find out for which problems mean and SD significantly outperformed chance
 
 problem_cats <- mean_sd_outputs_model_free %>%

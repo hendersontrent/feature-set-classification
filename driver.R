@@ -13,7 +13,11 @@ source("setup.R")
 #---------------- Time series preparation ------------
 
 source("analysis/prepare-time-series-data.R")
+
+#---------------- Problem scaling identificaiton -----
+
 source("analysis/check-z-score.R")
+source("analysis/mean-and-sd-check.R")
 
 #---------------- Feature calculation ----------------
 
