@@ -72,4 +72,4 @@ extract_features_by_problem_z <- function(data, theproblem, z_score = TRUE){
 extract_features_by_problem_z_safe <- purrr::possibly(extract_features_by_problem_z, otherwise = NULL)
 
 unique(TimeSeriesData2$problem) %>%
-  purrr::map(~ extract_features_by_problem_z_safe(data = TimeSeriesData, theproblem = .x))
+  purrr::map(~ extract_features_by_problem_z_safe(data = TimeSeriesData2, theproblem = .x))
