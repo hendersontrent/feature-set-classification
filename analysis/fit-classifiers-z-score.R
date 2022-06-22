@@ -61,7 +61,6 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE){
 }
 
 calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
-
 data_files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
 
 outputs_z <- data_files %>%
