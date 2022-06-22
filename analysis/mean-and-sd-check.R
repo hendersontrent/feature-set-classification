@@ -242,3 +242,21 @@ p1 <- significance_stats %>%
 
 print(p1)
 ggsave("output/mean-and-sd-model-free.pdf", plot = p1)
+
+#------------- Final list of problems --------------
+
+# Find out for which problems mean and SD significantly outperformed chance
+
+problem_cats <- mean_sd_outputs_model_free %>%
+  mutate(category = ifelse(p_value_accuracy <= 0.001, "Significant", "Non-significant"),
+         z_score = ifelse(category == "Significant", TRUE, FALSE))
+
+save(problem_cats, file = "data/problem_cats.Rda")
+
+# Generate proportion in each category for high-level understanding
+
+problem_cats %>%
+  group_by(category) %>%
+  summarise(counter = n()) %>%
+  ungroup() %>%
+  mutate(props = counter / sum(counter))

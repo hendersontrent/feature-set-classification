@@ -279,6 +279,8 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
 # Model fitting
 #--------------
 
+fit_resamples_safe <- purrr::possibly(fit_resamples, otherwise = NULL)
+
 fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, use_k_fold, num_folds, num_resamples = 30, set = NULL){
   
   # Set up input matrices
@@ -329,16 +331,16 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
   # Run model fitting via resampling
   
   finalOuts <- 1:num_resamples %>%
-    purrr::map_df(~ fit_resamples(data = tmp_mods, 
-                                  train_rows = train_rows, 
-                                  test_rows = test_rows, 
-                                  train_groups = train_props, 
-                                  test_groups = test_props, 
-                                  x = .x, 
-                                  test_method = test_method, 
-                                  use_balanced_accuracy = use_balanced_accuracy,
-                                  use_k_fold = use_k_fold, 
-                                  num_folds = num_folds))
+    purrr::map_df(~ fit_resamples_safe(data = tmp_mods, 
+                                       train_rows = train_rows, 
+                                       test_rows = test_rows, 
+                                       train_groups = train_props, 
+                                       test_groups = test_props, 
+                                       x = .x, 
+                                       test_method = test_method, 
+                                       use_balanced_accuracy = use_balanced_accuracy,
+                                       use_k_fold = use_k_fold, 
+                                       num_folds = num_folds))
   
   # Return final dataframe
   
