@@ -37,8 +37,8 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, rem
   
   files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
-  
   load(theproblem)
+  problem_name <- unique(outs$problem)
   
   # Remove Mean and SD from catch22 if specified (e.g., for un-normalised data)
   
@@ -63,13 +63,13 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE, rem
                                              use_balanced_accuracy = TRUE,
                                              use_k_fold = TRUE, 
                                              num_folds = 10, 
-                                             num_resamples = 30)
+                                             num_resamples = 30) %>%
+    mutate(problem = problem_name)
   
   return(results)
 }
 
 calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
-
 data_files <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rda")
 
 outputs <- data_files %>%
