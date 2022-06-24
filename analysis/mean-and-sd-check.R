@@ -248,7 +248,7 @@ ggsave("output/mean-and-sd-model-free.pdf", plot = p1)
 # Find out for which problems mean and SD significantly outperformed chance
 
 problem_cats <- mean_sd_outputs_model_free %>%
-  mutate(category = ifelse(p_value_accuracy <= 0.001, "Significant", "Non-significant"),
+  mutate(category = ifelse(p_value_accuracy < 0.05, "Significant", "Non-significant"),
          z_score = ifelse(category == "Significant", TRUE, FALSE))
 
 save(problem_cats, file = "data/problem_cats.Rda")
