@@ -15,6 +15,22 @@
 
 load("data/TimeSeriesData.Rda")
 
+# Load z-score list
+
+load("data/problem_cats.Rda")
+
+z_probs <- problem_cats %>%
+  filter(!z_score) %>%
+  dplyr::select(c(problem)) %>%
+  pull(problem)
+
+# Filter by list
+
+TimeSeriesData2 <- TimeSeriesData %>%
+  filter(problem %in% z_probs)
+
+rm(TimeSeriesData)
+
 # Fix Python environment to where the Python libraries are installed on my machine
 
 init_theft("~/opt/anaconda3/bin/python")
@@ -28,7 +44,7 @@ init_theft("~/opt/anaconda3/bin/python")
 #' @author Trent Henderson
 #' 
 
-extract_features_by_problem <- function(data, theproblem, z_score = TRUE){
+extract_features_by_problem <- function(data, theproblem){
   
   message(paste0("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem))))
   
@@ -51,5 +67,5 @@ extract_features_by_problem <- function(data, theproblem, z_score = TRUE){
 
 extract_features_by_problem_safe <- purrr::possibly(extract_features_by_problem, otherwise = NULL)
 
-unique(TimeSeriesData$problem) %>%
-  purrr::map(~ extract_features_by_problem_safe(data = TimeSeriesData, theproblem = .x))
+unique(TimeSeriesData2$problem) %>%
+  purrr::map(~ extract_features_by_problem_safe(data = TimeSeriesData2, theproblem = .x))

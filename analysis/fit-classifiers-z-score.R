@@ -33,11 +33,12 @@ rm(TimeSeriesData) # Clean up environment as dataframe is large
 #' @author Trent Henderson
 #' 
 
-calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE){
+calculate_accuracy_by_problem_z <- function(theproblem, tt_labels, set = TRUE){
   
   files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
   load(theproblem)
+  problem_name <- unique(outs_z$problem)
   
   # Join in train-test indicator
   
@@ -55,21 +56,22 @@ calculate_accuracy_by_problem <- function(theproblem, tt_labels, set = TRUE){
                                              use_balanced_accuracy = TRUE,
                                              use_k_fold = TRUE, 
                                              num_folds = 10, 
-                                             num_resamples = 30)
+                                             num_resamples = 30) %>%
+    mutate(problem = problem_name)
   
   return(results)
 }
 
-calculate_accuracy_by_problem_safe <- purrr::possibly(calculate_accuracy_by_problem, otherwise = NULL)
+calculate_accuracy_by_problem_z_safe <- purrr::possibly(calculate_accuracy_by_problem_z, otherwise = NULL)
 data_files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
 
 outputs_z <- data_files %>%
-  purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE))
+  purrr::map_df(~ calculate_accuracy_by_problem_z_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE))
 
 # Run function using all features at once to form an aggregate comparison later
 
 outputs_aggregate_z <- data_files %>%
-  purrr::map_df(~ calculate_accuracy_by_problem_safe(theproblem = .x, tt_labels = train_test_ids, set = FALSE))
+  purrr::map_df(~ calculate_accuracy_by_problem_z_safe(theproblem = .x, tt_labels = train_test_ids, set = FALSE))
 
 save(outputs_z, file = "data/outputs_z.Rda")
 save(outputs_aggregate_z, file = "data/outputs_aggregate_z.Rda") 
