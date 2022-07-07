@@ -21,7 +21,11 @@ library(Cairo)
 # Create important folders if none exist
 
 if(!dir.exists('analysis')) dir.create('analysis')
+if(!dir.exists('analysis/z-scored')) dir.create('analysis/z-scored')
+if(!dir.exists('analysis/non-z-scored')) dir.create('analysis/non-z-scored')
 if(!dir.exists('output')) dir.create('output')
+if(!dir.exists('output/z-scored')) dir.create('output/z-scored')
+if(!dir.exists('output/non-z-scored')) dir.create('output/non-z-scored')
 if(!dir.exists('data')) dir.create('data')
 if(!dir.exists('data/feature-calcs')) dir.create('data/feature-calcs')
 if(!dir.exists('data/feature-calcs/z-scored')) dir.create('data/feature-calcs/z-scored')

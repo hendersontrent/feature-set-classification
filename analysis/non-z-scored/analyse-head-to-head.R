@@ -12,17 +12,6 @@
 
 load("data/outputs.Rda")
 
-# Remove NULL entries that errored
-
-outputs_filtered <- outputs[!sapply(outputs, is.null)]
-
-# Get main results by problem and rowbind
-
-main_models <- 1:length(outputs_filtered) %>%
-  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x))
-
-rm(outputs, outputs_filtered)
-
 #----------------- Scatterplots -------------------
 
 
@@ -136,7 +125,7 @@ draw_lollipops <- function(set1, set2, alpha = 0.05, correct = FALSE){
           panel.grid.minor = element_blank(),
           legend.position = "bottom")
   
-  ggsave(paste0("output/lollipop_", set1, "_vs_", set2, ".pdf"), p)
+  ggsave(paste0("output/non-z-scored/lollipop_", set1, "_vs_", set2, ".pdf"), p)
 }
 
 # Get all pairwise combinations to map over

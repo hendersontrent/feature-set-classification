@@ -27,9 +27,24 @@ source("analysis/compute-features-z-score.R")
 #---------------- Classifier model fits --------------
 
 source("analysis/fit-classifiers.R")
+source("analysis/fit-classifiers-z-score.R")
 
 #---------------- Comparative analysis ---------------
 
-source("analysis/analyse-head-to-head.R")
-source("analysis/analyse-performance.R")
-source("analysis/analyse_sets_vs_overall.R")
+#-------------
+# non-z-scored
+#-------------
+
+source("analysis/non-z-scored/comp-to-benchmarks.R")
+source("analysis/non-z-scored/analyse-performance.R")
+source("analysis/non-z-scored/analyse-head-to-head.R")
+source("analysis/non-z-scored/analyse_sets_vs_overall.R")
+
+#---------
+# z-scored
+#---------
+
+source("analysis/z-scored/comp-to-benchmarks.R")
+source("analysis/z-scored/analyse-performance.R")
+source("analysis/z-scored/analyse-head-to-head.R")
+source("analysis/z-scored/analyse_sets_vs_overall.R")

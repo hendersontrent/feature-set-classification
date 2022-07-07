@@ -18,16 +18,9 @@
 load("data/outputs.Rda")
 load("data/outputs_aggregate.Rda")
 
-# Remove NULL entries that errored
-
-outputs_filtered <- outputs[!sapply(outputs, is.null)]
-outputs_aggregate_filtered <- outputs_aggregate[!sapply(outputs_aggregate, is.null)]
-rm(outputs, outputs_aggregate)
-
 # Run the function
 
-main_models <- 1:length(outputs_filtered) %>%
-  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x)) %>%
+main_models <- outputs %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100) %>%
   group_by(problem) %>%
@@ -40,8 +33,7 @@ main_models <- 1:length(outputs_filtered) %>%
   ungroup() %>%
   rename(method_set = method)
 
-main_models_aggregate <- 1:length(outputs_aggregate_filtered) %>%
-  purrr::map_df(~ pull_main_models(results = outputs_aggregate_filtered, x = .x)) %>%
+main_models_aggregate <- outputs_aggregate %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100,
          method = "All Features") %>%
@@ -100,4 +92,4 @@ p <- all_mains %>%
         panel.grid.minor = element_blank())
 
 print(p)
-ggsave("output/all_versus_sets.pdf", p)
+ggsave("output/non-z-scored/all_versus_sets.pdf", p)

@@ -38,7 +38,8 @@ calculate_accuracy_by_problem_z <- function(theproblem, tt_labels, set = TRUE){
   files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
   load(theproblem)
-  problem_name <- unique(outs_z$problem)
+  problem_name <- gsub(".*/", "\\1", theproblem)
+  problem_name <- gsub(".Rda", "\\1", problem_name)
   
   # Join in train-test indicator
   
@@ -56,7 +57,8 @@ calculate_accuracy_by_problem_z <- function(theproblem, tt_labels, set = TRUE){
                                              use_balanced_accuracy = TRUE,
                                              use_k_fold = TRUE, 
                                              num_folds = 10, 
-                                             num_resamples = 30) %>%
+                                             num_resamples = 30,
+                                             problem_name = problem_name) %>%
     mutate(problem = problem_name)
   
   return(results)

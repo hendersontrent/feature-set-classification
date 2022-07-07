@@ -455,6 +455,7 @@ clean_by_set <- function(data, themethod = NULL){
 #' @param use_k_fold a Boolean specifying whether to use k-fold procedures for generating a distribution of classification accuracy estimates. Defaults to \code{TRUE}
 #' @param num_folds an integer specifying the number of folds (train-test splits) to perform if \code{use_k_fold} is set to \code{TRUE}. Defaults to \code{10}
 #' @param num_resamples an integer specifying the number of resamples to compute. Defaults to \code{30}
+#' @param problem_name the string of the problem to calculate models for
 #' @return an object of class list containing dataframe summaries of the classification models and a \code{ggplot} object if \code{by_set} is \code{TRUE}
 #' @author Trent Henderson
 #' @export
@@ -476,14 +477,16 @@ clean_by_set <- function(data, themethod = NULL){
 #'   use_balanced_accuracy = FALSE,
 #'   use_k_fold = TRUE,
 #'   num_folds = 10,
-#'   num_resamples = 30)
+#'   num_resamples = 30,
+#'   problem_name = "ADIAC")
 #' }
 #'
 
 fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "group",
                                          by_set = FALSE, test_method = "gaussprRadial",
                                          use_balanced_accuracy = FALSE, use_k_fold = TRUE, 
-                                         num_folds = 10, num_resamples = 30){
+                                         num_folds = 10, num_resamples = 30,
+                                         problem_name){
   
   #---------- Check arguments ------------
   
@@ -618,7 +621,8 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
   
   output <- output %>%
     dplyr::mutate(classifier_name = classifier_name,
-                  statistic_name = statistic_name)
+                  statistic_name = statistic_name,
+                  problem = problem_name)
       
   return(output)
 }

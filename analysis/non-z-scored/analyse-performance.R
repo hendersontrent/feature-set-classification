@@ -17,42 +17,6 @@
 
 load("data/outputs.Rda")
 
-# Remove NULL entries that errored
-
-outputs_filtered <- outputs[!sapply(outputs, is.null)]
-rm(outputs)
-
-#' Pull only main results for every problem and feature set
-#' @param results the list containing classification results
-#' @param x the index of the problem to get results for
-#' @returns an object of class dataframe
-#' @author Trent Henderson
-#' 
-
-pull_main_models <- function(results, x){
-  
-  # Filter list
-  
-  tmp <- results[[x]]
-  
-  # Extract relevant dataframe and filter to main models
-  
-  tmp <- tmp$RawClassificationResults %>%
-    filter(category == "Main") %>%
-    mutate(problem = names(results)[[x]])
-  
-  return(tmp)
-}
-
-# Run the function
-
-main_models <- 1:length(outputs_filtered) %>%
-  purrr::map_df(~ pull_main_models(results = outputs_filtered, x = .x)) %>%
-  mutate(accuracy = accuracy * 100,
-         balanced_accuracy = balanced_accuracy * 100,
-         accuracy_sd = accuracy_sd * 100,
-         balanced_accuracy_sd = balanced_accuracy_sd * 100) # Just to make the plots nicer
-
 #------------------ Analysis I: Distribution of accuracies -----------------
 
 # GOAL: Understand distribution of performance across all problems
@@ -61,7 +25,7 @@ main_models <- 1:length(outputs_filtered) %>%
 # Boxplot
 #--------
 
-p <- main_models %>%
+p <- outputs %>%
   ggplot(aes(x = method, y = accuracy, colour = method)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.6) +
@@ -75,13 +39,13 @@ p <- main_models %>%
         legend.position = "none")
 
 print(p)
-ggsave("output/boxplot.pdf", p)
+ggsave("output/non-z-scored/boxplot.pdf", p)
 
 #------------
 # Violin plot
 #------------
 
-p1 <- main_models %>%
+p1 <- outputs %>%
   ggplot(aes(x = method, y = accuracy, colour = method)) +
   geom_violin() +
   geom_jitter(alpha = 0.6) +
@@ -95,13 +59,13 @@ p1 <- main_models %>%
         legend.position = "none")
 
 print(p1)
-ggsave("output/violin.pdf", p1)
+ggsave("output/non-z-scored/violin.pdf", p1)
 
 #----------
 # Histogram
 #----------
 
-p2 <- main_models %>%
+p2 <- outputs %>%
   ggplot(aes(x = accuracy, fill = method)) +
   geom_histogram(aes(y = ..density..), binwidth = 5) +
   labs(title = "Classification accuracy by feature set across UCR/UEA repository univariate problems",
@@ -115,7 +79,7 @@ p2 <- main_models %>%
   facet_wrap(~method)
 
 print(p2)
-ggsave("output/histogram.pdf", p2)
+ggsave("output/non-z-scored/histogram.pdf", p2)
 
 #------------------ Analysis II: Accuracy by problem complexity ------------
 
@@ -151,7 +115,7 @@ classes <- classes %>%
 
 # Join class numbers to classification results and draw plot
 
-p3 <- main_models %>%
+p3 <- outputs %>%
   left_join(classes, by = c("problem" = "problem")) %>%
   ggplot(aes(x = num_classes, y = accuracy, colour = method)) +
   geom_jitter(alpha = 0.6) +
@@ -166,7 +130,7 @@ p3 <- main_models %>%
         legend.position = "bottom")
 
 print(p3)
-ggsave("output/complexity-scatter.pdf", p3)
+ggsave("output/non-z-scored/complexity-scatter.pdf", p3)
 
 #--------
 # Barplot
@@ -174,7 +138,7 @@ ggsave("output/complexity-scatter.pdf", p3)
 
 # Calculate mean and +- 1 SD for each unique class numbers and plot results
 
-p4 <- main_models %>%
+p4 <- outputs %>%
   left_join(classes, by = c("problem" = "problem")) %>%
   group_by(num_classes, method) %>%
   summarise(avg = mean(accuracy, na.rm = TRUE),
@@ -197,4 +161,4 @@ p4 <- main_models %>%
   facet_wrap(~method)
 
 print(p4)
-ggsave("output/complexity-bar.pdf", p4)
+ggsave("output/non-z-scored/complexity-bar.pdf", p4)
