@@ -33,7 +33,7 @@ extract_features_by_problem_z <- function(data, theproblem){
   
   message(paste0("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem))))
   
-  # Filter to problem of interest
+  # Filter to problem of interest and apply z-score to values
   
   tmp <- data %>%
     filter(problem == theproblem) %>%
