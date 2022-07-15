@@ -10,7 +10,7 @@
 
 # Load classification results
 
-load("data/outputs.Rda")
+load("data/outputs_z.Rda")
 
 #----------------- Scatterplots -------------------
 

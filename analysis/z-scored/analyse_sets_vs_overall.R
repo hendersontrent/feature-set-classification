@@ -15,12 +15,12 @@
 
 # Load classification results
 
-load("data/outputs.Rda")
-load("data/outputs_aggregate.Rda")
+load("data/outputs_z.Rda")
+load("data/outputs_aggregate_z.Rda")
 
 # Run the function
 
-main_models <- outputs %>%
+main_models <- outputs_z %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100) %>%
   group_by(problem, method) %>%
@@ -35,7 +35,7 @@ main_models <- outputs %>%
   dplyr::select(-c(ranker)) %>%
   rename(balanced_accuracy = balanced_accuracy_mean)
 
-main_models_aggregate <- outputs_aggregate %>%
+main_models_aggregate <- outputs_aggregate_z %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100,
          method = "All Features") %>%
@@ -66,9 +66,9 @@ all_mains <- main_models %>%
 mypal <- c("All Features" = "black",
            "catch22" = "#1B9E77",
            "feasts" = "#D95F02",
-           "kats" = "#7570B3",
+           "Kats" = "#7570B3",
            "tsfeatures" = "#E7298A",
-           "tsfel" = "#66A61E",
+           "TSFEL" = "#66A61E",
            "tsfresh" = "#E6AB02")
 
 # Define coordinates for upper triangle to shade
@@ -99,4 +99,4 @@ p <- all_mains %>%
         panel.grid.minor = element_blank())
 
 print(p)
-ggsave("output/non-z-scored/all_versus_sets.pdf", p)
+ggsave("output/z-scored/all_versus_sets.pdf", p)
