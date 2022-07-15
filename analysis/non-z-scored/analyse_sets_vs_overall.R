@@ -23,15 +23,17 @@ load("data/outputs_aggregate.Rda")
 main_models <- outputs %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100) %>%
-  group_by(problem) %>%
-  mutate(ranker = dense_rank(-balanced_accuracy)) %>%
-  ungroup() %>%
-  filter(ranker == 1) %>%
   group_by(problem, method) %>%
-  summarise(balanced_accuracy = mean(balanced_accuracy, na.rm = TRUE),
+  summarise(balanced_accuracy_mean = mean(balanced_accuracy, na.rm = TRUE),
             balanced_accuracy_sd = sd(balanced_accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
-  rename(method_set = method)
+  rename(method_set = method) %>%
+  group_by(problem) %>%
+  mutate(ranker = dense_rank(-balanced_accuracy_mean)) %>%
+  ungroup() %>%
+  filter(ranker == 1) %>%
+  dplyr::select(-c(ranker)) %>%
+  rename(balanced_accuracy = balanced_accuracy_mean)
 
 main_models_aggregate <- outputs_aggregate %>%
   mutate(accuracy = accuracy * 100,
@@ -50,7 +52,12 @@ all_mains <- main_models %>%
          upper_x = balanced_accuracy + 1 * balanced_accuracy_sd,
          lower_y = balanced_accuracy_all - 1 * balanced_accuracy_sd_all,
          upper_y = balanced_accuracy_all + 1 * balanced_accuracy_sd_all) %>%
-  mutate(top_performer = ifelse(balanced_accuracy > balanced_accuracy_all, method_set, method))
+  mutate(top_performer = ifelse(balanced_accuracy > balanced_accuracy_all, method_set, method),
+         method = case_when(
+           method == "tsfel" ~ "TSFEL",
+           method == "kats"  ~ "Kats",
+           TRUE              ~ method)) %>%
+  drop_na()
 
 #------------------ Analysis I: Top performer per problem -----------------
 
@@ -79,8 +86,8 @@ p <- all_mains %>%
   geom_point(aes(colour = top_performer), size = 2) +
   annotate("text", x = 75, y = 10, label = "Single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +
-  labs(title = "Comparison of top classifier across UCR/UEA repository univariate problems",
-       subtitle = "Error bars are +- 1 SD obtained through 10-fold CV",
+  labs(title = "Comparison of top feature sets across UCR/UEA repository univariate problems",
+       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples",
        x = "Balanced classification accuracy individual set (%)",
        y = "Balanced classification accuracy all features (%)",
        colour = NULL) +
