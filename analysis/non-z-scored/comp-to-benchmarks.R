@@ -23,7 +23,8 @@ benchmarks <- pull_benchmark_results() %>%
   mutate(ranker = dense_rank(-accuracy_bench)) %>%
   ungroup() %>%
   filter(ranker == 1) %>%
-  dplyr::select(c(ranker, accuracy))
+  dplyr::select(c(method, problem, accuracy_bench)) %>%
+  rename(method_bench = method)
 
  # Load classification results
 
@@ -32,8 +33,12 @@ load("data/outputs_aggregate.Rda")
 
 # Concatenate the three datasets
 
+outputs <- outputs %>%
+  dplyr::select(c(method, problem, accuracy))
+
 outputs_aggregate <- outputs_aggregate %>%
-  mutate(method = "All features")
+  mutate(method = "All features") %>%
+  dplyr::select(c(method, problem, accuracy))
 
 main_models <- bind_rows(outputs, outputs_aggregate) %>%
   group_by(problem, method) %>%
@@ -44,10 +49,15 @@ main_models <- bind_rows(outputs, outputs_aggregate) %>%
   mutate(ranker = dense_rank(-accuracy)) %>%
   ungroup() %>%
   filter(ranker == 1) %>%
-  dplyr::select(c(ranker))
+  dplyr::select(-c(ranker))
 
 main_models <- main_models %>%
-  inner_join(benchmarks, by = c("problem" = "problem"))
+  inner_join(benchmarks, by = c("problem" = "problem")) %>%
+  mutate(method = case_when(
+          method == "tsfel" ~ "TSFEL",
+          method == "kats"  ~ "Kats",
+          TRUE              ~ method)) %>%
+  mutate(top_performer = ifelse(accuracy > accuracy_bench, method, method_bench))
 
 rm(benchmarks, outputs, outputs_aggregate)
 
@@ -71,9 +81,9 @@ mypal <- c("All Features" = "grey50",
            "TSF" = "black",
            "catch22" = "#1B9E77",
            "feasts" = "#D95F02",
-           "kats" = "#7570B3",
+           "Kats" = "#7570B3",
            "tsfeatures" = "#E7298A",
-           "tsfel" = "#66A61E",
+           "TSFEL" = "#66A61E",
            "tsfresh" = "#E6AB02")
 
 # Define coordinates for upper triangle to shade
@@ -86,15 +96,15 @@ p <- main_models %>%
   ggplot(aes(x = accuracy, y = accuracy_bench)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
-  geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
-  geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer)) +
+  #geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
+  #geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer)) +
   geom_point(aes(colour = top_performer), size = 2) +
-  annotate("text", x = 75, y = 10, label = "Single feature set better") +
-  annotate("text", x = 25, y = 90, label = "All features better") +
-  labs(title = "Comparison of top classifier across UCR/UEA repository univariate problems",
+  annotate("text", x = 75, y = 10, label = "Time-series features better") +
+  annotate("text", x = 25, y = 90, label = "Leading benchmark better") +
+  labs(title = "Comparison of feature sets versus benchmark algorithms across UCR/UEA repository univariate problems",
        subtitle = "Plots a subset of 54 problems that preliminary analysis showed mean and variance did not outperform chance",
-       x = "Classification accuracy individual set (%)",
-       y = "Classification accuracy all features (%)",
+       x = "Classification accuracy time-series features (%)",
+       y = "Classification accuracy benchmark algorithm (%)",
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
