@@ -67,8 +67,8 @@ z_scores <- z_scores %>%
 p <- z_scores %>%
   ggplot(aes(x = method, y = problem, fill = z)) +
   geom_tile() +
-  labs(title = "Comparison of z-score of mean accuracy across UEA/UCR repository univariate problems",
-       subtitle = "Performance scores calculated relative to mean and SD for each problem",
+  labs(title = "Comparison of z-score accuracy across UEA/UCR repository univariate problems",
+       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem",
        x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score") +
