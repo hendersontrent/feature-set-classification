@@ -45,3 +45,7 @@ for(f in r_files){
 }
 
 rm(r_files)
+
+# Suppress dplyr::summarise info
+
+options(dplyr.summarise.inform = FALSE)

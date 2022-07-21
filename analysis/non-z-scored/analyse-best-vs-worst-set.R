@@ -65,7 +65,7 @@ both <- best %>%
 #---------------------- Calculate p-values -----------------------
 
 p_values <- unique(both$problem) %>%
-  purrr::map_df(~ calculate_p_values(data = outputs, summary_data = both, theproblem = .x))
+  purrr::map_df(~ calculate_p_values(data = outputs, summary_data = both, theproblem = .x, all_features = FALSE))
 
 both <- both %>%
   inner_join(p_values, by = c("problem" = "problem")) %>%
