@@ -36,7 +36,7 @@ calculate_p_values <- function(data, summary_data, theproblem, all_features = FA
   
   sd_check <- tmp_data %>%
     group_by(method) %>%
-    summarise(stddev = sd(balanced_accuracy)) %>%
+    summarise(stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
     ungroup()
   
   # Do calculation
