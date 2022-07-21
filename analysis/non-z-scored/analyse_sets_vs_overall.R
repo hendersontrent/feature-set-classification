@@ -66,9 +66,9 @@ all_mains <- main_models %>%
 mypal <- c("All Features" = "black",
            "catch22" = "#1B9E77",
            "feasts" = "#D95F02",
-           "kats" = "#7570B3",
+           "Kats" = "#7570B3",
            "tsfeatures" = "#E7298A",
-           "tsfel" = "#66A61E",
+           "TSFEL" = "#66A61E",
            "tsfresh" = "#E6AB02")
 
 # Define coordinates for upper triangle to shade
