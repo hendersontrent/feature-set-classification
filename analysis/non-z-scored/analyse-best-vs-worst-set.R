@@ -17,6 +17,12 @@
 
 load("data/outputs.Rda")
 
+outputs <- outputs %>%
+  mutate(method = case_when(
+    method == "tsfel" ~ "TSFEL",
+    method == "kats"  ~ "Kats",
+    TRUE              ~ method))
+
 # Find best feature set by problem
 
 best <- outputs %>%
@@ -51,18 +57,43 @@ worst <- outputs %>%
 
 both <- best %>%
   inner_join(worst, by = c("problem" = "problem")) %>%
-  mutate(best_method = case_when(
-    best_method == "tsfel" ~ "TSFEL",
-    best_method == "kats"  ~ "Kats",
-    TRUE                   ~ best_method)) %>%
-  mutate(worst_method = case_when(
-    worst_method == "tsfel" ~ "TSFEL",
-    worst_method == "kats"  ~ "Kats",
-    TRUE                    ~ worst_method)) %>%
   mutate(lower_x = worst_balanced_accuracy_mean - 1 * worst_balanced_accuracy_sd,
          upper_x = worst_balanced_accuracy_mean + 1 * worst_balanced_accuracy_sd,
          lower_y = best_balanced_accuracy_mean - 1 * best_balanced_accuracy_sd,
          upper_y = best_balanced_accuracy_mean + 1 * best_balanced_accuracy_sd)
+
+#---------------------- Calculate p-values -----------------------
+
+#' Function to calculate p-values between two feature sets using resamples
+#' @param data the dataframe of raw classification accuracy results
+#' @param summary_data the dataframe of best and worst results
+#' @param theproblem the string name of the problem to calculate for
+#' @returns object of class dataframe
+#' @author Trent Henderson
+#' 
+
+calculate_p_values <- function(data, summary_data, theproblem){
+  
+  tmp_summ_data <- summary_data %>%
+    filter(problem == theproblem)
+  
+  tmp_data <- data %>%
+    filter(problem == theproblem) %>%
+    filter(method %in% append(unique(tmp_summ_data$best_method), unique(tmp_summ_data$worst_method)))
+  
+  # Do calculation
+  
+  t_test <- t.test(balanced_accuracy ~ method, data = tmp_data, var.equal = FALSE)
+  outs <- data.frame(problem = theproblem, t_statistic = t_test$statistic, p_value = t_test$p.value)
+}
+
+p_values <- unique(both$problem) %>%
+  purrr::map_df(~ calculate_p_values(data = outputs, summary_data = both, theproblem = .x))
+
+both <- both %>%
+  inner_join(p_values, by = c("problem" = "problem")) %>%
+  mutate(significant = ifelse(p_value < 0.05, "Significant difference", "Non-significant difference"),
+         top_performer = ifelse(significant == "Significant difference", best_method, "Non-Significant difference"))
 
 rm(outputs, best, worst)
 
@@ -75,7 +106,8 @@ mypal <- c("catch22" = "#1B9E77",
            "Kats" = "#7570B3",
            "tsfeatures" = "#E7298A",
            "TSFEL" = "#66A61E",
-           "tsfresh" = "#E6AB02")
+           "tsfresh" = "#E6AB02",
+           "Non-Significant difference" = "grey50")
 
 # Define coordinates for upper triangle to shade
 
@@ -87,13 +119,13 @@ p <- both %>%
   ggplot(aes(x = worst_balanced_accuracy_mean, y = best_balanced_accuracy_mean)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
-  geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = best_method)) +
-  geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = best_method)) +
-  geom_point(aes(colour = best_method), size = 2) +
-  annotate("text", x = 75, y = 10, label = "Best feature set") +
-  annotate("text", x = 25, y = 90, label = "Worst feature set") +
+  geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
+  geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer)) +
+  geom_point(aes(colour = top_performer), size = 2) +
+  annotate("text", x = 75, y = 10, label = "Worst feature set") +
+  annotate("text", x = 25, y = 90, label = "Best feature set") +
   labs(title = "Comparison of best and worst feature sets across UCR/UEA repository univariate problems",
-       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples",
+       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples. Colour indicates p < .05 difference",
        x = "Balanced classification accuracy worst set (%)",
        y = "Balanced classification accuracy best set (%)",
        colour = "Best feature set") +
@@ -105,4 +137,4 @@ p <- both %>%
         panel.grid.minor = element_blank())
 
 print(p)
-ggsave("output/non-z-scored/all_versus_sets.pdf", p)
+ggsave("output/non-z-scored/best_versus_worst_set.pdf", p)
