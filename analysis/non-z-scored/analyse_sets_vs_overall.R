@@ -122,7 +122,7 @@ p <- all_mains %>%
        subtitle = "Error bars are +/- 1 SD obtained over 30 resamples. Colour indicates p < .05 difference",
        x = "Balanced classification accuracy of the best individual set (%)",
        y = "Balanced classification accuracy of all features (%)",
-       colour = NULL) +
+       colour = "Best feature set") +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
   scale_colour_manual(values = mypal) +
