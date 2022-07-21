@@ -18,6 +18,12 @@
 load("data/outputs.Rda")
 load("data/outputs_aggregate.Rda")
 
+outputs <- outputs %>%
+  mutate(method = case_when(
+    method == "tsfel" ~ "TSFEL",
+    method == "kats"  ~ "Kats",
+    TRUE              ~ method))
+
 # Run the function
 
 main_models <- outputs %>%
@@ -52,23 +58,49 @@ all_mains <- main_models %>%
          upper_x = balanced_accuracy + 1 * balanced_accuracy_sd,
          lower_y = balanced_accuracy_all - 1 * balanced_accuracy_sd_all,
          upper_y = balanced_accuracy_all + 1 * balanced_accuracy_sd_all) %>%
-  mutate(top_performer = ifelse(balanced_accuracy > balanced_accuracy_all, method_set, method),
-         method = case_when(
-           method == "tsfel" ~ "TSFEL",
-           method == "kats"  ~ "Kats",
-           TRUE              ~ method)) %>%
+  mutate(top_performer = ifelse(balanced_accuracy > balanced_accuracy_all, method_set, method)) %>%
   drop_na()
+
+#---------------------- Calculate p-values -----------------------
+
+outputs_both <- outputs %>%
+  dplyr::select(c(problem, method, balanced_accuracy, resample))
+
+outputs_aggregate <- outputs_aggregate %>%
+  dplyr::select(c(problem, balanced_accuracy, resample)) %>%
+  mutate(method = "All Features")
+
+outputs_both <- bind_rows(outputs_both, outputs_aggregate)
+
+p_values <- unique(all_mains$problem) %>%
+  purrr::map_df(~ calculate_p_values(data = outputs_both, summary_data = all_mains, theproblem = .x, all_features = TRUE))
+
+all_mains <- all_mains %>%
+  inner_join(p_values, by = c("problem" = "problem")) %>%
+  mutate(significant = case_when(
+          is.na(p_value) ~ "Zero variance for one/more sets",
+          p_value < .05  ~ "Significant difference",
+          TRUE           ~ "Non-Significant difference"),
+        top_performer = case_when(
+          significant == "Significant difference" & balanced_accuracy > balanced_accuracy_all ~ method_set,
+          significant == "Significant difference" & balanced_accuracy < balanced_accuracy_all ~ method,
+          significant == "Non-Significant difference"                                         ~ "Non-Significant difference",
+          significant == "Zero variance for one/more sets"                                  ~ "Zero variance for one/more sets"))
+
+rm(outputs_both, outputs, outputs_aggregate)
 
 #------------------ Analysis I: Top performer per problem -----------------
 
 # Create palette for whoever is top performer
 
 mypal <- c("All Features" = "black",
+           "Non-Significant difference" = "grey50",
+           "Zero variance for one/more sets" = "grey75",
            "catch22" = "#1B9E77",
            "feasts" = "#D95F02",
-           "kats" = "#7570B3",
+           "Kats" = "#7570B3",
            "tsfeatures" = "#E7298A",
-           "tsfel" = "#66A61E",
+           "TSFEL" = "#66A61E",
            "tsfresh" = "#E6AB02")
 
 # Define coordinates for upper triangle to shade
@@ -87,10 +119,10 @@ p <- all_mains %>%
   annotate("text", x = 75, y = 10, label = "Single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +
   labs(title = "Comparison of top feature sets across UCR/UEA repository univariate problems",
-       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples",
-       x = "Balanced classification accuracy individual set (%)",
-       y = "Balanced classification accuracy all features (%)",
-       colour = NULL) +
+       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples. Colour indicates p < .05 difference",
+       x = "Balanced classification accuracy of the best individual set (%)",
+       y = "Balanced classification accuracy of all features (%)",
+       colour = "Best feature set") +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
   scale_colour_manual(values = mypal) +

@@ -86,6 +86,27 @@ mypal <- c("All Features" = "grey50",
            "TSFEL" = "#66A61E",
            "tsfresh" = "#E6AB02")
 
+myshapes <- c("All Features" = 16,
+              "TS-CHIEF" = 0,
+              "HIVE-COTE v1.0" = 1,
+              "ROCKET" = 2,
+              "InceptionTime" = 3,
+              "STC" = 4,
+              "ResNet" = 5,
+              "ProximityForest" = 6,
+              "WEASEL" = 7,
+              "S-BOSS" = 8,
+              "cBOSS" = 9,
+              "BOSS" = 10,
+              "RISE" = 11,
+              "TSF" = 12,
+              "catch22" = 16,
+              "feasts" = 16,
+              "Kats" = 16,
+              "tsfeatures" = 16,
+              "TSFEL" = 16,
+              "tsfresh" = 16)
+
 # Define coordinates for upper triangle to shade
 
 upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
@@ -98,19 +119,24 @@ p <- main_models %>%
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   #geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
   #geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer)) +
-  geom_point(aes(colour = top_performer), size = 2) +
-  annotate("text", x = 75, y = 10, label = "Time-series features better") +
-  annotate("text", x = 25, y = 90, label = "Leading benchmark better") +
+  geom_point(aes(colour = top_performer, shape = top_performer), size = 2) +
+  annotate("text", x = 80, y = 10, label = "Time-series features better") +
+  annotate("text", x = 20, y = 90, label = "Leading benchmark better") +
   labs(title = "Comparison of feature sets versus benchmark algorithms across UCR/UEA repository univariate problems",
        subtitle = "Plots a subset of 54 problems that preliminary analysis showed mean and variance did not outperform chance",
        x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
-       colour = NULL) +
+       colour = NULL,
+       shape = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_colour_manual(values = mypal) +
+  scale_colour_manual(values = mypal,
+                      name = "Algorithm and Set") +
+  scale_shape_manual(values = myshapes,
+                     name = "Algorithm and Set") +
   theme_bw() +
   theme(legend.position = "bottom",
+        legend.title = element_blank(),
         panel.grid.minor = element_blank())
 
 print(p)

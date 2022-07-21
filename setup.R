@@ -13,6 +13,7 @@ library(purrr)
 library(tidyr)
 library(readr)
 library(ggplot2)
+library(ggrepel)
 library(scales)
 library(foreign)
 library(theft)
@@ -44,3 +45,7 @@ for(f in r_files){
 }
 
 rm(r_files)
+
+# Suppress dplyr::summarise info
+
+options(dplyr.summarise.inform = FALSE)
