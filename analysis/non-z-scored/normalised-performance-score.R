@@ -71,8 +71,10 @@ p <- z_scores %>%
        subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem",
        x = "Feature set",
        y = "Problem",
-       fill = "Normalised performance score") +
+       fill = "Normalised performance score",
+       caption = "Value of 0 indicates no difference from the mean. Value of |1| indicates 1 standard deviation away from mean.") +
   scale_fill_viridis_c() +
+  #scale_fill_fermenter(palette = "RdBu") +
   theme_bw() +
   theme(legend.position = "bottom")
 
