@@ -64,9 +64,18 @@ z_scores <- z_scores %>%
 
 #---------------------- Draw graphic -----------------------
 
+mypal <- c("#CA0020", "#F4A582", "#92C5DE", "#0571B0")
+
 p <- z_scores %>%
-  ggplot(aes(x = method, y = problem, fill = z)) +
+  mutate(category = case_when(
+          z < -1         ~ "-1 to -2",
+          z > -1 & z < 0 ~ "0 to -1",
+          z > 0 & z < 1  ~ "0 to +1",
+          TRUE           ~ "+1 to +2"),
+         category = factor(category, levels = c("-1 to -2", "0 to -1", "0 to +1", "+1 to +2"))) %>%
+  ggplot(aes(x = method, y = problem, fill = category)) +
   geom_tile() +
+  #geom_text(aes(label = round(z, digits = 2)), colour = "white") +
   labs(title = "Comparison of z-score accuracy across UEA/UCR repository univariate problems",
        subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem",
        x = "Feature set",
@@ -74,7 +83,9 @@ p <- z_scores %>%
        fill = "Normalised performance score",
        caption = "Value of 0 indicates no difference from the mean. Value of |1| indicates 1 standard deviation away from mean.") +
   #scale_fill_viridis_c() +
-  scale_fill_fermenter(palette = "RdBu", direction = 1, n.breaks = 6) +
+  #scale_fill_fermenter(palette = "RdBu", direction = -1, show.limits = TRUE) +
+  scale_y_discrete(limits = rev) +
+  scale_fill_manual(values = rev(mypal)) +
   theme_bw() +
   theme(legend.position = "bottom")
 
