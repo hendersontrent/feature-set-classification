@@ -37,7 +37,7 @@ source("analysis/fit-classifiers-z-score.R")
 
 source("analysis/non-z-scored/comp-to-benchmarks.R")
 source("analysis/non-z-scored/analyse-performance.R")
-source("analysis/non-z-scored/analyse-head-to-head.R")
+source("analysis/non-z-scored/analyse-best-vs-worst-set.R")
 source("analysis/non-z-scored/analyse_sets_vs_overall.R")
 
 #---------
