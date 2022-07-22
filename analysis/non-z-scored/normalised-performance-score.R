@@ -73,8 +73,8 @@ p <- z_scores %>%
        y = "Problem",
        fill = "Normalised performance score",
        caption = "Value of 0 indicates no difference from the mean. Value of |1| indicates 1 standard deviation away from mean.") +
-  scale_fill_viridis_c() +
-  #scale_fill_fermenter(palette = "RdBu") +
+  #scale_fill_viridis_c() +
+  scale_fill_fermenter(palette = "RdBu", direction = 1, n.breaks = 6) +
   theme_bw() +
   theme(legend.position = "bottom")
 
