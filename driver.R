@@ -38,13 +38,16 @@ source("analysis/fit-classifiers-z-score.R")
 source("analysis/non-z-scored/comp-to-benchmarks.R")
 source("analysis/non-z-scored/analyse-performance.R")
 source("analysis/non-z-scored/analyse-best-vs-worst-set.R")
+source("analysis/non-z-scored/analyse-best-vs-second-best-set.R")
 source("analysis/non-z-scored/analyse_sets_vs_overall.R")
+source("analysis/non-z-scored/normalised-performance-score.R")
+source("analysis/non-z-scored/normalised-performance-score-distribution.R")
 
 #---------
 # z-scored
 #---------
 
-source("analysis/z-scored/comp-to-benchmarks.R")
-source("analysis/z-scored/analyse-performance.R")
-source("analysis/z-scored/analyse-head-to-head.R")
-source("analysis/z-scored/analyse_sets_vs_overall.R")
+# source("analysis/z-scored/comp-to-benchmarks.R")
+# source("analysis/z-scored/analyse-performance.R")
+# source("analysis/z-scored/analyse-head-to-head.R")
+# source("analysis/z-scored/analyse_sets_vs_overall.R")
