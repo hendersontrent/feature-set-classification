@@ -84,7 +84,7 @@ find_top_features <- function(setdata, theproblem, allfiles){
                                   seed = 123)
   
   ResultsTable <- outputs$ResultsTable %>%
-    mutate(problem = theproblem)
+    mutate(problem = problem_name)
   
   return(ResultsTable)
 }
