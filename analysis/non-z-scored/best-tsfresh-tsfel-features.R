@@ -115,7 +115,7 @@ tops %>%
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90))
 
-# Numerical summary
+# Numerical summary of top 10 by set
 
 totals <- prob_list %>%
   group_by(method) %>%
