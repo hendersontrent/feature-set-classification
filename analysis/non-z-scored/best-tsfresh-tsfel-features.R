@@ -99,6 +99,8 @@ save(tops, file = "data/non-z-scored-tops.Rda")
 
 #---------------------- Produce summary plot -----------------------
 
+# Plot
+
 tops %>%
   mutate(feature = gsub("tsfel", "TSFEL", feature),
          feature = gsub("tsfresh", "TSFRESH", feature)) %>%
@@ -113,10 +115,19 @@ tops %>%
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90))
 
+# Numerical summary
+
+totals <- prob_list %>%
+  group_by(method) %>%
+  summarise(total_problems = n()) %>%
+  ungroup()
+
 frequencies <- tops %>%
-  mutate(feature = gsub("tsfel", "TSFEL", feature),
-                             feature = gsub("tsfresh", "TSFRESH", feature)) %>%
+  mutate(feature = gsub("tsfel", "TSFEL", feature)) %>%
   group_by(feature) %>%
-  summarise(counter = n()) %>%
+  summarise(occurrences = n()) %>%
   ungroup() %>%
-  arrange(-counter)
+  mutate(method = gsub("_.*", "\\1", feature)) %>%
+  inner_join(totals, by = c("method" = "method")) %>%
+  mutate(prop_occurrences = occurrences / total_problems) %>%
+  arrange(-prop_occurrences)
