@@ -99,7 +99,7 @@ p <- both %>%
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer)) +
   geom_point(aes(colour = top_performer), size = 2) +
-  annotate("text", x = 75, y = 10, label = "Worst feature set") +
+  annotate("text", x = 75, y = 10, label = "Second best feature set") +
   annotate("text", x = 25, y = 90, label = "Best feature set") +
   labs(title = "Comparison of best and second best feature sets across UCR/UEA repository univariate problems",
        subtitle = "Error bars are +/- 1 SD obtained over 30 resamples. Colour indicates p < .05 difference",
