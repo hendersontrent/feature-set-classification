@@ -74,7 +74,7 @@ avg_over_probs <- outputs %>%
 
 set_averages <- outputs %>%
   filter(problem %in% tsfresh_probs) %>%
-  group_by(method) %>%
+  group_by(method, problem) %>%
   summarise(global_avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
   ungroup()
 
@@ -83,13 +83,15 @@ set_averages <- outputs %>%
 set.seed(123)
 
 p <- z_scores %>%
-  inner_join(set_averages, by = c("method" = "method")) %>%
+  inner_join(set_averages, by = c("method" = "method", "problem" = "problem")) %>%
   ggplot(aes(x = reorder(method, -global_avg), y = z, colour = method)) +
   geom_violin() +
-  geom_hline(yintercept = avg_over_probs, lty = "dashed", colour = "black") +
-  geom_point(size = 0.7, alpha = 0.9, position = ggplot2::position_jitter(w = 0.05)) +
+  geom_hline(yintercept = 0, lty = "dashed", colour = "black") +
+  #geom_point(size = 0.7, alpha = 0.9, position = ggplot2::position_jitter(w = 0.05)) +
+  geom_point(size = 0.7, alpha = 0.9) +
+  #geom_line(aes(group = problem), colour = "grey50", size = 0.3, alpha = 0.5) +
   labs(title = "Distributions of z-score accuracy across UEA/UCR repository univariate problems",
-       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.\nDashed line indicates global average.",
+       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.",
        x = "Feature set",
        y = "Normalised performance score",
        colour = NULL,
