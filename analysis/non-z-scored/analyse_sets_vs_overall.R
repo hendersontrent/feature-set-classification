@@ -85,7 +85,7 @@ all_mains <- all_mains %>%
           significant == "Significant difference" & balanced_accuracy > balanced_accuracy_all ~ method_set,
           significant == "Significant difference" & balanced_accuracy < balanced_accuracy_all ~ method,
           significant == "Non-Significant difference"                                         ~ "Non-Significant difference",
-          significant == "Zero variance for one/more sets"                                  ~ "Zero variance for one/more sets"))
+          significant == "Zero variance for one/more sets"                                    ~ "Zero variance for one/more sets"))
 
 rm(outputs_both, outputs, outputs_aggregate)
 

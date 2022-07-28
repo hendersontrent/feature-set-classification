@@ -73,7 +73,7 @@ p <- z_scores %>%
           z > 0 & z < 1  ~ "0 to +1",
           TRUE           ~ "+1 to +2"),
          category = factor(category, levels = c("-1 to -2", "0 to -1", "0 to +1", "+1 to +2"))) %>%
-  ggplot(aes(x = method, y = problem, fill = category)) +
+  ggplot(aes(x = method, y = problem, fill = z)) +
   geom_tile() +
   #geom_text(aes(label = round(z, digits = 2)), colour = "white") +
   labs(title = "Comparison of z-score accuracy across UEA/UCR repository univariate problems",
@@ -85,7 +85,11 @@ p <- z_scores %>%
   #scale_fill_viridis_c() +
   #scale_fill_fermenter(palette = "RdBu", direction = -1, show.limits = TRUE) +
   scale_y_discrete(limits = rev) +
-  scale_fill_manual(values = rev(mypal)) +
+  #scale_fill_manual(values = rev(mypal)) +
+  scale_fill_gradient2(low = "#0571B0",
+                       mid = "white",
+                       high = "#CA0020",
+                       midpoint = 0) +
   theme_bw() +
   theme(legend.position = "bottom")
 
