@@ -18,6 +18,7 @@ library(scales)
 library(foreign)
 library(theft)
 library(Cairo)
+library(scatterpie)
 
 # Create important folders if none exist
 
