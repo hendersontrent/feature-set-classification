@@ -44,7 +44,7 @@ main_models <- outputs %>%
 main_models_aggregate <- outputs_aggregate %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100,
-         method = "All Features") %>%
+         method = "All features") %>%
   group_by(problem, method) %>%
   summarise(balanced_accuracy_all = mean(balanced_accuracy, na.rm = TRUE),
             balanced_accuracy_sd_all = sd(balanced_accuracy, na.rm = TRUE)) %>%
@@ -113,19 +113,6 @@ comps <- comps %>%
 
 #---------------------- Set up final dataframe -------------------
 
-# Calculate ranks
-
-main_ranks <- outputs %>%
-  mutate(accuracy = accuracy * 100,
-         balanced_accuracy = balanced_accuracy * 100) %>%
-  group_by(problem, method) %>%
-  summarise(balanced_accuracy_mean = mean(balanced_accuracy, na.rm = TRUE)) %>%
-  ungroup() %>%
-  group_by(problem) %>%
-  mutate(ranker = dense_rank(balanced_accuracy_mean)) %>%
-  ungroup() %>%
-  dplyr::select(c(problem, method, ranker))
-
 #-------------------------------
 # Make wide dataframe of results 
 # to feed into pie graphs
@@ -134,11 +121,11 @@ main_ranks <- outputs %>%
 # Individual set wins
 
 wide <- comps %>%
-  inner_join(main_ranks, by = c("problem" = "problem", "method" = "method")) %>%
-  mutate(ranker = ifelse(flag %in% c("All features", "Zero variance for one/more sets", "Non-Significant difference"),
-                         NA, ranker)) %>%
-  dplyr::select(c(problem, method, ranker)) %>%
-  pivot_wider(id_cols = "problem", names_from = "method", values_from = ranker)
+  mutate(balanced_accuracy_mean = ifelse(flag %in% c("All features", "Zero variance for one/more sets", "Non-Significant difference"),
+                                         0, balanced_accuracy_mean)) %>%
+  dplyr::select(c(problem, method, balanced_accuracy_mean)) %>%
+  mutate(balanced_accuracy_mean = balanced_accuracy_mean / 100) %>%
+  pivot_wider(id_cols = "problem", names_from = "method", values_from = balanced_accuracy_mean)
 
 # All other cases
 
@@ -147,30 +134,34 @@ main_models_filt <- main_models %>%
 
 wide2 <- comps %>%
   filter(flag %in% c("All features", "Zero variance for one/more sets", "Non-Significant difference")) %>%
-  mutate(`All features` = ifelse(flag == "All features", 6, NA),
-         `Zero variance for one/more sets` = ifelse(flag == "Zero variance for one/more sets", 6, NA),
-         `Non-significant difference` = ifelse(flag == "Non-Significant difference", 6, NA)) %>%
+  mutate(`All features` = ifelse(flag == "All features", 1, 0),
+         `Zero variance for one/more sets` = ifelse(flag == "Zero variance for one/more sets", 1, 0),
+         `Non-significant difference` = ifelse(flag == "Non-Significant difference", 1, 0)) %>%
   dplyr::select(c(problem, method, `All features`, `Zero variance for one/more sets`, `Non-significant difference`)) %>%
   inner_join(main_models_filt, by = c("problem" = "problem", "method" = "method_set")) %>%
   dplyr::select(c(problem, `All features`, `Zero variance for one/more sets`, `Non-significant difference`))
 
 # Join
 
-wides <- wide %>%
+wide <- wide %>%
   left_join(wide2, by = c("problem" = "problem"))
 
 # Add indicator for beating all features to core dataframe
 
 all_mains2 <- all_mains %>%
-  inner_join(wides, by = c("problem" = "problem"))
+  inner_join(wide, by = c("problem" = "problem")) %>%
+  mutate(top_performer = case_when(
+          `Non-significant difference` == 1      ~ "Non-significant difference",
+          `Zero variance for one/more sets` == 1 ~ "Zero variance for one/more sets",
+          TRUE                                   ~ top_performer))
 
-all_mains2[is.na(all_mains2)] <- 0
+all_mains2[is.na(all_mains2)] <- 0 # Gets pie graph to work
 
 #---------------------- Produce graphic --------------------------
 
 # Create palette for whoever is top performer
 
-mypal <- c("All Features" = "black",
+mypal <- c("All features" = "black",
            "Non-Significant difference" = "grey50",
            "Zero variance for one/more sets" = "grey75",
            "catch22" = "#1B9E77",
@@ -187,14 +178,13 @@ upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 # Draw scatterplot
 
 p <- all_mains2 %>%
-  mutate(top_performer = ifelse(`Non-significant difference` == 6, "Non-significant difference", top_performer)) %>%
   ggplot(aes(x = balanced_accuracy, y = balanced_accuracy_all)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = all_mains2,  
-                   cols = colnames(all_mains2)[13:length(colnames(all_mains2))]) +
-  geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
-  geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer)) +
+                   cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
+  geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
+  geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
   annotate("text", x = 75, y = 10, label = "Best single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +
   labs(title = "Comparison of top feature sets across UCR/UEA repository univariate problems",
