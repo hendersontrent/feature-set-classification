@@ -24,7 +24,7 @@ outputs <- outputs %>%
     method == "kats"  ~ "Kats",
     TRUE              ~ method))
 
-# Run the function
+# Calculate winners
 
 main_models <- outputs %>%
   mutate(accuracy = accuracy * 100,
