@@ -181,10 +181,10 @@ p <- all_mains2 %>%
   ggplot(aes(x = balanced_accuracy, y = balanced_accuracy_all)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
-  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = all_mains2,  
-                   cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
+  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = all_mains2,  
+                   cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8, pie_scale = 1.5) +
   annotate("text", x = 75, y = 10, label = "Best single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +
   labs(title = "Comparison of top feature sets across UCR/UEA repository univariate problems",
