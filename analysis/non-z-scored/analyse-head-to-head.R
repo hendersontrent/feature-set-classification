@@ -40,21 +40,28 @@ find_winner <- function(data, theproblem){
   
   tmp2 <- data %>%
     filter(problem == theproblem) %>%
-    group_by(method) %>%
+    dplyr::select(c(resample, method, balanced_accuracy)) %>%
+    pivot_wider(id_cols = "resample", names_from = "method", values_from = "balanced_accuracy")
+  
+  set1_name <- colnames(tmp2)[2]
+  set2_name <- colnames(tmp2)[3]
+  fit <- stats::t.test(x = tmp2[, 2], y = tmp2[, 3], data = tmp2)
+  
+  tmp2 <- data %>%
+    filter(problem == theproblem) %>%
+    group_by(problem, method) %>%
     summarise(mean_acc = mean(balanced_accuracy, na.rm = TRUE)) %>%
     ungroup() %>%
-    pivot_wider(names_from = "method", values_from = "mean_acc")
-  
-  set1_name <- colnames(tmp2)[1]
-  set2_name <- colnames(tmp2)[2]
-  
-  tmp2 <- tmp2 %>%
-    rename(set1 = 1,
-           set2 = 2) %>%
+    pivot_wider(id_cols = "problem", names_from = "method", values_from = "mean_acc") %>%
+    rename(set1 = 2,
+           set2 = 3) %>%
     mutate(winner = case_when(
-            set1 > set2  ~ set1_name,
-            set1 == set2 ~ "tie",
-            TRUE         ~ set2_name))
+            fit$p.value < .05 & set1 > set2 ~ set1_name,
+            fit$p.value < .05 & set2 > set1 ~ set2_name,
+            TRUE                            ~ "tie")) %>%
+    pivot_longer(cols = set1:set2, names_to = "method", values_to = "mean_accuracy") %>%
+    mutate(method = ifelse(method == "set1", set1_name, set2_name),
+           p_value = fit$p.value)
   
   return(tmp2)
 }
@@ -81,8 +88,9 @@ calculate_wins <- function(data, combn_data, rownum){
   if(thesets$set1 == thesets$set2){
     outs <- data.frame(set1 = thesets$set1, 
                        set2 = thesets$set2,
-                       counter = 0,
-                       props = 0)
+                       wins_for_set1 = length(unique(data$problem)),
+                       props = 1,
+                       total_probs = length(unique(data$problem)))
   } else{
     
     # Filter data
@@ -96,14 +104,17 @@ calculate_wins <- function(data, combn_data, rownum){
     
     outs <- unique(tmp$problem) %>%
       purrr::map_df(~ find_winner_safe(data = tmp, theproblem = .x)) %>%
+      filter(method == thesets$set1) %>%
       group_by(winner) %>%
       summarise(counter = n()) %>%
       ungroup() %>%
-      mutate(props = counter / sum(counter)) %>%
+      mutate(total_probs = sum(counter),
+             props = counter / total_probs) %>%
       filter(winner == thesets$set1) %>%
       rename(set1 = winner) %>%
       mutate(set2 = thesets$set2) %>%
-      dplyr::select(c(set1, set2, counter, props))
+      dplyr::select(c(set1, set2, counter, total_probs, props)) %>%
+      rename(wins_for_set1 = counter)
   }
   
   return(outs)
@@ -120,17 +131,19 @@ wins <- 1:nrow(combns) %>%
 
 #---------------------- Draw graphic -----------------------
 
-mypalette <- c("#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC")
-
 p <- wins %>%
-  ggplot(aes(x = set1, y = set2, fill = props)) +
+  ggplot(aes(x = set1, y = set2, fill = wins_for_set1)) +
   geom_tile() +
-  labs(title = "Head to head of feature sets",
-       subtitle = "Mean balanced accuracy was calculated for each problem, with the highest declared winner",
+  geom_text(aes(label = wins_for_set1), colour = "white") +
+  labs(title = paste0("Head to head of feature sets over maximum of ", max(wins$total_probs), " problems"),
+       subtitle = "t-tests between accuracy distributions for each feature set and problem combination were calculated",
        x = "Feature set",
        y = "Feature set",
-       fill = "Proportion of times won") +
-  scale_fill_stepsn(n.breaks = 5, colours = rev(mypalette)) +
+       fill = "Number of times won") +
+  scale_fill_gradient2(low = "white",
+                       mid = "#0571B0",
+                       high = "#CA0020",
+                       midpoint = as.integer(mean(wins$wins_for_set1))) +
   theme_bw() +
   theme(legend.position = "bottom")
 
