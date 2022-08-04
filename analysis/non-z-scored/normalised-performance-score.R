@@ -62,30 +62,42 @@ tsfresh_probs <- z_scores %>%
 z_scores <- z_scores %>%
   filter(problem %in% tsfresh_probs)
 
+# Mean accuracy by set
+
+benchmarks_sets <- outputs %>%
+  filter(problem %in% tsfresh_probs) %>%
+  group_by(method) %>%
+  summarise(global_avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  ungroup()
+
+#---------------------- Cluster by problem -----------------
+
+# Hierarchical cluster on rows (problems)
+
+z_scores_mat <- z_scores %>%
+  dplyr::select(c(problem, method, z)) %>%
+  pivot_wider(id_cols = "problem", names_from = "method", values_from = "z") %>%
+  tibble::column_to_rownames(var = "problem")
+
+row.order <- stats::hclust(stats::dist(z_scores_mat, method = "euclidean"), method = "average")$order
+z_scores_mat <- z_scores_mat[row.order, ]
+
+z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
+  rename(problem = Var1,
+         method = Var2) %>%
+  left_join(benchmarks_sets, by = c("method" = "method"))
+
 #---------------------- Draw graphic -----------------------
 
-mypal <- c("#CA0020", "#F4A582", "#92C5DE", "#0571B0")
-
-p <- z_scores %>%
-  mutate(category = case_when(
-          z < -1         ~ "-1 to -2",
-          z > -1 & z < 0 ~ "0 to -1",
-          z > 0 & z < 1  ~ "0 to +1",
-          TRUE           ~ "+1 to +2"),
-         category = factor(category, levels = c("-1 to -2", "0 to -1", "0 to +1", "+1 to +2"))) %>%
-  ggplot(aes(x = method, y = problem, fill = z)) +
+p <- z_scores_mat %>%
+  ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
-  #geom_text(aes(label = round(z, digits = 2)), colour = "white") +
   labs(title = "Comparison of z-score accuracy across UEA/UCR repository univariate problems",
-       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem",
+       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.\nColumns organised by descending overall mean balanced accuracy.\nRows organised by heirarchical clustering.",
        x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score",
        caption = "Value of 0 indicates no difference from the mean. Value of |1| indicates 1 standard deviation away from mean.") +
-  #scale_fill_viridis_c() +
-  #scale_fill_fermenter(palette = "RdBu", direction = -1, show.limits = TRUE) +
-  scale_y_discrete(limits = rev) +
-  #scale_fill_manual(values = rev(mypal)) +
   scale_fill_gradient2(low = "#0571B0",
                        mid = "white",
                        high = "#CA0020",

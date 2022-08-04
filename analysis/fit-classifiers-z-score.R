@@ -44,6 +44,8 @@ calculate_accuracy_by_problem_z <- function(theproblem, tt_labels, set = TRUE){
   # Join in train-test indicator
   
   outs_z <- outs_z %>%
+    filter(names != "DN_Mean") %>% # Just last ditch case in case it slips through
+    filter(names != "DN_Spread_Std") %>% # Just last ditch case in case it slips through
     inner_join(tt_labels, by = c("id" = "id")) %>%
     dplyr::select(-c(problem))
   
