@@ -33,6 +33,18 @@ calculate_p_values2 <- function(data, combn_data, rownum){
     return(outs)
   }
   
+  # Check for lack of observations
+  
+  group_check <- tmp_data %>%
+    group_by(method) %>%
+    summarise(resamples = n()) %>%
+    ungroup()
+  
+  if(min(group_check$resamples) <= 2){
+    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = NA, p_value = NA)
+    return(outs)
+  }
+  
   # Check for 0 variance
   
   sd_check <- tmp_data %>%

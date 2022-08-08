@@ -32,6 +32,13 @@ calculate_p_values <- function(data, summary_data, theproblem, all_features = FA
     filter(problem == theproblem) %>%
     filter(method %in% themethods)
   
+  # Check for only 1 feature set present
+  
+  if(length(unique(tmp_data$method)) <= 1){
+    outs <- data.frame(problem = theproblem, t_statistic = NA, p_value = NA)
+    return(outs)
+  }
+  
   # Check for 0 variance
   
   sd_check <- tmp_data %>%
