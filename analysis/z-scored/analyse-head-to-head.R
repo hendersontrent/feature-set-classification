@@ -132,13 +132,13 @@ wins <- 1:nrow(combns) %>%
 #---------------------- Draw graphic -----------------------
 
 p <- wins %>%
-  ggplot(aes(x = set1, y = set2, fill = wins_for_set1)) +
+  ggplot(aes(x = set2, y = set1, fill = wins_for_set1)) +
   geom_tile() +
   geom_text(aes(label = paste0(wins_for_set1, "/", total_probs)), colour = "white") +
   labs(title = paste0("Head to head of feature sets over maximum of ", max(wins$total_probs), " problems"),
        subtitle = "t-tests between accuracy distributions for each feature set and problem combination were calculated",
-       x = "Feature set",
-       y = "Feature set",
+       x = "Benchmark feature set",
+       y = "Test feature set",
        fill = "Number of times won") +
   scale_fill_gradient2(low = "white",
                        mid = "#0571B0",
