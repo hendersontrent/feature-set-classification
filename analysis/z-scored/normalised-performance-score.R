@@ -93,7 +93,7 @@ p <- z_scores_mat %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
   labs(title = "Comparison of z-score accuracy across UEA/UCR repository univariate problems",
-       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.\nColumns organised by descending overall mean balanced accuracy.\nRows organised by heirarchical clustering.",
+       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.\nColumns organised by descending overall mean balanced accuracy.\nRows organised by hierarchical clustering.",
        x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score",
@@ -106,4 +106,4 @@ p <- z_scores_mat %>%
   theme(legend.position = "bottom")
 
 print(p)
-ggsave("output/z-scored/normalised-performance-score.pdf", p)
+ggsave("output/z-scored/normalised-performance-score.pdf", p, units = "in", height = 11, width = 11)
