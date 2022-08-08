@@ -17,7 +17,7 @@
 
 load("data/outputs_z.Rda")
 
-outputs <- outputs_z %>%
+outputs_z <- outputs_z %>%
   mutate(method = case_when(
     method == "tsfel" ~ "TSFEL",
     method == "kats"  ~ "Kats",
@@ -60,19 +60,21 @@ both <- best %>%
   mutate(lower_x = worst_balanced_accuracy_mean - 1 * worst_balanced_accuracy_sd,
          upper_x = worst_balanced_accuracy_mean + 1 * worst_balanced_accuracy_sd,
          lower_y = best_balanced_accuracy_mean - 1 * best_balanced_accuracy_sd,
-         upper_y = best_balanced_accuracy_mean + 1 * best_balanced_accuracy_sd)
+         upper_y = best_balanced_accuracy_mean + 1 * best_balanced_accuracy_sd) %>%
+  group_by(problem) %>%
+  slice(which.min(worst_balanced_accuracy_sd)) # THere is 1 tie for BeetleFly so take smallest SD one for now
 
 #---------------------- Calculate p-values -----------------------
 
 p_values <- unique(both$problem) %>%
-  purrr::map_df(~ calculate_p_values(data = outputs, summary_data = both, theproblem = .x, all_features = FALSE))
+  purrr::map_df(~ calculate_p_values(data = outputs_z, summary_data = both, theproblem = .x, all_features = FALSE))
 
 both <- both %>%
   inner_join(p_values, by = c("problem" = "problem")) %>%
   mutate(significant = ifelse(p_value < 0.05, "Significant difference", "Non-significant difference"),
          top_performer = ifelse(significant == "Significant difference", best_method, "Non-Significant difference"))
 
-rm(outputs, best, best_2)
+rm(outputs_z, best, best_2)
 
 #---------------------- Draw summary graphic ---------------------
 
