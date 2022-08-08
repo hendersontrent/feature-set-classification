@@ -4,9 +4,9 @@
 # problem
 #
 # NOTE: This script requires setup.R and
-# analysis/compute-features.R and
-# analysis/fit-classifiers.R to have been 
-# run first
+# analysis/compute-features_z-score.R and
+# analysis/fit-classifiers_z-score.R to have 
+# been run first
 #-----------------------------------------
 
 #--------------------------------------

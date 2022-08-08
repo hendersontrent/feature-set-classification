@@ -3,9 +3,9 @@
 # of normalised performance scores
 #
 # NOTE: This script requires setup.R and
-# analysis/compute-features.R and
-# analysis/fit-classifiers.R to have been 
-# run first
+# analysis/compute-features_z-score.R and
+# analysis/fit-classifiers_z-score.R to have 
+# been run first
 #-----------------------------------------
 
 #--------------------------------------
@@ -14,9 +14,9 @@
 
 # Load classification results
 
-load("data/outputs.Rda")
+load("data/outputs_z.Rda")
 
-outputs <- outputs %>%
+outputs_z <- outputs_z %>%
   mutate(method = case_when(
     method == "tsfel" ~ "TSFEL",
     method == "kats"  ~ "Kats",
@@ -30,7 +30,7 @@ outputs <- outputs %>%
 
 # Calculate into own dataframe in case we want it later
 
-benchmarks <- outputs %>%
+benchmarks <- outputs_z %>%
   group_by(problem) %>%
   summarise(overall_avg = mean(balanced_accuracy, na.rm = TRUE),
             stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
@@ -42,7 +42,7 @@ benchmarks <- outputs %>%
 
 # Calculate z-scores
 
-z_scores <- outputs %>%
+z_scores <- outputs_z %>%
   group_by(problem, method) %>%
   summarise(x = mean(balanced_accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
@@ -64,7 +64,7 @@ z_scores <- z_scores %>%
 
 # Mean accuracy by set
 
-benchmarks_sets <- outputs %>%
+benchmarks_sets <- outputs_z %>%
   filter(problem %in% tsfresh_probs) %>%
   group_by(method) %>%
   summarise(global_avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
@@ -106,4 +106,4 @@ p <- z_scores_mat %>%
   theme(legend.position = "bottom")
 
 print(p)
-ggsave("output/non-z-scored/normalised-performance-score.pdf", p)
+ggsave("output/z-scored/normalised-performance-score.pdf", p)

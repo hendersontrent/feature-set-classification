@@ -4,9 +4,9 @@
 # performance scores as a violin plot
 #
 # NOTE: This script requires setup.R and
-# analysis/compute-features.R and
-# analysis/fit-classifiers.R to have been 
-# run first
+# analysis/compute-features_z-score.R and
+# analysis/fit-classifiers_z-score.R to have 
+# been run first
 #-----------------------------------------
 
 #--------------------------------------
@@ -15,9 +15,9 @@
 
 # Load classification results
 
-load("data/outputs.Rda")
+load("data/outputs_z.Rda")
 
-outputs <- outputs %>%
+outputs_z <- outputs_z %>%
   mutate(method = case_when(
     method == "tsfel" ~ "TSFEL",
     method == "kats"  ~ "Kats",
@@ -25,7 +25,7 @@ outputs <- outputs %>%
 
 # Filter to just problems present in tsfresh as it had some errors
 
-tsfresh_probs <- outputs %>%
+tsfresh_probs <- outputs_z %>%
   filter(method == "tsfresh") %>%
   dplyr::select(c(problem)) %>%
   distinct() %>%
@@ -39,7 +39,7 @@ tsfresh_probs <- outputs %>%
 
 # Calculate into own dataframe in case we want it later
 
-benchmarks <- outputs %>%
+benchmarks <- outputs_z %>%
   filter(problem %in% tsfresh_probs) %>%
   group_by(problem) %>%
   summarise(overall_avg = mean(balanced_accuracy, na.rm = TRUE),
@@ -52,7 +52,7 @@ benchmarks <- outputs %>%
 
 # Calculate z-scores
 
-z_scores <- outputs %>%
+z_scores <- outputs_z %>%
   filter(problem %in% tsfresh_probs) %>%
   group_by(problem, method) %>%
   summarise(x = mean(balanced_accuracy, na.rm = TRUE)) %>%
@@ -67,12 +67,12 @@ z_scores <- z_scores %>%
 
 # Calculate global averages
 
-avg_over_probs <- outputs %>%
+avg_over_probs <- outputs_z %>%
   filter(problem %in% tsfresh_probs) %>%
   summarise(global_avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
   pull()
 
-set_averages <- outputs %>%
+set_averages <- outputs_z %>%
   filter(problem %in% tsfresh_probs) %>%
   group_by(method, problem) %>%
   summarise(global_avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
@@ -87,9 +87,7 @@ p <- z_scores %>%
   ggplot(aes(x = reorder(method, -global_avg), y = z, colour = method)) +
   geom_violin() +
   geom_hline(yintercept = 0, lty = "dashed", colour = "black") +
-  #geom_point(size = 0.7, alpha = 0.9, position = ggplot2::position_jitter(w = 0.05)) +
   geom_point(size = 0.7, alpha = 0.9) +
-  #geom_line(aes(group = problem), colour = "grey50", size = 0.3, alpha = 0.5) +
   labs(title = "Distributions of z-score accuracy across UEA/UCR repository univariate problems",
        subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.",
        x = "Feature set",
@@ -101,4 +99,4 @@ p <- z_scores %>%
   theme(legend.position = "none")
 
 print(p)
-ggsave("output/non-z-scored/normalised-performance-score-distribution.pdf", p)
+ggsave("output/z-scored/normalised-performance-score-distribution.pdf", p)
