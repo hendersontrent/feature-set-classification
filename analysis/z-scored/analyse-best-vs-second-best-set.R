@@ -15,9 +15,9 @@
 
 # Load classification results
 
-load("data/outputs.Rda")
+load("data/outputs_z.Rda")
 
-outputs <- outputs %>%
+outputs <- outputs_z %>%
   mutate(method = case_when(
     method == "tsfel" ~ "TSFEL",
     method == "kats"  ~ "Kats",
@@ -25,7 +25,7 @@ outputs <- outputs %>%
 
 # Find best feature set by problem
 
-best <- outputs %>%
+best <- outputs_z %>%
   mutate(balanced_accuracy = balanced_accuracy * 100) %>%
   group_by(problem, method) %>%
   summarise(best_balanced_accuracy_mean = mean(balanced_accuracy, na.rm = TRUE),
@@ -40,7 +40,7 @@ best <- outputs %>%
 
 # Find worst feature set by problem
 
-best_2 <- outputs %>%
+best_2 <- outputs_z %>%
   mutate(balanced_accuracy = balanced_accuracy * 100) %>%
   group_by(problem, method) %>%
   summarise(balanced_accuracy_mean = mean(balanced_accuracy, na.rm = TRUE),
@@ -114,4 +114,4 @@ p <- both %>%
         panel.grid.minor = element_blank())
 
 print(p)
-ggsave("output/non-z-scored/best_versus_second_best_set.pdf", p)
+ggsave("output/z-scored/best_versus_second_best_set.pdf", p)
