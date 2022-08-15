@@ -72,7 +72,9 @@ p_values <- unique(both$problem) %>%
 both <- both %>%
   inner_join(p_values, by = c("problem" = "problem")) %>%
   mutate(significant = ifelse(p_value < 0.05, "Significant difference", "Non-significant difference"),
-         top_performer = ifelse(significant == "Significant difference", best_method, "Non-Significant difference"))
+         top_performer = ifelse(significant == "Significant difference", best_method, "Non-Significant difference")) %>%
+  mutate(significant = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", significant),
+         top_performer = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", top_performer))
 
 rm(outputs_z, best, best_2)
 
@@ -86,7 +88,8 @@ mypal <- c("catch22" = "#1B9E77",
            "tsfeatures" = "#E7298A",
            "TSFEL" = "#66A61E",
            "tsfresh" = "#E6AB02",
-           "Non-Significant difference" = "grey50")
+           "Non-Significant difference" = "grey50",
+           "Zero variance for one/more sets" = "grey75")
 
 # Define coordinates for upper triangle to shade
 
@@ -117,3 +120,12 @@ p <- both %>%
 
 print(p)
 ggsave("output/z-scored/best_versus_second_best_set.pdf", p)
+
+#---------------------- Create summary table ---------------------
+
+summary_table <- both %>%
+  mutate(best_method = ifelse(significant == "Non-significant difference", significant, best_method)) %>%
+  group_by(best_method) %>%
+  summarise(counter = n()) %>%
+  ungroup() %>%
+  arrange(-counter)
