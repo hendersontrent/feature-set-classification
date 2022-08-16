@@ -30,7 +30,7 @@ outputs_z <- outputs_z %>%
 #----------------
 
 #' Function to calculate winner for a given problem
-#' @param data the dataframe to operate on
+#' @param data the \code{data.frame} to operate on
 #' @param theproblem string name of the problem to analyse
 #' @return object of class \code{data.frame}
 #' @author Trent Henderson
@@ -71,8 +71,8 @@ find_winner <- function(data, theproblem){
 #---------------
 
 #' Function to compute pairwise comparison between resamples of accuracy between sets
-#' @param data the dataframe of classification results
-#' @param combn_data the dataframe of pairwise feature set name combinations
+#' @param data the \code{data.frame} of classification results
+#' @param combn_data the \code{data.frame} of pairwise feature set name combinations
 #' @param rownum row number of combination matrix to use
 #' @return object of class \code{data.frame}
 #' @author Trent Henderson
@@ -89,7 +89,7 @@ calculate_wins <- function(data, combn_data, rownum){
     outs <- data.frame(set1 = thesets$set1, 
                        set2 = thesets$set2,
                        wins_for_set1 = length(unique(data$problem)),
-                       props = 1,
+                       props = NA,
                        total_probs = length(unique(data$problem)))
   } else{
     
