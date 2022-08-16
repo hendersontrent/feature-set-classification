@@ -89,30 +89,8 @@ z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
 
 #---------------------- Draw graphic -----------------------
 
-mypalette <- c("#B2182B", "#EF8A62", "#FDDBC7", "white", "white", "#D1E5F0", "#67A9CF", "#2166AC")
-
-mypalette <- c("<= -1.5" = "#B2182B", 
-               "-1 to -1.5" = "#EF8A62", 
-               "-0.5 to -1" = "#FAF9F6", 
-               "0 to -0.5" = "white",
-               "0 to 0.5" = "white", 
-               "0.5 to 1" = "#FAF9F6", 
-               "1 to 1.5" = "#67A9CF", 
-               ">= 1.5" = "#2166AC")
-
 p <- z_scores_mat %>%
-  mutate(value_fct = case_when(
-          value <= -1.5              ~ "<= -1.5",
-          value < -1 & value > -1.5  ~ "-1 to -1.5",
-          value < -0.5 & value > -1  ~ "-0.5 to -1",
-          value < 0 & value > -0.5   ~ "0 to -0.5",
-          value > 0 & value < 0.5    ~ "0 to 0.5",
-          value > 0.5 & value < 1    ~ "0.5 to 1",
-          value > 1 & value < 1.5    ~ "1 to 1.5",
-          value >= 1.5               ~ ">= 1.5"),
-         value_fct = factor(value_fct, levels = c("<= -1.5", "-1 to -1.5", "-0.5 to -1", "0 to -0.5",
-                                             "0 to 0.5", "0.5 to 1", "1 to 1.5", ">= 1.5"))) %>%
-  ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value_fct)) +
+  ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
   labs(title = "Comparison of z-score accuracy across UEA/UCR repository univariate problems",
        subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.\nColumns organised by descending overall mean balanced accuracy.\nRows organised by hierarchical clustering.",
@@ -120,13 +98,17 @@ p <- z_scores_mat %>%
        y = "Problem",
        fill = "Normalised performance score",
        caption = "Value of 0 indicates no difference from the mean. Value of |1| indicates 1 standard deviation away from mean.") +
-  scale_fill_manual(values = mypalette) +
-  # scale_fill_gradient2(low = "#0571B0",
-  #                      mid = "white",
-  #                      high = "#CA0020",
-  #                      midpoint = 0) +
+  # scale_fill_gradientn(colours = c("#2166AC", "#67A9CF", "#D1E5F0", "#FAF9F6", "white", "#FAF9F6", "#FDDBC7", "#EF8A62", "#B2182B"),
+  #                      breaks = seq(from = -2, to = 2, by = 0.5),
+  #                      labels = seq(from = -2, to = 2, by = 0.5),
+  #                      limits = c(-2, 2)) +
+  scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
+                       breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2),
+                       labels = c(-2, -1, -0.5, 0, 0.5, 1, 2),
+                       limits = c(-2, 2)) +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        legend.key.width = unit(1.5, "cm"))
 
 print(p)
 ggsave("output/z-scored/normalised-performance-score.pdf", p, units = "in", height = 11, width = 11)
