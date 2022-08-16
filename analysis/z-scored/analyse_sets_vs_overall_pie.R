@@ -157,6 +157,25 @@ all_mains2 <- all_mains %>%
 
 all_mains2[is.na(all_mains2)] <- 0 # Gets pie graph to work
 
+#---------------------- Separate dataframes for plot control -------------------
+
+# Find number of unique values to enable filtering
+
+separates <- all_mains2 %>%
+  rowwise %>%
+  mutate(uniques = n_distinct(c_across(catch22:tsfresh))) %>%
+  ungroup() 
+
+# Rows where we just want a geom_point
+
+point_df <- separates %>%
+  filter(uniques <= 2)
+
+# Rows where we want a geom_scatterpie
+
+pie_df <- separates %>%
+  filter(uniques > 2)
+
 #---------------------- Produce graphic --------------------------
 
 # Create palette for whoever is top performer
@@ -177,18 +196,21 @@ upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 
 # Draw scatterplot
 
-p <- all_mains2 %>%
+p <- point_df %>%
   ggplot(aes(x = balanced_accuracy, y = balanced_accuracy_all)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
-  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = all_mains2,  
-                   cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8, pie_scale = 1.25) +
+  geom_point(aes(colour = top_performer), size = 2) +
+  geom_errorbar(data = pie_df, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
+  geom_errorbarh(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
+  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all, r = (uniques / 1.5)), data = pie_df,  
+                   cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
   annotate("text", x = 75, y = 10, label = "Best single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +
   labs(title = "Comparison of top feature sets across UCR/UEA repository univariate problems",
-       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples for 'All features' and top individual set.\nColour indicates p < .05 difference in accuracy for individual feature set(s) over all features.\nPie proportions broadly correspond to rank, with the top performer occupying the largest space.",
+       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples for 'All features' and top individual set.\nColour indicates p < .05 difference in accuracy for individual feature set(s) over all features.\nPie/point size scales proportionately to the number of individual sets that outperformed 'All features', with points\nindicating one or none. Pie proportions map to rank with the top performer occupying the largest space.",
        x = "Balanced classification accuracy of the best individual set (%)",
        y = "Balanced classification accuracy of all features (%)",
        fill = "Feature set",
