@@ -205,7 +205,7 @@ p <- point_df %>%
   geom_point(aes(colour = top_performer), size = 2) +
   geom_errorbar(data = pie_df, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_errorbarh(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
-  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all, r = (uniques / 1.5)), data = pie_df,  
+  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 1.25,
                    cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
   annotate("text", x = 75, y = 10, label = "Best single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +
