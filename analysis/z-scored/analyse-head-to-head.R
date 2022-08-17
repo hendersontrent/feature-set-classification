@@ -32,16 +32,22 @@ outputs_z <- outputs_z %>%
 #' Function to calculate winner for a given problem
 #' @param data the \code{data.frame} to operate on
 #' @param theproblem string name of the problem to analyse
+#' @param set1name string of the benchmark set to focus on
 #' @return object of class \code{data.frame}
 #' @author Trent Henderson
 #' 
 
-find_winner <- function(data, theproblem){
+find_winner <- function(data, theproblem, set1name){
   
   tmp2 <- data %>%
     filter(problem == theproblem) %>%
     dplyr::select(c(resample, method, balanced_accuracy)) %>%
     pivot_wider(id_cols = "resample", names_from = "method", values_from = "balanced_accuracy")
+  
+  if(colnames(tmp2)[2] != set1name){
+    tmp2 <- tmp2 %>%
+      dplyr::select(c(1, 3, 2))
+  }
   
   set1_name <- colnames(tmp2)[2]
   set2_name <- colnames(tmp2)[3]
@@ -52,7 +58,14 @@ find_winner <- function(data, theproblem){
     group_by(problem, method) %>%
     summarise(mean_acc = mean(balanced_accuracy, na.rm = TRUE)) %>%
     ungroup() %>%
-    pivot_wider(id_cols = "problem", names_from = "method", values_from = "mean_acc") %>%
+    pivot_wider(id_cols = "problem", names_from = "method", values_from = "mean_acc")
+  
+  if(colnames(tmp2)[2] != set1name){
+    tmp2 <- tmp2 %>%
+      dplyr::select(c(1, 3, 2))
+  }
+  
+  tmp2 <- tmp2 %>%
     rename(set1 = 2,
            set2 = 3) %>%
     mutate(winner = case_when(
@@ -88,9 +101,9 @@ calculate_wins <- function(data, combn_data, rownum){
   if(thesets$set1 == thesets$set2){
     outs <- data.frame(set1 = thesets$set1, 
                        set2 = thesets$set2,
-                       wins_for_set1 = length(unique(data$problem)),
+                       counter = NA,
                        props = NA,
-                       total_probs = length(unique(data$problem)))
+                       total_probs = NA)
   } else{
     
     # Filter data
@@ -103,20 +116,18 @@ calculate_wins <- function(data, combn_data, rownum){
     find_winner_safe <- purrr::possibly(find_winner, otherwise = NULL)
     
     outs <- unique(tmp$problem) %>%
-      purrr::map_df(~ find_winner_safe(data = tmp, theproblem = .x)) %>%
-      filter(method == thesets$set1) %>%
+      purrr::map_df(~ find_winner_safe(data = tmp, theproblem = .x, set1name = thesets$set1)) %>%
+      dplyr::select(-c(method, mean_accuracy, p_value)) %>%
+      distinct() %>%
       group_by(winner) %>%
       summarise(counter = n()) %>%
       ungroup() %>%
       mutate(total_probs = sum(counter),
              props = counter / total_probs) %>%
-      filter(winner == thesets$set1) %>%
+      filter(winner != "tie") %>%
       rename(set1 = winner) %>%
-      mutate(set2 = thesets$set2) %>%
-      dplyr::select(c(set1, set2, counter, total_probs, props)) %>%
-      rename(wins_for_set1 = counter)
+      mutate(set2 = ifelse(set1 == thesets$set1, thesets$set2, thesets$set1))
   }
-  
   return(outs)
 }
 
@@ -126,24 +137,29 @@ combns <- crossing(unique(outputs_z$method), unique(outputs_z$method), .name_rep
   rename(set1 = 1,
          set2 = 2)
 
+combns <- combns[!duplicated(data.frame(t(apply(combns, 1, sort)))), ] # Remove duplicates since we get both set's values in the function
+
 wins <- 1:nrow(combns) %>%
-  purrr::map_df(~ calculate_wins(data = outputs_z, combn_data = combns, rownum = .x))
+  purrr::map_df(~ calculate_wins(data = outputs_z, combn_data = combns, rownum = .x)) %>%
+  mutate(label_wins = ifelse(set1 == set2, "-", counter),
+         label_total = ifelse(set1 == set2, "-", total_probs)) 
 
 #---------------------- Draw graphic -----------------------
 
 p <- wins %>%
-  ggplot(aes(x = set2, y = set1, fill = wins_for_set1)) +
+  ggplot(aes(x = set2, y = set1, fill = counter)) +
   geom_tile() +
-  geom_text(aes(label = paste0(wins_for_set1, "/", total_probs)), colour = "white") +
+  geom_text(aes(label = paste0(label_wins, "/", label_total)), colour = "black") +
   labs(title = paste0("Head to head of feature sets over maximum of ", max(wins$total_probs), " problems"),
        subtitle = "t-tests between accuracy distributions for each feature set and problem combination were calculated",
-       x = "Benchmark feature set",
-       y = "Test feature set",
-       fill = "Number of times won") +
-  scale_fill_gradient2(low = "white",
-                       mid = "#0571B0",
-                       high = "#CA0020",
-                       midpoint = as.integer(mean(wins$wins_for_set1))) +
+       x = "Test feature set",
+       y = "Benchmark feature set",
+       fill = "Number of statistical wins") +
+  scale_fill_gradient2(low = "#67A9CF",
+                       mid = "#F7F7F7",
+                       high = "#EF8A62",
+                       midpoint = median(wins$counter, na.rm = TRUE),
+                       na.value = "grey50") +
   theme_bw() +
   theme(legend.position = "bottom")
 
