@@ -66,15 +66,7 @@ find_winner <- function(data, theproblem, set1name){
   }
   
   tmp2 <- tmp2 %>%
-    rename(set1 = 2,
-           set2 = 3) %>%
-    mutate(winner = case_when(
-      fit$p.value < .05 & set1 > set2 ~ set1_name,
-      fit$p.value < .05 & set2 > set1 ~ set2_name,
-      TRUE                            ~ "tie")) %>%
-    pivot_longer(cols = set1:set2, names_to = "method", values_to = "mean_accuracy") %>%
-    mutate(method = ifelse(method == "set1", set1_name, set2_name),
-           p_value = fit$p.value)
+    mutate(p_value = fit$p.value)
   
   return(tmp2)
 }
@@ -103,7 +95,8 @@ calculate_wins <- function(data, combn_data, rownum){
                        set2 = thesets$set2,
                        counter = NA,
                        props = NA,
-                       total_probs = NA)
+                       total_probs = NA,
+                       ties = NA)
   } else{
     
     # Filter data
@@ -117,16 +110,28 @@ calculate_wins <- function(data, combn_data, rownum){
     
     outs <- unique(tmp$problem) %>%
       purrr::map_df(~ find_winner_safe(data = tmp, theproblem = .x, set1name = thesets$set1)) %>%
-      dplyr::select(-c(method, mean_accuracy, p_value)) %>%
-      distinct() %>%
+      rename(set1 = 2,
+             set2 = 3) %>%
+      mutate(p_adj = p.adjust(p_value, method = "holm"),
+             winner = case_when(
+               p_adj < .05 & set1 > set2 ~ thesets$set1,
+               p_adj < .05 & set2 > set1 ~ thesets$set2,
+               TRUE                      ~ "tie")) %>%
       group_by(winner) %>%
       summarise(counter = n()) %>%
       ungroup() %>%
       mutate(total_probs = sum(counter),
-             props = counter / total_probs) %>%
+             props = counter / total_probs)
+    
+    ties <- outs %>%
+      filter(winner == "tie")
+    
+    outs <- outs %>%
       filter(winner != "tie") %>%
       rename(set1 = winner) %>%
-      mutate(set2 = ifelse(set1 == thesets$set1, thesets$set2, thesets$set1))
+      mutate(set2 = ifelse(set1 == thesets$set1, thesets$set2, thesets$set1),
+             ties = ties$counter) %>%
+      filter(set1 != thesets$set1) # For upper triangular glory
   }
   return(outs)
 }
@@ -142,18 +147,20 @@ combns <- combns[!duplicated(data.frame(t(apply(combns, 1, sort)))), ] # Remove 
 wins <- 1:nrow(combns) %>%
   purrr::map_df(~ calculate_wins(data = outputs_z, combn_data = combns, rownum = .x)) %>%
   mutate(label_wins = ifelse(set1 == set2, "-", counter),
-         label_total = ifelse(set1 == set2, "-", total_probs)) 
+         label_total = ifelse(set1 == set2, "-", total_probs),
+         label_ties = ifelse(set1 == set2, "-", ties),
+         label_losses = ifelse(set1 == set2, "-", total_probs - (counter + ties))) 
 
 #---------------------- Draw graphic -----------------------
 
 p <- wins %>%
   ggplot(aes(x = set2, y = set1, fill = counter)) +
   geom_tile() +
-  geom_text(aes(label = paste0(label_wins, "/", label_total)), colour = "black") +
-  labs(title = paste0("Head to head of feature sets over maximum of ", max(wins$total_probs), " problems"),
-       subtitle = "t-tests between accuracy distributions for each feature set and problem combination were calculated",
-       x = "Test feature set",
-       y = "Benchmark feature set",
+  geom_text(aes(label = paste0(label_wins, "/", label_ties, "/", label_losses)), colour = "black") +
+  labs(title = paste0("Head to head of feature sets over maximum of ", max(wins$total_probs, na.rm = TRUE), " problems"),
+       subtitle = "t-tests between accuracy distributions for each feature set and problem combination were calculated\nand p-values corrected using Holm-Bonferroni method for each pairwise feature set comparison over all problems.\nTile labels follow a wins/ties/losses format.",
+       x = "Comparator feature set",
+       y = "Focus feature set",
        fill = "Number of statistical wins") +
   scale_fill_gradient2(low = "#67A9CF",
                        mid = "#F7F7F7",
@@ -161,7 +168,8 @@ p <- wins %>%
                        midpoint = median(wins$counter, na.rm = TRUE),
                        na.value = "grey50") +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        panel.grid = element_blank())
 
 print(p)
 ggsave("output/z-scored/head-to-head-matrix.pdf", p)
