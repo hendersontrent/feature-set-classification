@@ -130,7 +130,8 @@ calculate_wins <- function(data, combn_data, rownum){
       filter(winner != "tie") %>%
       rename(set1 = winner) %>%
       mutate(set2 = ifelse(set1 == thesets$set1, thesets$set2, thesets$set1),
-             ties = ties$counter)
+             ties = ties$counter) %>%
+      filter(set1 != thesets$set1) # For upper triangular glory
   }
   return(outs)
 }
@@ -158,8 +159,8 @@ p <- wins %>%
   geom_text(aes(label = paste0(label_wins, "/", label_ties, "/", label_losses)), colour = "black") +
   labs(title = paste0("Head to head of feature sets over maximum of ", max(wins$total_probs, na.rm = TRUE), " problems"),
        subtitle = "t-tests between accuracy distributions for each feature set and problem combination were calculated\nand p-values corrected using Holm-Bonferroni method for each pairwise feature set comparison over all problems.\nTile labels follow a wins/ties/losses format.",
-       x = "Test feature set",
-       y = "Benchmark feature set",
+       x = "Comparator feature set",
+       y = "Focus feature set",
        fill = "Number of statistical wins") +
   scale_fill_gradient2(low = "#67A9CF",
                        mid = "#F7F7F7",
@@ -167,7 +168,8 @@ p <- wins %>%
                        midpoint = median(wins$counter, na.rm = TRUE),
                        na.value = "grey50") +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        panel.grid = element_blank())
 
 print(p)
 ggsave("output/z-scored/head-to-head-matrix.pdf", p)
