@@ -98,17 +98,14 @@ p <- z_scores_mat %>%
        y = "Problem",
        fill = "Normalised performance score",
        caption = "Value of 0 indicates no difference from the mean. Value of |1| indicates 1 standard deviation away from mean.") +
-  # scale_fill_gradientn(colours = c("#2166AC", "#67A9CF", "#D1E5F0", "#FAF9F6", "white", "#FAF9F6", "#FDDBC7", "#EF8A62", "#B2182B"),
-  #                      breaks = seq(from = -2, to = 2, by = 0.5),
-  #                      labels = seq(from = -2, to = 2, by = 0.5),
-  #                      limits = c(-2, 2)) +
   scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2),
                        labels = c(-2, -1, -0.5, 0, 0.5, 1, 2),
                        limits = c(-2, 2)) +
   theme_bw() +
   theme(legend.position = "bottom",
-        legend.key.width = unit(1.5, "cm"))
+        legend.key.width = unit(1.5, "cm"),
+        panel.grid = element_blank())
 
 print(p)
 ggsave("output/z-scored/normalised-performance-score.pdf", p, units = "in", height = 11, width = 11)
