@@ -64,12 +64,12 @@ all_mains <- main_models %>%
 # Create palette for whoever is top performer
 
 mypal <- c("All Features" = "black",
-           "catch22" = "#1B9E77",
-           "feasts" = "#D95F02",
-           "Kats" = "#7570B3",
-           "tsfeatures" = "#E7298A",
-           "TSFEL" = "#66A61E",
-           "tsfresh" = "#E6AB02")
+           "catch22" = "#256676",
+           "feasts" = "#f6a39f",
+           "Kats" = "#1fc468",
+           "tsfeatures" = "#b41e51",
+           "TSFEL" = "#3eeaef",
+           "tsfresh" = "#5f3e3f")
 
 # Define coordinates for upper triangle to shade
 
