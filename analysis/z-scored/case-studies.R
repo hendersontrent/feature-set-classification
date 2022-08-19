@@ -35,6 +35,16 @@ plane <- TimeSeriesData %>%
 
 rm(TimeSeriesData)
 
+# Load feature calculations
+
+load("data/feature-calcs/z-scored/Coffee.Rda")
+coffee_feats <- outs_z
+load("data/feature-calcs/z-scored/ProximalPhalanxOutlineAgeGroup.Rda")
+proximal_feats <- outs_z
+load("data/feature-calcs/z-scored/Plane.Rda")
+plane_feats <- outs_z
+rm(outs_z)
+
 #------------------ Define useful functions ----------------
 
 #' Sample IDs by class
@@ -103,6 +113,27 @@ plot_samples <- function(data, n = 2, seed = 123){
 # Draw plot
 
 plot_samples(data = coffee, n = 2, seed = 123)
+
+# Identify top features
+
+outputs <- compute_top_features(coffee, 
+                                id_var = "id", 
+                                group_var = "group",
+                                num_features = 10, 
+                                normalise_violin_plots = FALSE,
+                                method = "RobustSigmoid",
+                                cor_method = "pearson",
+                                test_method = "gaussprRadial",
+                                clust_method = "average",
+                                use_balanced_accuracy = FALSE,
+                                use_k_fold = TRUE,
+                                num_folds = 10,
+                                use_empirical_null =  TRUE,
+                                null_testing_method = "ModelFreeShuffles",
+                                p_value_method = "gaussian",
+                                num_permutations = 10,
+                                pool_empirical_null = FALSE,
+                                seed = 123)
 
 #------------------ Case study II: ProximalPhalanxOutlineAgeGroup -----------------
 
