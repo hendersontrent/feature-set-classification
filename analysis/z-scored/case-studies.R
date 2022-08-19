@@ -24,10 +24,74 @@ outputs_z <- outputs_z %>%
 
 load("data/TimeSeriesData.Rda")
 
-TimeSeriesData_filt <- TimeSeriesData %>%
-  filter(problem %in% c("Coffee", "ProximalPhalanxOutlineAgeGroup", "Plane")) 
+coffee <- TimeSeriesData %>%
+  filter(problem == "Coffee")
+
+proximal <- TimeSeriesData %>%
+  filter(problem == "ProximalPhalanxOutlineAgeGroup")
+
+plane <- TimeSeriesData %>%
+  filter(problem == "Plane")
 
 rm(TimeSeriesData)
+
+#------------------ Define useful functions ----------------
+
+#' Sample IDs by class
+#' @param data the dataframe containing time-series data
+#' @param group_name string specifying the class to filter by
+#' @param n number of samples to generate
+#' @return object of class vector
+#' @author Trent Henderson
+#' 
+
+draw_samples <- function(data, group_name, n){
+  
+  samps <- data %>%
+    filter(target == group_name) %>%
+    dplyr::select(id) %>%
+    distinct() %>%
+    pull(id) %>%
+    sample(size = n)
+  
+  return(samps)
+}
+
+#' Draw time series plots by class
+#' @param data the dataframe containing time series data
+#' @param n number of samples to take
+#' @param seed fix R's pseudo-random number generator
+#' @author Trent Henderson
+#'
+
+plot_samples <- function(data, n = 2, seed = 123){
+  
+  set.seed(seed)
+  
+  # Generate IDs to sample
+  
+  ids <- unique(data$target) %>%
+    purrr::map(~ draw_samples(data = data, group_name = .x, n = n)) %>%
+    unlist()
+  
+  # Draw plot
+  
+  p <- data %>%
+    filter(id %in% ids) %>%
+    ggplot(aes(x = timepoint, y = values, colour = target)) +
+    geom_line() +
+    labs(title = paste0("Random sample of ", n, " time series from each class for ", unique(data$problem)),
+         x = "Time",
+         y = "Value",
+         colour = "Class") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          strip.background = element_blank(),
+          strip.text = element_text(face = "bold")) +
+    facet_wrap(~id)
+  
+  return(p)
+}
 
 #------------------ Case study I: Coffee ------------------
 
@@ -36,7 +100,9 @@ rm(TimeSeriesData)
 # and we want to understand why
 #----------------------------------------
 
+# Draw plot
 
+plot_samples(data = coffee, n = 2, seed = 123)
 
 #------------------ Case study II: ProximalPhalanxOutlineAgeGroup -----------------
 
@@ -45,7 +111,9 @@ rm(TimeSeriesData)
 # and we want to understand why
 #--------------------------------------------
 
+# Draw plot
 
+plot_samples(data = proximal, n = 2, seed = 123)
 
 #------------------ Case study III: Plane ----------------
 
@@ -54,4 +122,6 @@ rm(TimeSeriesData)
 # and we want to understand why
 #--------------------------------------------
 
+# Draw plot
 
+plot_samples(data = plane, n = 2, seed = 123)
