@@ -224,8 +224,8 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                           method = test_method,
                           trControl = fitControl,
                           preProcess = c("center", "scale", "nzv"),
-                          tuneGrid = tuneGrid = c(0, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75,
-                                                  1, 1.5, 2, 5))
+                          tuneGrid = c(0, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75,
+                                       1, 1.5, 2, 5))
     } else{
       mod <- caret::train(group ~ .,
                           data = tmp_train,
