@@ -224,8 +224,9 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                           method = test_method,
                           trControl = fitControl,
                           preProcess = c("center", "scale", "nzv"),
-                          tuneGrid = c(0, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75,
-                                       1, 1.5, 2, 5))
+                          tuneGrid = expand.grid(C = c(0.01, 0.05, 0.1, 0.25, 
+                                                       0.5, 0.75, 1, 1.25, 1.5, 1.75, 
+                                                       2, 5)))
     } else{
       mod <- caret::train(group ~ .,
                           data = tmp_train,
@@ -260,7 +261,7 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
       mainOuts <- data.frame(accuracy = accuracy)
     }
     
-    mainOuts <- mainOuts%>%
+    mainOuts <- mainOuts %>%
       dplyr::mutate(category = "Main")
     
   } else{
@@ -280,8 +281,9 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                           method = test_method,
                           trControl = fitControl,
                           preProcess = c("center", "scale", "nzv"),
-                          tuneGrid = c(0, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75,
-                                       1, 1.5, 2, 5))
+                          tuneGrid = expand.grid(C = c(0, 0.01, 0.05, 0.1, 0.25, 
+                                                       0.5, 0.75, 1, 1.25, 1.5, 1.75, 
+                                                       2, 5)))
     } else{
       mod <- caret::train(group ~ .,
                           data = tmp_train,
@@ -320,7 +322,13 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
   }
   
   mainOuts <- mainOuts %>%
-    dplyr::mutate(resample = x)
+    dplyr::mutate(resample = x,
+                  num_features_used = (ncol(mod$trainingData) - 1))
+  
+  if(test_method == "svmLinear"){
+    mainOuts <- mainOuts %>%
+      dplyr::mutate(best_C = mod$bestTune[1, 1])
+  }
   
   return(mainOuts)
 }
@@ -396,8 +404,7 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
   
   if(!is.null(set)){
     finalOuts <- finalOuts %>%
-      dplyr::mutate(method = set,
-                    num_features_used = length(unique(tmp_mods$names)))
+      dplyr::mutate(method = set)
   }
   
   return(finalOuts)
