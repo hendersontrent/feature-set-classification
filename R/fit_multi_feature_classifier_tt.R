@@ -212,10 +212,14 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                                         number = num_folds,
                                         summaryFunction = calculate_balanced_accuracy,
                                         classProbs = TRUE)
+      
+      themetric <- "Balanced_Accuracy"
     } else {
       fitControl <- caret::trainControl(method = "cv",
                                         number = num_folds,
                                         classProbs = TRUE)
+      
+      themetric <- "Accuracy"
     }
     
     if(test_method == "svmLinear"){
@@ -223,6 +227,7 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                           data = tmp_train,
                           method = test_method,
                           trControl = fitControl,
+                          metric = themetric,
                           preProcess = c("center", "scale", "nzv"),
                           tuneGrid = expand.grid(C = c(0.01, 0.05, 0.1, 0.25, 
                                                        0.5, 0.75, 1, 1.25, 1.5, 1.75, 
@@ -275,22 +280,11 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                                         classProbs = TRUE)
     }
     
-    if(test_method == "svmLinear"){
-      mod <- caret::train(group ~ .,
-                          data = tmp_train,
-                          method = test_method,
-                          trControl = fitControl,
-                          preProcess = c("center", "scale", "nzv"),
-                          tuneGrid = expand.grid(C = c(0, 0.01, 0.05, 0.1, 0.25, 
-                                                       0.5, 0.75, 1, 1.25, 1.5, 1.75, 
-                                                       2, 5)))
-    } else{
-      mod <- caret::train(group ~ .,
+    mod <- caret::train(group ~ .,
                           data = tmp_train,
                           method = test_method,
                           trControl = fitControl,
                           preProcess = c("center", "scale", "nzv"))
-    }
     
     # Get main predictions
     
