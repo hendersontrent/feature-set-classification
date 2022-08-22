@@ -169,6 +169,36 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
       dplyr::select(-c(.data$id))
   }
   
+  #----------------- Final NaN/Inf drops ------------------------
+  
+  tmp_train <- tmp_train %>%
+    dplyr::filter(
+      dplyr::across(
+        .cols = dplyr::everything(),
+        .fns = ~ !is.na(.x)
+      )
+    ) %>%
+    dplyr::filter(
+      dplyr::across(
+        .cols = dplyr::everything(),
+        .fns = ~ !is.infinite(.x)
+      )
+    )
+  
+  tmp_test <- tmp_test %>%
+    dplyr::filter(
+      dplyr::across(
+        .cols = dplyr::everything(),
+        .fns = ~ !is.na(.x)
+      )
+    ) %>%
+    dplyr::filter(
+      dplyr::across(
+        .cols = dplyr::everything(),
+        .fns = ~ !is.infinite(.x)
+      )
+    )
+  
   #----------------- Model fitting and returns ------------------
   
   # Fit models
@@ -182,17 +212,33 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                                         number = num_folds,
                                         summaryFunction = calculate_balanced_accuracy,
                                         classProbs = TRUE)
+      
+      themetric <- "Balanced_Accuracy"
     } else {
       fitControl <- caret::trainControl(method = "cv",
                                         number = num_folds,
                                         classProbs = TRUE)
+      
+      themetric <- "Accuracy"
     }
     
-    mod <- caret::train(group ~ .,
-                        data = tmp_train,
-                        method = test_method,
-                        trControl = fitControl,
-                        preProcess = c("center", "scale", "nzv"))
+    if(test_method == "svmLinear"){
+      mod <- caret::train(group ~ .,
+                          data = tmp_train,
+                          method = test_method,
+                          trControl = fitControl,
+                          metric = themetric,
+                          preProcess = c("center", "scale", "nzv"),
+                          tuneGrid = expand.grid(C = c(0.01, 0.05, 0.1, 0.25, 
+                                                       0.5, 0.75, 1, 1.25, 1.5, 1.75, 
+                                                       2, 5)))
+    } else{
+      mod <- caret::train(group ~ .,
+                          data = tmp_train,
+                          method = test_method,
+                          trControl = fitControl,
+                          preProcess = c("center", "scale", "nzv"))
+    }
     
     # Get main predictions
     
@@ -220,7 +266,7 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
       mainOuts <- data.frame(accuracy = accuracy)
     }
     
-    mainOuts <- mainOuts%>%
+    mainOuts <- mainOuts %>%
       dplyr::mutate(category = "Main")
     
   } else{
@@ -235,10 +281,10 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
     }
     
     mod <- caret::train(group ~ .,
-                        data = tmp_train,
-                        method = test_method,
-                        trControl = fitControl,
-                        preProcess = c("center", "scale", "nzv"))
+                          data = tmp_train,
+                          method = test_method,
+                          trControl = fitControl,
+                          preProcess = c("center", "scale", "nzv"))
     
     # Get main predictions
     
@@ -270,7 +316,13 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
   }
   
   mainOuts <- mainOuts %>%
-    dplyr::mutate(resample = x)
+    dplyr::mutate(resample = x,
+                  num_features_used = (ncol(mod$trainingData) - 1))
+  
+  if(test_method == "svmLinear"){
+    mainOuts <- mainOuts %>%
+      dplyr::mutate(best_C = mod$bestTune[1, 1])
+  }
   
   return(mainOuts)
 }
@@ -346,8 +398,7 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
   
   if(!is.null(set)){
     finalOuts <- finalOuts %>%
-      dplyr::mutate(method = set,
-                    num_features_used = length(unique(tmp_mods$names)))
+      dplyr::mutate(method = set)
   }
   
   return(finalOuts)
@@ -458,28 +509,6 @@ clean_by_set <- function(data, themethod = NULL){
 #' @param problem_name the string of the problem to calculate models for
 #' @return an object of class list containing dataframe summaries of the classification models and a \code{ggplot} object if \code{by_set} is \code{TRUE}
 #' @author Trent Henderson
-#' @export
-#' @examples
-#' \donttest{
-#' featMat <- calculate_features(data = simData,
-#'   id_var = "id",
-#'   time_var = "timepoint",
-#'   values_var = "values",
-#'   group_var = "process",
-#'   feature_set = "catch22",
-#'   seed = 123)
-#'
-#' fit_multi_feature_classifier_tt(featMat,
-#'   id_var = "id",
-#'   group_var = "group",
-#'   by_set = FALSE,
-#'   test_method = "gaussprRadial",
-#'   use_balanced_accuracy = FALSE,
-#'   use_k_fold = TRUE,
-#'   num_folds = 10,
-#'   num_resamples = 30,
-#'   problem_name = "ADIAC")
-#' }
 #'
 
 fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "group",
