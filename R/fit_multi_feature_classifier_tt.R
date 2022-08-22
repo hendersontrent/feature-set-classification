@@ -458,28 +458,6 @@ clean_by_set <- function(data, themethod = NULL){
 #' @param problem_name the string of the problem to calculate models for
 #' @return an object of class list containing dataframe summaries of the classification models and a \code{ggplot} object if \code{by_set} is \code{TRUE}
 #' @author Trent Henderson
-#' @export
-#' @examples
-#' \donttest{
-#' featMat <- calculate_features(data = simData,
-#'   id_var = "id",
-#'   time_var = "timepoint",
-#'   values_var = "values",
-#'   group_var = "process",
-#'   feature_set = "catch22",
-#'   seed = 123)
-#'
-#' fit_multi_feature_classifier_tt(featMat,
-#'   id_var = "id",
-#'   group_var = "group",
-#'   by_set = FALSE,
-#'   test_method = "gaussprRadial",
-#'   use_balanced_accuracy = FALSE,
-#'   use_k_fold = TRUE,
-#'   num_folds = 10,
-#'   num_resamples = 30,
-#'   problem_name = "ADIAC")
-#' }
 #'
 
 fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "group",
