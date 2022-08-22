@@ -169,6 +169,36 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
       dplyr::select(-c(.data$id))
   }
   
+  #----------------- Final NaN/Inf drops ------------------------
+  
+  tmp_train <- tmp_train %>%
+    dplyr::filter(
+      dplyr::across(
+        .cols = dplyr::everything(),
+        .fns = ~ !is.na(.x)
+      )
+    ) %>%
+    dplyr::filter(
+      dplyr::across(
+        .cols = dplyr::everything(),
+        .fns = ~ !is.infinite(.x)
+      )
+    )
+  
+  tmp_test <- tmp_test %>%
+    dplyr::filter(
+      dplyr::across(
+        .cols = dplyr::everything(),
+        .fns = ~ !is.na(.x)
+      )
+    ) %>%
+    dplyr::filter(
+      dplyr::across(
+        .cols = dplyr::everything(),
+        .fns = ~ !is.infinite(.x)
+      )
+    )
+  
   #----------------- Model fitting and returns ------------------
   
   # Fit models
@@ -192,7 +222,9 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                         data = tmp_train,
                         method = test_method,
                         trControl = fitControl,
-                        preProcess = c("center", "scale", "nzv"))
+                        preProcess = c("center", "scale", "nzv"),
+                        tuneGrid = c(0, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75,
+                                     1, 1.5, 2, 5))
     
     # Get main predictions
     
@@ -238,7 +270,9 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                         data = tmp_train,
                         method = test_method,
                         trControl = fitControl,
-                        preProcess = c("center", "scale", "nzv"))
+                        preProcess = c("center", "scale", "nzv"),
+                        tuneGrid = c(0, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75,
+                                     1, 1.5, 2, 5))
     
     # Get main predictions
     
