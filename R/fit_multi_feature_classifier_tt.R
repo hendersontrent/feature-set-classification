@@ -169,36 +169,6 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
       dplyr::select(-c(.data$id))
   }
   
-  #----------------- Final NaN/Inf drops ------------------------
-  
-  tmp_train <- tmp_train %>%
-    dplyr::filter(
-      dplyr::across(
-        .cols = dplyr::everything(),
-        .fns = ~ !is.na(.x)
-      )
-    ) %>%
-    dplyr::filter(
-      dplyr::across(
-        .cols = dplyr::everything(),
-        .fns = ~ !is.infinite(.x)
-      )
-    )
-  
-  tmp_test <- tmp_test %>%
-    dplyr::filter(
-      dplyr::across(
-        .cols = dplyr::everything(),
-        .fns = ~ !is.na(.x)
-      )
-    ) %>%
-    dplyr::filter(
-      dplyr::across(
-        .cols = dplyr::everything(),
-        .fns = ~ !is.infinite(.x)
-      )
-    )
-  
   #----------------- Model fitting and returns ------------------
   
   # Fit models
@@ -212,33 +182,17 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                                         number = num_folds,
                                         summaryFunction = calculate_balanced_accuracy,
                                         classProbs = TRUE)
-      
-      themetric <- "Balanced_Accuracy"
     } else {
       fitControl <- caret::trainControl(method = "cv",
                                         number = num_folds,
                                         classProbs = TRUE)
-      
-      themetric <- "Accuracy"
     }
     
-    if(test_method == "svmLinear"){
-      mod <- caret::train(group ~ .,
-                          data = tmp_train,
-                          method = test_method,
-                          trControl = fitControl,
-                          metric = themetric,
-                          preProcess = c("center", "scale", "nzv"),
-                          tuneGrid = expand.grid(C = c(0.01, 0.05, 0.1, 0.25, 
-                                                       0.5, 0.75, 1, 1.25, 1.5, 1.75, 
-                                                       2, 5)))
-    } else{
-      mod <- caret::train(group ~ .,
-                          data = tmp_train,
-                          method = test_method,
-                          trControl = fitControl,
-                          preProcess = c("center", "scale", "nzv"))
-    }
+    mod <- caret::train(group ~ .,
+                        data = tmp_train,
+                        method = test_method,
+                        trControl = fitControl,
+                        preProcess = c("center", "scale", "nzv"))
     
     # Get main predictions
     
@@ -266,7 +220,7 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
       mainOuts <- data.frame(accuracy = accuracy)
     }
     
-    mainOuts <- mainOuts %>%
+    mainOuts <- mainOuts%>%
       dplyr::mutate(category = "Main")
     
   } else{
@@ -281,10 +235,10 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
     }
     
     mod <- caret::train(group ~ .,
-                          data = tmp_train,
-                          method = test_method,
-                          trControl = fitControl,
-                          preProcess = c("center", "scale", "nzv"))
+                        data = tmp_train,
+                        method = test_method,
+                        trControl = fitControl,
+                        preProcess = c("center", "scale", "nzv"))
     
     # Get main predictions
     
@@ -318,11 +272,6 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
   mainOuts <- mainOuts %>%
     dplyr::mutate(resample = x,
                   num_features_used = (ncol(mod$trainingData) - 1))
-  
-  if(test_method == "svmLinear"){
-    mainOuts <- mainOuts %>%
-      dplyr::mutate(best_C = mod$bestTune[1, 1])
-  }
   
   return(mainOuts)
 }
@@ -448,26 +397,31 @@ clean_by_set <- function(data, themethod = NULL){
   
   ncols <- ncol(tmp_cleaner)
   
-  # Delete features that are all NaNs and features with constant values
+  # Delete features that contain NAs/Infs and features with constant values
+  # Note: We want to delete features rather than observations so the data stays consistent across sets
   
   tmp_cleaner <- tmp_cleaner %>%
-    dplyr::select_if(~sum(!is.na(.)) > 0) %>%
     dplyr::select(mywhere(~dplyr::n_distinct(.) > 1))
   
+  inds <- apply(tmp_cleaner, 2, function(x)!any(is.na(x)))
+  tmp_cleaner <- tmp_cleaner[, inds]
+  inds <- apply(tmp_cleaner, 2, function(x)!any(is.finite(x)))
+  tmp_cleaner <- tmp_cleaner[, inds]
+  
   if(ncol(tmp_cleaner) < ncols){
-    message(paste0("Dropped ", ncols - ncol(tmp_cleaner), "/", ncol(tmp_cleaner), " features from ", themethod, " due to containing NAs or only a constant."))
+    message(paste0("Dropped ", ncols - ncol(tmp_cleaner), "/", ncol(tmp_cleaner), " features from ", themethod, " due to containing NAs, -Infs/Infs or only a constant."))
   }
   
-  # Check NAs
-  
-  nrows <- nrow(tmp_cleaner)
-  
-  tmp_cleaner <- tmp_cleaner %>%
-    tidyr::drop_na()
-  
-  if(nrow(tmp_cleaner) < nrows){
-    message(paste0("Dropped ", nrows - nrow(tmp_cleaner), " unique IDs due to NA values."))
-  }
+  # # Check NAs
+  # 
+  # nrows <- nrow(tmp_cleaner)
+  # 
+  # tmp_cleaner <- tmp_cleaner %>%
+  #   tidyr::drop_na()
+  # 
+  # if(nrow(tmp_cleaner) < nrows){
+  #   message(paste0("Dropped ", nrows - nrow(tmp_cleaner), " unique IDs due to NA values."))
+  # }
   
   # Clean up column (feature) names so models fit properly (mainly an issue with SVM formula) and re-join set labels
   # and prep factor levels as names for {caret} if the 3 base two-class options aren't being used
@@ -509,13 +463,35 @@ clean_by_set <- function(data, themethod = NULL){
 #' @param problem_name the string of the problem to calculate models for
 #' @return an object of class list containing dataframe summaries of the classification models and a \code{ggplot} object if \code{by_set} is \code{TRUE}
 #' @author Trent Henderson
+#' @export
+#' @examples
+#' \donttest{
+#' featMat <- calculate_features(data = simData,
+#'   id_var = "id",
+#'   time_var = "timepoint",
+#'   values_var = "values",
+#'   group_var = "process",
+#'   feature_set = "catch22",
+#'   seed = 123)
+#'
+#' fit_multi_feature_classifier_tt(featMat,
+#'   id_var = "id",
+#'   group_var = "group",
+#'   by_set = FALSE,
+#'   test_method = "gaussprRadial",
+#'   use_balanced_accuracy = FALSE,
+#'   use_k_fold = TRUE,
+#'   num_folds = 10,
+#'   num_resamples = 30,
+#'   problem_name = "ADIAC")
+#' }
 #'
 
 fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "group",
-                                         by_set = FALSE, test_method = "gaussprRadial",
-                                         use_balanced_accuracy = FALSE, use_k_fold = TRUE, 
-                                         num_folds = 10, num_resamples = 30,
-                                         problem_name){
+                                            by_set = FALSE, test_method = "gaussprRadial",
+                                            use_balanced_accuracy = FALSE, use_k_fold = TRUE, 
+                                            num_folds = 10, num_resamples = 30,
+                                            problem_name){
   
   #---------- Check arguments ------------
   
@@ -652,6 +628,6 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
     dplyr::mutate(classifier_name = classifier_name,
                   statistic_name = statistic_name,
                   problem = problem_name)
-      
+  
   return(output)
 }
