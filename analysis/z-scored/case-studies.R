@@ -88,6 +88,7 @@ plot_samples <- function(data, n = 2, seed = 123){
   
   p <- data %>%
     filter(id %in% ids) %>%
+    mutate(id = factor(id, levels = ids)) %>%
     ggplot(aes(x = timepoint, y = values, colour = target)) +
     geom_line() +
     labs(title = paste0("Random sample of ", n, " time series from each class for ", unique(data$problem)),
@@ -98,7 +99,7 @@ plot_samples <- function(data, n = 2, seed = 123){
     theme(legend.position = "bottom",
           strip.background = element_blank(),
           strip.text = element_text(face = "bold")) +
-    facet_wrap(~id)
+    facet_wrap(~id, ncol = n, nrow = length(unique(data$target)))
   
   return(p)
 }
@@ -112,7 +113,7 @@ plot_samples <- function(data, n = 2, seed = 123){
 
 # Draw plot
 
-plot_samples(data = coffee, n = 2, seed = 123)
+plot_samples(data = coffee, n = 3, seed = 123)
 
 # Identify top features
 
