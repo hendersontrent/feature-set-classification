@@ -104,6 +104,40 @@ plot_samples <- function(data, n = 2, seed = 123){
   return(p)
 }
 
+#' Draw all time series faceted by class with a mean line
+#' @param data the dataframe containing time series data
+#' @author Trent Henderson
+#'
+
+plot_all_ts <- function(data){
+  
+  # Calculate mean
+  
+  mu <- data %>%
+    group_by(timepoint) %>%
+    summarise(mu = mean(values, na.rm = TRUE)) %>%
+    ungroup()
+  
+  # Draw plot
+
+  p <- data %>%
+    mutate(id = as.factor(id),
+           target = as.factor(target)) %>%
+    ggplot(aes(x = timepoint, y = values)) +
+    geom_line(size = 0.6, alpha = 0.8, colour = "grey50") +
+    geom_line(data = mu, aes(x = timepoint, y = mu), size = 1, colour = "#b41e51") +
+    labs(title = paste0("Time series plots for each class for ", unique(data$problem)),
+         subtitle = "Mean is represented by thick red line.",
+         x = "Time",
+         y = "Value") +
+    theme_bw() +
+    theme(strip.background = element_blank(),
+          strip.text = element_text(face = "bold")) +
+    facet_wrap(~target)
+  
+  return(p)
+}
+
 #------------------ Case study I: Coffee ------------------
 
 #----------------------------------------
@@ -131,6 +165,11 @@ coffee_top <- compute_top_features(coffee_feats,
                                    p_value_method = "gaussian",
                                    num_permutations = 100,
                                    seed = 123)
+
+# Draw plots like in the catch22 paper
+
+coffee_plot <- plot_all_ts(data = coffee)
+print(coffee_plot)
 
 #------------------ Case study II: ProximalPhalanxOutlineAgeGroup -----------------
 
@@ -160,6 +199,11 @@ proximal_top <- compute_top_features(proximal_feats,
                                      num_permutations = 100,
                                      seed = 123)
 
+# Draw plots like in the catch22 paper
+
+proximal_plot <- plot_all_ts(data = proximal)
+print(proximal_plot)
+
 #------------------ Case study III: Plane ----------------
 
 #--------------------------------------------
@@ -187,3 +231,8 @@ plane_top <- compute_top_features(plane_feats,
                                   p_value_method = "gaussian",
                                   num_permutations = 100,
                                   seed = 123)
+
+# Draw plots like in the catch22 paper
+
+plane_plot <- plot_all_ts(data = plane)
+print(plane_plot)
