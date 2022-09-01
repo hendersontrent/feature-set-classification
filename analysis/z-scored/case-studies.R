@@ -114,7 +114,8 @@ plot_all_ts <- function(data){
   # Calculate mean
   
   mu <- data %>%
-    group_by(timepoint) %>%
+    mutate(target = as.factor(target)) %>%
+    group_by(timepoint, target) %>%
     summarise(mu = mean(values, na.rm = TRUE)) %>%
     ungroup()
   
