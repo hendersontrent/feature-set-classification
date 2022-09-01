@@ -122,9 +122,11 @@ plot_all_ts <- function(data){
 
   p <- data %>%
     mutate(id = as.factor(id),
-           target = as.factor(target)) %>%
+           target = as.factor(target))
+  
+  p <- p %>%
     ggplot(aes(x = timepoint, y = values)) +
-    geom_line(size = 0.6, alpha = 0.8, colour = "grey50") +
+    geom_line(aes(group = id), size = 0.6, alpha = 0.8, colour = "grey50") +
     geom_line(data = mu, aes(x = timepoint, y = mu), size = 1, colour = "#b41e51") +
     labs(title = paste0("Time series plots for each class for ", unique(data$problem)),
          subtitle = "Mean is represented by thick red line.",
@@ -133,7 +135,7 @@ plot_all_ts <- function(data){
     theme_bw() +
     theme(strip.background = element_blank(),
           strip.text = element_text(face = "bold")) +
-    facet_wrap(~target)
+    facet_wrap(~target, ncol = 1, nrow = length(unique(p$target)))
   
   return(p)
 }
