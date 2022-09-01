@@ -166,8 +166,10 @@ coffee_top <- compute_top_features(coffee_feats,
                                    use_empirical_null =  TRUE,
                                    null_testing_method = "ModelFreeShuffles",
                                    p_value_method = "gaussian",
-                                   num_permutations = 100,
+                                   num_permutations = 1000,
                                    seed = 123)
+
+save(coffee_top, file = "data/coffee_top.Rda")
 
 # Draw plots like in the catch22 paper
 
@@ -199,8 +201,10 @@ proximal_top <- compute_top_features(proximal_feats,
                                      use_empirical_null =  TRUE,
                                      null_testing_method = "ModelFreeShuffles",
                                      p_value_method = "gaussian",
-                                     num_permutations = 100,
+                                     num_permutations = 1000,
                                      seed = 123)
+
+save(proximal_top, file = "data/proximal_top.Rda")
 
 # Draw plots like in the catch22 paper
 
@@ -232,8 +236,10 @@ plane_top <- compute_top_features(plane_feats,
                                   use_empirical_null =  TRUE,
                                   null_testing_method = "ModelFreeShuffles",
                                   p_value_method = "gaussian",
-                                  num_permutations = 100,
+                                  num_permutations = 1000,
                                   seed = 123)
+
+save(plane_top, file = "data/plane_top.Rda")
 
 # Draw plots like in the catch22 paper
 
