@@ -45,6 +45,13 @@ load("data/feature-calcs/z-scored/Plane.Rda")
 plane_feats <- outs_z
 rm(outs_z)
 
+# Calculate overall mean performance for each problem and set
+
+perform <- outputs_z %>%
+  group_by(problem, method) %>%
+  summarise(x = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  ungroup() 
+
 #------------------ Define useful functions ----------------
 
 #' Sample IDs by class
@@ -221,6 +228,10 @@ save(proximal_top, file = "data/proximal_top.Rda")
 
 proximal_plot <- plot_all_ts(data = proximal)
 print(proximal_plot)
+
+# Check 
+
+
 
 #------------------ Case study III: Plane ----------------
 
