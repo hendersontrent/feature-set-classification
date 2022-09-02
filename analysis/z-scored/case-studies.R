@@ -171,6 +171,17 @@ coffee_top <- compute_top_features(coffee_feats,
 
 save(coffee_top, file = "data/coffee_top.Rda")
 
+# Statistical version as we have a two-class problem
+
+coffee_top2 <- compute_top_features(coffee_feats, 
+                                    id_var = "id", 
+                                    group_var = "group",
+                                    num_features = 40, 
+                                    method = "z-score",
+                                    test_method = "t-test",
+                                    p_value_method = "gaussian",
+                                    seed = 123)
+
 # Draw plots like in the catch22 paper
 
 coffee_plot <- plot_all_ts(data = coffee)
