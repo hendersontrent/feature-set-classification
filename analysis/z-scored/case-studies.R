@@ -45,6 +45,13 @@ load("data/feature-calcs/z-scored/Plane.Rda")
 plane_feats <- outs_z
 rm(outs_z)
 
+# Calculate overall mean performance for each problem and set
+
+perform <- outputs_z %>%
+  group_by(problem, method) %>%
+  summarise(x = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  ungroup() 
+
 #------------------ Define useful functions ----------------
 
 #' Sample IDs by class
@@ -104,6 +111,43 @@ plot_samples <- function(data, n = 2, seed = 123){
   return(p)
 }
 
+#' Draw all time series faceted by class with a mean line
+#' @param data the dataframe containing time series data
+#' @author Trent Henderson
+#'
+
+plot_all_ts <- function(data){
+  
+  # Calculate mean
+  
+  mu <- data %>%
+    mutate(target = as.factor(target)) %>%
+    group_by(timepoint, target) %>%
+    summarise(mu = mean(values, na.rm = TRUE)) %>%
+    ungroup()
+  
+  # Draw plot
+
+  p <- data %>%
+    mutate(id = as.factor(id),
+           target = as.factor(target))
+  
+  p <- p %>%
+    ggplot(aes(x = timepoint, y = values)) +
+    geom_line(aes(group = id), size = 0.6, alpha = 0.8, colour = "grey50") +
+    geom_line(data = mu, aes(x = timepoint, y = mu), size = 1, colour = "#b41e51") +
+    labs(title = paste0("Time series plots for each class for ", unique(data$problem)),
+         subtitle = "Mean is represented by thick red line.",
+         x = "Time",
+         y = "Value") +
+    theme_bw() +
+    theme(strip.background = element_blank(),
+          strip.text = element_text(face = "bold")) +
+    facet_wrap(~target, ncol = 1, nrow = length(unique(p$target)))
+  
+  return(p)
+}
+
 #------------------ Case study I: Coffee ------------------
 
 #----------------------------------------
@@ -120,7 +164,7 @@ plot_samples(data = coffee, n = 3, seed = 123)
 coffee_top <- compute_top_features(coffee_feats, 
                                    id_var = "id", 
                                    group_var = "group",
-                                   num_features = 20, 
+                                   num_features = 40, 
                                    method = "z-score",
                                    test_method = "svmLinear",
                                    use_balanced_accuracy = TRUE,
@@ -129,8 +173,26 @@ coffee_top <- compute_top_features(coffee_feats,
                                    use_empirical_null =  TRUE,
                                    null_testing_method = "ModelFreeShuffles",
                                    p_value_method = "gaussian",
-                                   num_permutations = 100,
+                                   num_permutations = 1000,
                                    seed = 123)
+
+save(coffee_top, file = "data/coffee_top.Rda")
+
+# Statistical version as we have a two-class problem
+
+coffee_top2 <- compute_top_features(coffee_feats, 
+                                    id_var = "id", 
+                                    group_var = "group",
+                                    num_features = 40, 
+                                    method = "z-score",
+                                    test_method = "t-test",
+                                    p_value_method = "gaussian",
+                                    seed = 123)
+
+# Draw plots like in the catch22 paper
+
+coffee_plot <- plot_all_ts(data = coffee)
+print(coffee_plot)
 
 #------------------ Case study II: ProximalPhalanxOutlineAgeGroup -----------------
 
@@ -148,7 +210,7 @@ plot_samples(data = proximal, n = 2, seed = 123)
 proximal_top <- compute_top_features(proximal_feats, 
                                      id_var = "id", 
                                      group_var = "group",
-                                     num_features = 20, 
+                                     num_features = 40, 
                                      method = "z-score",
                                      test_method = "svmLinear",
                                      use_balanced_accuracy = TRUE,
@@ -157,8 +219,19 @@ proximal_top <- compute_top_features(proximal_feats,
                                      use_empirical_null =  TRUE,
                                      null_testing_method = "ModelFreeShuffles",
                                      p_value_method = "gaussian",
-                                     num_permutations = 100,
+                                     num_permutations = 1000,
                                      seed = 123)
+
+save(proximal_top, file = "data/proximal_top.Rda")
+
+# Draw plots like in the catch22 paper
+
+proximal_plot <- plot_all_ts(data = proximal)
+print(proximal_plot)
+
+# Check 
+
+
 
 #------------------ Case study III: Plane ----------------
 
@@ -176,7 +249,7 @@ plot_samples(data = plane, n = 2, seed = 123)
 plane_top <- compute_top_features(plane_feats, 
                                   id_var = "id", 
                                   group_var = "group",
-                                  num_features = 20, 
+                                  num_features = 40, 
                                   method = "z-score",
                                   test_method = "svmLinear",
                                   use_balanced_accuracy = TRUE,
@@ -185,5 +258,12 @@ plane_top <- compute_top_features(plane_feats,
                                   use_empirical_null =  TRUE,
                                   null_testing_method = "ModelFreeShuffles",
                                   p_value_method = "gaussian",
-                                  num_permutations = 100,
+                                  num_permutations = 1000,
                                   seed = 123)
+
+save(plane_top, file = "data/plane_top.Rda")
+
+# Draw plots like in the catch22 paper
+
+plane_plot <- plot_all_ts(data = plane)
+print(plane_plot)
