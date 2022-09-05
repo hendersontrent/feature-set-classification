@@ -436,8 +436,9 @@ clean_by_set <- function(data, themethod = NULL){
   
   inds <- apply(tmp_cleaner, 2, function(x)!any(is.na(x)))
   tmp_cleaner <- tmp_cleaner[, inds]
-  inds <- apply(tmp_cleaner, 2, function(x)!any(is.finite(x)))
-  tmp_cleaner <- tmp_cleaner[, inds]
+  inds2 <- colSums(tmp_cleaner[4:ncol(tmp_cleaner)])
+  inds2 <- inds2[inds2 %ni% c(NA, Inf, -Inf, NaN)]
+  tmp_cleaner <- tmp_cleaner[, append(c("id", "group", "set_split"), names(inds2))]
   
   if(ncol(tmp_cleaner) < ncols){
     message(paste0("Dropped ", ncols - ncol(tmp_cleaner), "/", ncol(tmp_cleaner), " features from ", themethod, " due to containing NAs, -Infs/Infs or only a constant."))

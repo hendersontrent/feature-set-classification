@@ -60,7 +60,8 @@ calculate_accuracy_by_problem_z <- function(theproblem, tt_labels, set = TRUE){
                                              use_k_fold = TRUE, 
                                              num_folds = 10, 
                                              num_resamples = 30,
-                                             problem_name = problem_name)
+                                             problem_name = problem_name,
+                                             conf_mat = FALSE)
   
   return(results)
 }
