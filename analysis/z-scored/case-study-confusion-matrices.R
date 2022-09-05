@@ -24,11 +24,12 @@ rm(TimeSeriesData) # Clean up environment as dataframe is large
 #' @param theproblem filepath to the feature data
 #' @param tt_labels the dataframe containing train-test labels
 #' @param set Boolean whether to fit by set or not
+#' @param catch22 Boolean whether to just analysis \code{catch22} or not. Defaults to \code{FALSE}
 #' @returns an object of class dataframe
 #' @author Trent Henderson
 #' 
 
-get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE){
+get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, catch22 = FALSE){
   
   files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
@@ -43,6 +44,11 @@ get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE){
     filter(names != "DN_Spread_Std") %>% # Just last ditch case in case it slips through
     inner_join(tt_labels, by = c("id" = "id")) %>%
     dplyr::select(-c(problem))
+  
+  if(catch22){
+    outs_z <- outs_z %>%
+      filter(method == "catch22")
+  }
   
   # Fit multi-feature classifiers by feature set
   
@@ -65,7 +71,7 @@ data_files <- c("data/feature-calcs/z-scored/Coffee.Rda", "data/feature-calcs/z-
                 "data/feature-calcs/z-scored/Plane.Rda")
 
 conf_mats <- data_files %>%
-  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = FALSE))
+  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = FALSE, catch22 = FALSE))
 
 #---------------- Confusion matrix analysis -----------------
 
@@ -81,8 +87,15 @@ conf_mats[[1]]$Resample_1
 
 conf_mats[[2]]$Resample_1
 
-#-------------------------------
+#------
 # Plane
-#-------------------------------
+#------
 
 conf_mats[[3]]$Resample_1
+
+# catch22 only for comparison
+
+catch22 <- get_confusion_matrices(theproblem = "data/feature-calcs/z-scored/Plane.Rda", 
+                                  tt_labels = train_test_ids, set = FALSE, catch22 = TRUE)
+
+catch22$Resample_1
