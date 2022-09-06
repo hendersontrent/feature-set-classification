@@ -89,12 +89,14 @@ calculate_balanced_accuracy <- function(data, lev = NULL, model = NULL) {
 #' @param use_balanced_accuracy a Boolean specifying whether to use balanced accuracy as the summary metric for caret model training. Defaults to \code{FALSE}
 #' @param use_k_fold a Boolean specifying whether to use k-fold procedures for generating a distribution of classification accuracy estimates. Defaults to \code{TRUE}
 #' @param num_folds an integer specifying the number of folds (train-test splits) to perform if \code{use_k_fold} is set to \code{TRUE}. Defaults to \code{10}
+#' @param conf_mat Boolean whether to return confusion matrix instead of dataframe of results. Defaults to \code{FALSE}
 #' @returns an object of class dataframe
 #' @author Trent Henderson
 #' 
 
 fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups, x, 
-                          test_method, use_balanced_accuracy, use_k_fold, num_folds){
+                          test_method, use_balanced_accuracy, use_k_fold, num_folds, 
+                          conf_mat = FALSE){
   
   message(paste0("Fitting model ", x))
   set.seed(x)
@@ -194,34 +196,42 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                         trControl = fitControl,
                         preProcess = c("center", "scale", "nzv"))
     
-    # Get main predictions
-    
-    u <- dplyr::union(predict(mod, newdata = tmp_test), tmp_test$group)
-    mytable <- table(factor(stats::predict(mod, newdata = tmp_test), u), factor(tmp_test$group, u))
-    cm <- t(as.matrix(caret::confusionMatrix(mytable)$table))
-    
-    if(use_balanced_accuracy){
-      
-      recall <- 1:nrow(cm) %>%
-        purrr::map(~ calculate_recall(cm, x = .x)) %>%
-        unlist()
-      
-      balanced_accuracy <- sum(recall) / length(recall)
-    }
-    
-    # Calculate accuracy
-    
-    accuracy <- sum(diag(cm)) / sum(cm)
-    
-    if(use_balanced_accuracy){
-      mainOuts <- data.frame(accuracy = accuracy, 
-                             balanced_accuracy = balanced_accuracy)
+    if(conf_mat){
+      mainOuts <- caret::confusionMatrix(predict(mod, newdata = tmp_test), tmp_test$group)
     } else{
-      mainOuts <- data.frame(accuracy = accuracy)
+      # Get main predictions
+      
+      u <- dplyr::union(predict(mod, newdata = tmp_test), tmp_test$group)
+      mytable <- table(factor(stats::predict(mod, newdata = tmp_test), u), factor(tmp_test$group, u))
+      cm <- t(as.matrix(caret::confusionMatrix(mytable)$table))
+      
+      if(use_balanced_accuracy){
+        
+        recall <- 1:nrow(cm) %>%
+          purrr::map(~ calculate_recall(cm, x = .x)) %>%
+          unlist()
+        
+        balanced_accuracy <- sum(recall) / length(recall)
+      }
+      
+      # Calculate accuracy
+      
+      accuracy <- sum(diag(cm)) / sum(cm)
+      
+      if(use_balanced_accuracy){
+        mainOuts <- data.frame(accuracy = accuracy, 
+                               balanced_accuracy = balanced_accuracy)
+      } else{
+        mainOuts <- data.frame(accuracy = accuracy)
+      }
+      
+      mainOuts <- mainOuts%>%
+        dplyr::mutate(category = "Main")
+      
+      mainOuts <- mainOuts %>%
+        dplyr::mutate(resample = x,
+                      num_features_used = (ncol(mod$trainingData) - 1))
     }
-    
-    mainOuts <- mainOuts%>%
-      dplyr::mutate(category = "Main")
     
   } else{
     
@@ -240,39 +250,41 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
                         trControl = fitControl,
                         preProcess = c("center", "scale", "nzv"))
     
-    # Get main predictions
-    
-    u <- dplyr::union(predict(mod, newdata = tmp_test), tmp_test$group)
-    mytable <- table(factor(stats::predict(mod, newdata = tmp_test), u), factor(tmp_test$group, u))
-    cm <- t(as.matrix(caret::confusionMatrix(mytable)$table))
-    
-    if(use_balanced_accuracy){
-      
-      recall <- 1:nrow(cm) %>%
-        purrr::map(~ calculate_recall(cm, x = .x)) %>%
-        unlist()
-      
-      balanced_accuracy <- sum(recall) / length(recall)
-    }
-    
-    # Calculate accuracy
-    
-    accuracy <- sum(diag(cm)) / sum(cm)
-    
-    if(use_balanced_accuracy){
-      mainOuts <- data.frame(accuracy = accuracy, 
-                             balanced_accuracy = balanced_accuracy)
+    if(conf_mat){
+      mainOuts <- caret::confusionMatrix(predict(mod, newdata = tmp_test), tmp_test$group)
     } else{
-      mainOuts <- data.frame(accuracy = accuracy)
+      # Get main predictions
+      
+      u <- dplyr::union(predict(mod, newdata = tmp_test), tmp_test$group)
+      mytable <- table(factor(stats::predict(mod, newdata = tmp_test), u), factor(tmp_test$group, u))
+      cm <- t(as.matrix(caret::confusionMatrix(mytable)$table))
+      
+      if(use_balanced_accuracy){
+        
+        recall <- 1:nrow(cm) %>%
+          purrr::map(~ calculate_recall(cm, x = .x)) %>%
+          unlist()
+        
+        balanced_accuracy <- sum(recall) / length(recall)
+      }
+      
+      # Calculate accuracy
+      
+      accuracy <- sum(diag(cm)) / sum(cm)
+      
+      if(use_balanced_accuracy){
+        mainOuts <- data.frame(accuracy = accuracy, 
+                               balanced_accuracy = balanced_accuracy)
+      } else{
+        mainOuts <- data.frame(accuracy = accuracy)
+      }
+      mainOuts <- mainOuts
+      
+      mainOuts <- mainOuts %>%
+        dplyr::mutate(resample = x,
+                      num_features_used = (ncol(mod$trainingData) - 1))
     }
-    
-    mainOuts <- mainOuts
   }
-  
-  mainOuts <- mainOuts %>%
-    dplyr::mutate(resample = x,
-                  num_features_used = (ncol(mod$trainingData) - 1))
-  
   return(mainOuts)
 }
 
@@ -282,7 +294,7 @@ fit_resamples <- function(data, train_rows, test_rows, train_groups, test_groups
 
 fit_resamples_safe <- purrr::possibly(fit_resamples, otherwise = NULL)
 
-fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, use_k_fold, num_folds, num_resamples = 30, set = NULL){
+fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, use_k_fold, num_folds, num_resamples = 30, set = NULL, conf_mat = FALSE){
   
   # Set up input matrices
   
@@ -331,21 +343,40 @@ fit_multi_feature_models <- function(data, test_method, use_balanced_accuracy, u
   
   # Run model fitting via resampling
   
-  finalOuts <- 1:num_resamples %>%
-    purrr::map_df(~ fit_resamples_safe(data = tmp_mods, 
-                                       train_rows = train_rows, 
-                                       test_rows = test_rows, 
-                                       train_groups = train_props, 
-                                       test_groups = test_props, 
-                                       x = .x, 
-                                       test_method = test_method, 
-                                       use_balanced_accuracy = use_balanced_accuracy,
-                                       use_k_fold = use_k_fold, 
-                                       num_folds = num_folds))
+  if(conf_mat){
+    finalOuts <- 1:num_resamples %>%
+      purrr::map(~ fit_resamples_safe(data = tmp_mods, 
+                                      train_rows = train_rows, 
+                                      test_rows = test_rows, 
+                                      train_groups = train_props, 
+                                      test_groups = test_props, 
+                                      x = .x, 
+                                      test_method = test_method, 
+                                      use_balanced_accuracy = use_balanced_accuracy,
+                                      use_k_fold = use_k_fold, 
+                                      num_folds = num_folds, 
+                                      conf_mat = conf_mat))
+    
+    names(finalOuts) <- paste0("Resample_", 1:num_resamples)
+    
+  } else{
+    finalOuts <- 1:num_resamples %>%
+      purrr::map_df(~ fit_resamples_safe(data = tmp_mods, 
+                                         train_rows = train_rows, 
+                                         test_rows = test_rows, 
+                                         train_groups = train_props, 
+                                         test_groups = test_props, 
+                                         x = .x, 
+                                         test_method = test_method, 
+                                         use_balanced_accuracy = use_balanced_accuracy,
+                                         use_k_fold = use_k_fold, 
+                                         num_folds = num_folds, 
+                                         conf_mat = conf_mat))
+  }
   
   # Return final dataframe
   
-  if(!is.null(set)){
+  if(!is.null(set) && !conf_mat){
     finalOuts <- finalOuts %>%
       dplyr::mutate(method = set)
   }
@@ -405,23 +436,13 @@ clean_by_set <- function(data, themethod = NULL){
   
   inds <- apply(tmp_cleaner, 2, function(x)!any(is.na(x)))
   tmp_cleaner <- tmp_cleaner[, inds]
-  inds <- apply(tmp_cleaner, 2, function(x)!any(is.finite(x)))
-  tmp_cleaner <- tmp_cleaner[, inds]
+  inds2 <- colSums(tmp_cleaner[4:ncol(tmp_cleaner)])
+  inds2 <- inds2[inds2 %ni% c(NA, Inf, -Inf, NaN)]
+  tmp_cleaner <- tmp_cleaner[, append(c("id", "group", "set_split"), names(inds2))]
   
   if(ncol(tmp_cleaner) < ncols){
     message(paste0("Dropped ", ncols - ncol(tmp_cleaner), "/", ncol(tmp_cleaner), " features from ", themethod, " due to containing NAs, -Infs/Infs or only a constant."))
   }
-  
-  # # Check NAs
-  # 
-  # nrows <- nrow(tmp_cleaner)
-  # 
-  # tmp_cleaner <- tmp_cleaner %>%
-  #   tidyr::drop_na()
-  # 
-  # if(nrow(tmp_cleaner) < nrows){
-  #   message(paste0("Dropped ", nrows - nrow(tmp_cleaner), " unique IDs due to NA values."))
-  # }
   
   # Clean up column (feature) names so models fit properly (mainly an issue with SVM formula) and re-join set labels
   # and prep factor levels as names for {caret} if the 3 base two-class options aren't being used
@@ -461,37 +482,16 @@ clean_by_set <- function(data, themethod = NULL){
 #' @param num_folds an integer specifying the number of folds (train-test splits) to perform if \code{use_k_fold} is set to \code{TRUE}. Defaults to \code{10}
 #' @param num_resamples an integer specifying the number of resamples to compute. Defaults to \code{30}
 #' @param problem_name the string of the problem to calculate models for
+#' @param conf_mat Boolean whether to return confusion matrix instead of dataframe of results. Defaults to \code{FALSE}
 #' @return an object of class list containing dataframe summaries of the classification models and a \code{ggplot} object if \code{by_set} is \code{TRUE}
 #' @author Trent Henderson
-#' @export
-#' @examples
-#' \donttest{
-#' featMat <- calculate_features(data = simData,
-#'   id_var = "id",
-#'   time_var = "timepoint",
-#'   values_var = "values",
-#'   group_var = "process",
-#'   feature_set = "catch22",
-#'   seed = 123)
-#'
-#' fit_multi_feature_classifier_tt(featMat,
-#'   id_var = "id",
-#'   group_var = "group",
-#'   by_set = FALSE,
-#'   test_method = "gaussprRadial",
-#'   use_balanced_accuracy = FALSE,
-#'   use_k_fold = TRUE,
-#'   num_folds = 10,
-#'   num_resamples = 30,
-#'   problem_name = "ADIAC")
-#' }
-#'
+#' 
 
 fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "group",
                                             by_set = FALSE, test_method = "gaussprRadial",
                                             use_balanced_accuracy = FALSE, use_k_fold = TRUE, 
                                             num_folds = 10, num_resamples = 30,
-                                            problem_name){
+                                            problem_name, conf_mat = FALSE){
   
   #---------- Check arguments ------------
   
@@ -599,14 +599,29 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
     
     # Compute accuracies for each feature set
     
-    output <- sets %>%
-      purrr::map_df(~ fit_multi_feature_models(data = data_id,
-                                               test_method = test_method,
-                                               use_balanced_accuracy = use_balanced_accuracy,
-                                               use_k_fold = use_k_fold,
-                                               num_folds = num_folds,
-                                               num_resamples = num_resamples,
-                                               set = .x))
+    if(conf_mat){
+      output <- sets %>%
+        purrr::map(~ fit_multi_feature_models(data = data_id,
+                                              test_method = test_method,
+                                              use_balanced_accuracy = use_balanced_accuracy,
+                                              use_k_fold = use_k_fold,
+                                              num_folds = num_folds,
+                                              num_resamples = num_resamples,
+                                              set = .x,
+                                              conf_mat = conf_mat))
+      
+      names(output) <- sets
+    } else{
+      output <- sets %>%
+        purrr::map_df(~ fit_multi_feature_models(data = data_id,
+                                                 test_method = test_method,
+                                                 use_balanced_accuracy = use_balanced_accuracy,
+                                                 use_k_fold = use_k_fold,
+                                                 num_folds = num_folds,
+                                                 num_resamples = num_resamples,
+                                                 set = .x,
+                                                 conf_mat = conf_mat))
+    }
     
   } else{
     
@@ -616,7 +631,8 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
                                        use_k_fold = use_k_fold,
                                        num_folds = num_folds,
                                        num_resamples = num_resamples,
-                                       set = NULL)
+                                       set = NULL,
+                                       conf_mat = conf_mat)
   }
   
   #--------------- Return results ---------------
@@ -624,10 +640,12 @@ fit_multi_feature_classifier_tt <- function(data, id_var = "id", group_var = "gr
   # NOTE: Removed barplot and statistical testing functionality here in {theft} as we don't need it for this project
   # Just shortens the code up since we are doing different comparative testing later on
   
+  if(!conf_mat){
   output <- output %>%
-    dplyr::mutate(classifier_name = classifier_name,
-                  statistic_name = statistic_name,
-                  problem = problem_name)
+      dplyr::mutate(classifier_name = classifier_name,
+                    statistic_name = statistic_name,
+                    problem = problem_name)
+  }
   
   return(output)
 }

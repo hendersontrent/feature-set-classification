@@ -1,17 +1,11 @@
-#------------------------------------------
-# This script sets out to compute 
-# classification accuracy for each feature 
-# set by problem
-#
-# NOTE: This script requires setup.R and
-# analysis/compute-features.R and
-# analysis/compute-features-z-score.R to 
-# have been run first
-#-----------------------------------------
+#----------------------------------------------
+# This script sets out to analyse the confusion
+# matrices for the case study models
+#----------------------------------------------
 
-#--------------------------------------
-# Author: Trent Henderson, 18 June 2022
-#--------------------------------------
+#------------------------------------------
+# Author: Trent Henderson, 3 September 2022
+#------------------------------------------
 
 # Load in data and summarise to just problem, ID, and train-test set indicator as I didn't bind initially
 
@@ -19,21 +13,23 @@ load("data/TimeSeriesData.Rda")
 
 train_test_ids <- TimeSeriesData %>%
   dplyr::select(c(problem, id, set_split)) %>%
-  distinct()
+  distinct() %>% 
+  filter(problem %in% c("Coffee", "ProximalPhalanxOutlineAgeGroup", "Plane"))
 
 rm(TimeSeriesData) # Clean up environment as dataframe is large
 
-#---------------- Classification accuracy -----------------
+#---------------- Confusion matrix calculations -----------------
 
 #' Function to map classification performance calculations over datasets/problems
 #' @param theproblem filepath to the feature data
 #' @param tt_labels the dataframe containing train-test labels
 #' @param set Boolean whether to fit by set or not
+#' @param catch22 Boolean whether to just analysis \code{catch22} or not. Defaults to \code{FALSE}
 #' @returns an object of class dataframe
 #' @author Trent Henderson
 #' 
 
-calculate_accuracy_by_problem_z <- function(theproblem, tt_labels, set = TRUE){
+get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, catch22 = FALSE){
   
   files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
@@ -49,6 +45,11 @@ calculate_accuracy_by_problem_z <- function(theproblem, tt_labels, set = TRUE){
     inner_join(tt_labels, by = c("id" = "id")) %>%
     dplyr::select(-c(problem))
   
+  if(catch22){
+    outs_z <- outs_z %>%
+      filter(method == "catch22")
+  }
+  
   # Fit multi-feature classifiers by feature set
   
   results <- fit_multi_feature_classifier_tt(outs_z, 
@@ -59,23 +60,42 @@ calculate_accuracy_by_problem_z <- function(theproblem, tt_labels, set = TRUE){
                                              use_balanced_accuracy = TRUE,
                                              use_k_fold = TRUE, 
                                              num_folds = 10, 
-                                             num_resamples = 30,
+                                             num_resamples = 1,
                                              problem_name = problem_name,
-                                             conf_mat = FALSE)
+                                             conf_mat = TRUE)
   
   return(results)
 }
 
-calculate_accuracy_by_problem_z_safe <- purrr::possibly(calculate_accuracy_by_problem_z, otherwise = NULL)
-data_files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
+data_files <- c("data/feature-calcs/z-scored/Coffee.Rda", "data/feature-calcs/z-scored/ProximalPhalanxOutlineAgeGroup.Rda",
+                "data/feature-calcs/z-scored/Plane.Rda")
 
-outputs_z <- data_files %>%
-  purrr::map_df(~ calculate_accuracy_by_problem_z_safe(theproblem = .x, tt_labels = train_test_ids, set = TRUE))
+conf_mats <- data_files %>%
+  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = FALSE, catch22 = FALSE))
 
-# Run function using all features at once to form an aggregate comparison later
+#---------------- Confusion matrix analysis -----------------
 
-outputs_aggregate_z <- data_files %>%
-  purrr::map_df(~ calculate_accuracy_by_problem_z_safe(theproblem = .x, tt_labels = train_test_ids, set = FALSE))
+#-------
+# Coffee
+#-------
 
-save(outputs_z, file = "data/outputs_z.Rda")
-save(outputs_aggregate_z, file = "data/outputs_aggregate_z.Rda") 
+conf_mats[[1]]$Resample_1
+
+#-------------------------------
+# ProximalPhalanxOutlineAgeGroup
+#-------------------------------
+
+conf_mats[[2]]$Resample_1
+
+#------
+# Plane
+#------
+
+conf_mats[[3]]$Resample_1
+
+# catch22 only for comparison
+
+catch22 <- get_confusion_matrices(theproblem = "data/feature-calcs/z-scored/Plane.Rda", 
+                                  tt_labels = train_test_ids, set = FALSE, catch22 = TRUE)
+
+catch22$Resample_1
