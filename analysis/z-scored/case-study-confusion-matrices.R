@@ -92,7 +92,12 @@ conf_mats[[2]]$Resample_1
 
 # Each individual confusion matrix for comparison
 
+for(i in 1:length(conf_mats_set[[2]])){
+  print(names(conf_mats_set[[2]][i]))
+  print(conf_mats_set[[2]][[i]]$Resample_1$overall)
+}
 
+conf_mats_set[[2]]$tsfresh$Resample_1
 
 #------
 # Plane
@@ -102,4 +107,9 @@ conf_mats[[3]]$Resample_1
 
 # Each individual confusion matrix for comparison
 
-
+conf_mats_set[[3]]$catch22$Resample_1
+conf_mats_set[[3]]$feasts$Resample_1
+conf_mats_set[[3]]$tsfeatures$Resample_1
+conf_mats_set[[3]]$tsfresh$Resample_1
+conf_mats_set[[3]]$tsfel$Resample_1
+conf_mats_set[[3]]$kats$Resample_1
