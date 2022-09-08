@@ -113,3 +113,66 @@ conf_mats_set[[3]]$tsfeatures$Resample_1
 conf_mats_set[[3]]$tsfresh$Resample_1
 conf_mats_set[[3]]$tsfel$Resample_1
 conf_mats_set[[3]]$kats$Resample_1
+
+#---------------- Follow-up pairwise analyses-----------------
+
+#----------------------------------
+# PREMISE: Do binary classification 
+# analyses for key pairwise splits 
+# where a set(s) excels to identify 
+# useful features
+#----------------------------------
+
+#------
+# Plane
+#------
+
+# Set up binary groups
+
+load("data/feature-calcs/z-scored/Plane.Rda")
+plane_binary <- outs_z
+rm(outs_z)
+
+plane_binary <- plane_binary %>%
+  mutate(group = as.factor(group)) %>%
+  mutate(group_1 = ifelse(group == "6", "Group 6", "Everything else"),
+         group_2 = ifelse(group == "3", "Group 3", "Everything else")) %>%
+  mutate(group_1 = as.factor(group_1),
+         group_2 = as.factor(group_2)) %>%
+  dplyr::select(-c(group))
+
+# Compute top features
+
+plane_bin_top_1 <- compute_top_features(plane_binary[plane_binary$method == "catch22", ], 
+                                        id_var = "id", 
+                                        group_var = "group_1",
+                                        num_features = 22, 
+                                        method = "z-score",
+                                        test_method = "svmLinear",
+                                        use_balanced_accuracy = TRUE,
+                                        use_k_fold = TRUE,
+                                        num_folds = 10,
+                                        use_empirical_null =  TRUE,
+                                        null_testing_method = "ModelFreeShuffles",
+                                        p_value_method = "gaussian",
+                                        num_permutations = 1e4,
+                                        seed = 123)
+
+View(plane_bin_top_1$ResultsTable)
+
+plane_bin_top_2 <- compute_top_features(plane_binary[plane_binary$method == "catch22", ], 
+                                        id_var = "id", 
+                                        group_var = "group_2",
+                                        num_features = 22, 
+                                        method = "z-score",
+                                        test_method = "svmLinear",
+                                        use_balanced_accuracy = TRUE,
+                                        use_k_fold = TRUE,
+                                        num_folds = 10,
+                                        use_empirical_null =  TRUE,
+                                        null_testing_method = "ModelFreeShuffles",
+                                        p_value_method = "gaussian",
+                                        num_permutations = 1e4,
+                                        seed = 123)
+
+View(plane_bin_top_2$ResultsTable)
