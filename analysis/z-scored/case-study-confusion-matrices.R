@@ -71,7 +71,10 @@ data_files <- c("data/feature-calcs/z-scored/Coffee.Rda", "data/feature-calcs/z-
                 "data/feature-calcs/z-scored/Plane.Rda")
 
 conf_mats <- data_files %>%
-  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = FALSE, catch22 = FALSE))
+  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = FALSE))
+
+conf_mats_set <- data_files %>%
+  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = TRUE))
 
 #---------------- Confusion matrix analysis -----------------
 
@@ -87,10 +90,9 @@ conf_mats[[1]]$Resample_1
 
 conf_mats[[2]]$Resample_1
 
-tsfresh <- get_confusion_matrices(theproblem = "data/feature-calcs/z-scored/ProximalPhalanxOutlineAgeGroup.Rda", 
-                                  tt_labels = train_test_ids, set = FALSE, catch22 = FALSE, set_filt = "tsfresh")
+# Each individual confusion matrix for comparison
 
-tsfresh$Resample_1
+
 
 #------
 # Plane
@@ -100,6 +102,4 @@ conf_mats[[3]]$Resample_1
 
 # Each individual confusion matrix for comparison
 
-plane_confs <- c("catch22", "feasts", "tsfeatures", "Kats", "tsfresh", "TSFEL") %>%
-  results <- purrr::map(~ get_confusion_matrices(theproblem = "data/feature-calcs/z-scored/Plane.Rda", 
-                                                 tt_labels = train_test_ids, set = FALSE, set_filt = .x))
+
