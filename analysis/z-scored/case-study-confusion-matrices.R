@@ -24,12 +24,12 @@ rm(TimeSeriesData) # Clean up environment as dataframe is large
 #' @param theproblem filepath to the feature data
 #' @param tt_labels the dataframe containing train-test labels
 #' @param set Boolean whether to fit by set or not
-#' @param catch22 Boolean whether to just analysis \code{catch22} or not. Defaults to \code{FALSE}
+#' @param set_filt string name of individual feature set to calculate results for. Defaults to \code{NULL} for no usage
 #' @returns an object of class dataframe
 #' @author Trent Henderson
 #' 
 
-get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, catch22 = FALSE){
+get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, set_filt = NULL){
   
   files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
@@ -45,9 +45,9 @@ get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, catch22 = 
     inner_join(tt_labels, by = c("id" = "id")) %>%
     dplyr::select(-c(problem))
   
-  if(catch22){
+  if(!is.null(set_filt)){
     outs_z <- outs_z %>%
-      filter(method == "catch22")
+      filter(method == set_filt)
   }
   
   # Fit multi-feature classifiers by feature set
@@ -87,15 +87,19 @@ conf_mats[[1]]$Resample_1
 
 conf_mats[[2]]$Resample_1
 
+tsfresh <- get_confusion_matrices(theproblem = "data/feature-calcs/z-scored/ProximalPhalanxOutlineAgeGroup.Rda", 
+                                  tt_labels = train_test_ids, set = FALSE, catch22 = FALSE, set_filt = "tsfresh")
+
+tsfresh$Resample_1
+
 #------
 # Plane
 #------
 
 conf_mats[[3]]$Resample_1
 
-# catch22 only for comparison
+# Each individual confusion matrix for comparison
 
-catch22 <- get_confusion_matrices(theproblem = "data/feature-calcs/z-scored/Plane.Rda", 
-                                  tt_labels = train_test_ids, set = FALSE, catch22 = TRUE)
-
-catch22$Resample_1
+plane_confs <- c("catch22", "feasts", "tsfeatures", "Kats", "tsfresh", "TSFEL") %>%
+  results <- purrr::map(~ get_confusion_matrices(theproblem = "data/feature-calcs/z-scored/Plane.Rda", 
+                                                 tt_labels = train_test_ids, set = FALSE, set_filt = .x))

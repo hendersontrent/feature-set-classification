@@ -134,14 +134,16 @@ plot_all_ts <- function(data){
   
   p <- p %>%
     ggplot(aes(x = timepoint, y = values)) +
-    geom_line(aes(group = id), size = 0.6, alpha = 0.8, colour = "grey50") +
+    geom_line(aes(group = id, colour = set_split), size = 0.6, alpha = 0.8) +
     geom_line(data = mu, aes(x = timepoint, y = mu), size = 1, colour = "#b41e51") +
     labs(title = paste0("Time series plots for each class for ", unique(data$problem)),
          subtitle = "Mean is represented by thick red line.",
          x = "Time",
-         y = "Value") +
+         y = "Value",
+         colour = NULL) +
     theme_bw() +
-    theme(strip.background = element_blank(),
+    theme(legend.position = "bottom",
+          strip.background = element_blank(),
           strip.text = element_text(face = "bold")) +
     facet_wrap(~target, ncol = 1, nrow = length(unique(p$target)))
   
@@ -193,6 +195,7 @@ coffee_top2 <- compute_top_features(coffee_feats,
 
 coffee_plot <- plot_all_ts(data = coffee)
 print(coffee_plot)
+ggsave("output/coffee_sample.pdf", plot = coffee_plot)
 
 #------------------ Case study II: ProximalPhalanxOutlineAgeGroup -----------------
 
@@ -228,6 +231,7 @@ save(proximal_top, file = "data/proximal_top.Rda")
 
 proximal_plot <- plot_all_ts(data = proximal)
 print(proximal_plot)
+ggsave("output/proximal_sample.pdf", plot = proximal_plot)
 
 # Check 
 
@@ -267,3 +271,4 @@ save(plane_top, file = "data/plane_top.Rda")
 
 plane_plot <- plot_all_ts(data = plane)
 print(plane_plot)
+ggsave("output/plane_sample.pdf", plot = plane_plot, units = "in", height = 12, width = 8)
