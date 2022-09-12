@@ -210,20 +210,20 @@ plot_samples(data = phalanx, n = 2, seed = 123)
 
 # Identify top features
 
-phalanx_top <- compute_top_features(phalanx_feats, 
-                                    id_var = "id", 
-                                    group_var = "group",
-                                    num_features = 40, 
-                                    method = "z-score",
-                                    test_method = "svmLinear",
-                                    use_balanced_accuracy = TRUE,
-                                    use_k_fold = TRUE,
-                                    num_folds = 10,
-                                    use_empirical_null =  TRUE,
-                                    null_testing_method = "ModelFreeShuffles",
-                                    p_value_method = "gaussian",
-                                    num_permutations = 1000,
-                                    seed = 123)
+phalanx_top <- compute_top_features2(phalanx_feats, 
+                                     id_var = "id", 
+                                     group_var = "group",
+                                     num_features = 40, 
+                                     method = "z-score",
+                                     test_method = "svmLinear",
+                                     use_balanced_accuracy = TRUE,
+                                     use_k_fold = TRUE,
+                                     num_folds = 10,
+                                     use_empirical_null =  TRUE,
+                                     null_testing_method = "ModelFreeShuffles",
+                                     p_value_method = "gaussian",
+                                     num_permutations = 1000,
+                                     seed = 123)
 
 save(phalanx_top, file = "data/phalanx_top.Rda")
 

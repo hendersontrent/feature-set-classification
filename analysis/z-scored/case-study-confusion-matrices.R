@@ -14,7 +14,7 @@ load("data/TimeSeriesData.Rda")
 train_test_ids <- TimeSeriesData %>%
   dplyr::select(c(problem, id, set_split)) %>%
   distinct() %>% 
-  filter(problem %in% c("Coffee", "ProximalPhalanxOutlineAgeGroup", "Plane"))
+  filter(problem %in% c("Coffee", "MiddlePhalanxTW", "Plane"))
 
 rm(TimeSeriesData) # Clean up environment as dataframe is large
 
@@ -67,7 +67,7 @@ get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, set_filt =
   return(results)
 }
 
-data_files <- c("data/feature-calcs/z-scored/Coffee.Rda", "data/feature-calcs/z-scored/ProximalPhalanxOutlineAgeGroup.Rda",
+data_files <- c("data/feature-calcs/z-scored/Coffee.Rda", "data/feature-calcs/z-scored/MiddlePhalanxTW.Rda",
                 "data/feature-calcs/z-scored/Plane.Rda")
 
 conf_mats <- data_files %>%
@@ -84,9 +84,9 @@ conf_mats_set <- data_files %>%
 
 conf_mats[[1]]$Resample_1
 
-#-------------------------------
-# ProximalPhalanxOutlineAgeGroup
-#-------------------------------
+#----------------
+# MiddlePhalanxTW
+#----------------
 
 conf_mats[[2]]$Resample_1
 
@@ -122,6 +122,12 @@ conf_mats_set[[3]]$kats$Resample_1
 # where a set(s) excels to identify 
 # useful features
 #----------------------------------
+
+#----------------
+# MiddlePhalanxTW
+#----------------
+
+
 
 #------
 # Plane
