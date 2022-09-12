@@ -24,12 +24,12 @@ rm(TimeSeriesData) # Clean up environment as dataframe is large
 #' @param theproblem filepath to the feature data
 #' @param tt_labels the dataframe containing train-test labels
 #' @param set Boolean whether to fit by set or not
-#' @param catch22 Boolean whether to just analysis \code{catch22} or not. Defaults to \code{FALSE}
+#' @param set_filt string name of individual feature set to calculate results for. Defaults to \code{NULL} for no usage
 #' @returns an object of class dataframe
 #' @author Trent Henderson
 #' 
 
-get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, catch22 = FALSE){
+get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, set_filt = NULL){
   
   files <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda")
   message(paste0("Doing problem ", match(theproblem, files), "/", length(files)))
@@ -45,9 +45,9 @@ get_confusion_matrices <- function(theproblem, tt_labels, set = TRUE, catch22 = 
     inner_join(tt_labels, by = c("id" = "id")) %>%
     dplyr::select(-c(problem))
   
-  if(catch22){
+  if(!is.null(set_filt)){
     outs_z <- outs_z %>%
-      filter(method == "catch22")
+      filter(method == set_filt)
   }
   
   # Fit multi-feature classifiers by feature set
@@ -71,7 +71,10 @@ data_files <- c("data/feature-calcs/z-scored/Coffee.Rda", "data/feature-calcs/z-
                 "data/feature-calcs/z-scored/Plane.Rda")
 
 conf_mats <- data_files %>%
-  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = FALSE, catch22 = FALSE))
+  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = FALSE))
+
+conf_mats_set <- data_files %>%
+  purrr::map(~ get_confusion_matrices(theproblem = .x, tt_labels = train_test_ids, set = TRUE))
 
 #---------------- Confusion matrix analysis -----------------
 
@@ -87,15 +90,89 @@ conf_mats[[1]]$Resample_1
 
 conf_mats[[2]]$Resample_1
 
+# Each individual confusion matrix for comparison
+
+for(i in 1:length(conf_mats_set[[2]])){
+  print(names(conf_mats_set[[2]][i]))
+  print(conf_mats_set[[2]][[i]]$Resample_1$overall)
+}
+
+conf_mats_set[[2]]$tsfresh$Resample_1
+
 #------
 # Plane
 #------
 
 conf_mats[[3]]$Resample_1
 
-# catch22 only for comparison
+# Each individual confusion matrix for comparison
 
-catch22 <- get_confusion_matrices(theproblem = "data/feature-calcs/z-scored/Plane.Rda", 
-                                  tt_labels = train_test_ids, set = FALSE, catch22 = TRUE)
+conf_mats_set[[3]]$catch22$Resample_1
+conf_mats_set[[3]]$feasts$Resample_1
+conf_mats_set[[3]]$tsfeatures$Resample_1
+conf_mats_set[[3]]$tsfresh$Resample_1
+conf_mats_set[[3]]$tsfel$Resample_1
+conf_mats_set[[3]]$kats$Resample_1
 
-catch22$Resample_1
+#---------------- Follow-up pairwise analyses-----------------
+
+#----------------------------------
+# PREMISE: Do binary classification 
+# analyses for key pairwise splits 
+# where a set(s) excels to identify 
+# useful features
+#----------------------------------
+
+#------
+# Plane
+#------
+
+# Set up binary groups
+
+load("data/feature-calcs/z-scored/Plane.Rda")
+plane_binary <- outs_z
+rm(outs_z)
+
+plane_binary <- plane_binary %>%
+  mutate(group = as.factor(group)) %>%
+  mutate(group_1 = ifelse(group == "6", "Group 6", "Everything else"),
+         group_2 = ifelse(group == "3", "Group 3", "Everything else")) %>%
+  mutate(group_1 = as.factor(group_1),
+         group_2 = as.factor(group_2)) %>%
+  dplyr::select(-c(group))
+
+# Compute top features
+
+plane_bin_top_1 <- compute_top_features(plane_binary[plane_binary$method == "catch22", ], 
+                                        id_var = "id", 
+                                        group_var = "group_1",
+                                        num_features = 22, 
+                                        method = "z-score",
+                                        test_method = "svmLinear",
+                                        use_balanced_accuracy = TRUE,
+                                        use_k_fold = TRUE,
+                                        num_folds = 10,
+                                        use_empirical_null =  TRUE,
+                                        null_testing_method = "ModelFreeShuffles",
+                                        p_value_method = "gaussian",
+                                        num_permutations = 1e4,
+                                        seed = 123)
+
+View(plane_bin_top_1$ResultsTable)
+
+plane_bin_top_2 <- compute_top_features(plane_binary[plane_binary$method == "catch22", ], 
+                                        id_var = "id", 
+                                        group_var = "group_2",
+                                        num_features = 22, 
+                                        method = "z-score",
+                                        test_method = "svmLinear",
+                                        use_balanced_accuracy = TRUE,
+                                        use_k_fold = TRUE,
+                                        num_folds = 10,
+                                        use_empirical_null =  TRUE,
+                                        null_testing_method = "ModelFreeShuffles",
+                                        p_value_method = "gaussian",
+                                        num_permutations = 1e4,
+                                        seed = 123)
+
+View(plane_bin_top_2$ResultsTable)
