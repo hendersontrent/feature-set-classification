@@ -114,20 +114,7 @@ conf_mats_set[[3]]$tsfresh$Resample_1
 conf_mats_set[[3]]$tsfel$Resample_1
 conf_mats_set[[3]]$kats$Resample_1
 
-#---------------- Follow-up pairwise analyses-----------------
-
-#----------------------------------
-# PREMISE: Do binary classification 
-# analyses for key pairwise splits 
-# where a set(s) excels to identify 
-# useful features
-#----------------------------------
-
-#----------------
-# MiddlePhalanxTW
-#----------------
-
-
+#---------------- Follow-up pairwise analyses -----------------
 
 #------
 # Plane
@@ -182,3 +169,33 @@ plane_bin_top_2 <- compute_top_features(plane_binary[plane_binary$method == "cat
                                         seed = 123)
 
 View(plane_bin_top_2$ResultsTable)
+
+#---------------- Follow-up correlation plots -----------------
+
+#----------------
+# MiddlePhalanxTW
+#----------------
+
+load("data/feature-calcs/z-scored/MiddlePhalanxTW.Rda")
+MiddlePhalanxTW <- outs_z
+rm(outs_z)
+
+# Define useful function for drawing plot between all feature values for a given set
+
+draw_cor_plots <- function(data, set){
+  
+  tmp <- data %>%
+    filter(method == set)
+  
+  p <- plot_feature_correlations(data = tmp, id_var = "id", names_var = "names", 
+                                 values_var = "values", method = "z-score", 
+                                 clust_method = "average", interactive = FALSE)
+  
+  return(p)
+}
+
+MiddlePhalanxTW_plots <- c("tsfresh", "catch22") %>%
+  purrr::map(~ draw_cor_plots(data = MiddlePhalanxTW, set = .x))
+
+print(MiddlePhalanxTW_plots[[1]])
+print(MiddlePhalanxTW_plots[[2]])
