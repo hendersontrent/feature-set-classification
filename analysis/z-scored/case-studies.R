@@ -18,7 +18,7 @@ outputs_z <- outputs_z %>%
     method == "tsfel" ~ "TSFEL",
     method == "kats"  ~ "Kats",
     TRUE              ~ method)) %>%
-  filter(problem %in% c("Coffee", "ProximalPhalanxOutlineAgeGroup", "Plane")) # Case study problems of interest
+  filter(problem %in% c("Coffee", "MiddlePhalanxTW", "Plane")) # Case study problems of interest
 
 # Load raw time series
 
@@ -27,8 +27,8 @@ load("data/TimeSeriesData.Rda")
 coffee <- TimeSeriesData %>%
   filter(problem == "Coffee")
 
-proximal <- TimeSeriesData %>%
-  filter(problem == "ProximalPhalanxOutlineAgeGroup")
+phalanx <- TimeSeriesData %>%
+  filter(problem == "MiddlePhalanxTW")
 
 plane <- TimeSeriesData %>%
   filter(problem == "Plane")
@@ -39,8 +39,8 @@ rm(TimeSeriesData)
 
 load("data/feature-calcs/z-scored/Coffee.Rda")
 coffee_feats <- outs_z
-load("data/feature-calcs/z-scored/ProximalPhalanxOutlineAgeGroup.Rda")
-proximal_feats <- outs_z
+load("data/feature-calcs/z-scored/MiddlePhalanxTW.Rda")
+phalanx_feats <- outs_z
 load("data/feature-calcs/z-scored/Plane.Rda")
 plane_feats <- outs_z
 rm(outs_z)
@@ -197,20 +197,20 @@ coffee_plot <- plot_all_ts(data = coffee)
 print(coffee_plot)
 ggsave("output/coffee_sample.pdf", plot = coffee_plot)
 
-#------------------ Case study II: ProximalPhalanxOutlineAgeGroup -----------------
+#------------------ Case study II: MiddlePhalanxTW -----------------
 
 #--------------------------------------------
-# PREMISE: tsfresh performs far below average
-# and we want to understand why
+# PREMISE: tsfresh performs below average and 
+# we want to understand why
 #--------------------------------------------
 
 # Draw plot
 
-plot_samples(data = proximal, n = 2, seed = 123)
+plot_samples(data = phalanx, n = 2, seed = 123)
 
 # Identify top features
 
-proximal_top <- compute_top_features(proximal_feats, 
+phalanx_top <- compute_top_features2(phalanx_feats, 
                                      id_var = "id", 
                                      group_var = "group",
                                      num_features = 40, 
@@ -225,17 +225,13 @@ proximal_top <- compute_top_features(proximal_feats,
                                      num_permutations = 1000,
                                      seed = 123)
 
-save(proximal_top, file = "data/proximal_top.Rda")
+save(phalanx_top, file = "data/phalanx_top.Rda")
 
 # Draw plots like in the catch22 paper
 
-proximal_plot <- plot_all_ts(data = proximal)
-print(proximal_plot)
-ggsave("output/proximal_sample.pdf", plot = proximal_plot)
-
-# Check 
-
-
+phalanx_plot <- plot_all_ts(data = phalanx)
+print(phalanx_plot)
+ggsave("output/phalanx_sample.pdf", plot = phalanx_plot, units = "in", height = 12, width = 8)
 
 #------------------ Case study III: Plane ----------------
 
