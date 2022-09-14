@@ -217,10 +217,6 @@ plot_feature_cors <- function(data, cor_method, clust_method){
   dat_new <- result[row.order, col.order] # Re-order matrix by cluster outputs
   cluster_out <- reshape2::melt(as.matrix(dat_new)) # Turn into dataframe
   
-  # Define a nice colour palette consistent with RColorBrewer in other functions
-  
-  mypalette <- c("#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC")
-  
   # Draw plot
   
   FeatureFeatureCorrelationPlot <- cluster_out %>%
