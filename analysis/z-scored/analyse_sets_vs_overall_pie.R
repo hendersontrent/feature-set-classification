@@ -157,6 +157,15 @@ all_mains2 <- all_mains %>%
 
 all_mains2[is.na(all_mains2)] <- 0 # Gets pie graph to work
 
+# Select case studies based on distance from line of identity
+
+'%ni%' <- Negate('%in%')
+
+cases <- all_mains2 %>%
+  filter(top_performer %ni% c("Non-significant difference", "Zero variance for one/more sets")) %>%
+  mutate(abs_distance = abs(ifelse(top_performer == "All features", balanced_accuracy_all - balanced_accuracy, balanced_accuracy - balanced_accuracy_all))) %>%
+  slice_max(abs_distance, n = 5)
+
 #---------------------- Separate dataframes for plot control -------------------
 
 # Find number of unique values to enable filtering

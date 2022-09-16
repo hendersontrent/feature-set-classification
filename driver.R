@@ -48,9 +48,13 @@ source("analysis/non-z-scored/best-tsfresh-tsfel-features.R")
 # z-scored
 #---------
 
+source("analysis/z-scored/analyse-mean-performance-line-plot.R")
 source("analysis/z-scored/analyse-best-vs-worst-set.R")
 source("analysis/z-scored/analyse-best-vs-second-best-set.R")
 source("analysis/z-scored/analyse_sets_vs_overall.R")
 source("analysis/z-scored/analyse_sets_vs_overall_pie.R")
+source("analysis/z-scored/analyse-head-to-head.R")
 source("analysis/z-scored/normalised-performance-score.R")
 source("analysis/z-scored/normalised-performance-score-distribution.R")
+source("analysis/z-scored/case-studies.R")
+source("analysis/z-scored/case-study-confusion-matrices.R")
