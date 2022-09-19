@@ -10,7 +10,9 @@ fit_single_feature_models2 <- function(data, test_method, use_balanced_accuracy,
   
   pb$tick()$print()
   set.seed(seed)
-  tmp <- data
+  
+  tmp <- data %>%
+    dplyr::select(c(.data$group, dplyr::all_of(feature)))
   
   if(use_k_fold){
     
@@ -113,7 +115,7 @@ fit_single_feature_models2 <- function(data, test_method, use_balanced_accuracy,
   }
   
   finalOuts <- finalOuts %>%
-    dplyr::mutate(feature = names(tmp[2]))
+    dplyr::mutate(feature = colnames(tmp[2]))
   
   return(finalOuts)
 }
@@ -136,10 +138,10 @@ clean_by_feature2 <- function(data){
   tmp_cleaner <- tmp_cleaner[, inds]
   inds2 <- colSums(tmp_cleaner[3:ncol(tmp_cleaner)])
   inds2 <- inds2[inds2 %ni% c(NA, Inf, -Inf, NaN)]
-  tmp_cleaner <- tmp_cleaner[, append(c("id", "group", "set_split"), names(inds2))]
+  tmp_cleaner <- tmp_cleaner[, append(c("id", "group"), names(inds2))]
   
   if(ncol(tmp_cleaner) < ncols){
-    message(paste0("Dropped ", ncols - ncol(tmp_cleaner), "/", ncol(tmp_cleaner), " features from ", themethod, " due to containing NAs or only a constant."))
+    message(paste0("Dropped ", ncols - ncol(tmp_cleaner), "/", (ncol(tmp_cleaner) - 2), " features due to containing NAs or only a constant."))
   }
   
   # Check NAs
@@ -222,10 +224,9 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     tidyr::pivot_wider(id_cols = c("id", "group"), names_from = "names", values_from = "values") %>%
     janitor::clean_names()
   
-  # Run cleaner
+  # Run cleaner to retain only non-constant features with no NAs or Infs
   
-  data_id <- 3:ncol(data_id) %>%
-    purrr::map_df(~ clean_by_feature2(data = data_id, x = .x)) %>%
+  data_id <- clean_by_feature2(data = data_id) %>%
     dplyr::select(-c(.data$id))
   
   #------------- Fit classifiers -------------
@@ -265,7 +266,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     mean_diff_calculator_safe <- purrr::possibly(mean_diff_calculator, otherwise = NULL)
     
-    output <- 3:ncol(data_id) %>%
+    output <- 2:ncol(data_id) %>%
       purrr::map_df(~ mean_diff_calculator_safe(data = data_id, x = .x, method = test_method)) %>%
       dplyr::distinct() %>%
       dplyr::mutate(feature = gsub(" .*", "\\1", .data$feature),
@@ -278,7 +279,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     mean_diff_calculator_safe <- purrr::possibly(mean_diff_calculator, otherwise = NULL)
     
-    output <- 3:ncol(data_id) %>%
+    output <- 2:ncol(data_id) %>%
       purrr::map_df(~ mean_diff_calculator_safe(data = data_id, x = .x, method = test_method)) %>%
       dplyr::distinct() %>%
       dplyr::mutate(feature = gsub(" .*", "\\1", .data$feature),
@@ -294,7 +295,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     data_id <- data_id %>%
       dplyr::mutate(group = as.factor(.data$group))
     
-    output <- 3:ncol(data_id) %>%
+    output <- 2:ncol(data_id) %>%
       purrr::map_df(~ gather_binomial_info_safe(data_id, .x)) %>%
       dplyr::mutate(classifier_name = classifier_name,
                     statistic_name = statistic_name)
@@ -305,7 +306,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     # Set up progress bar for {purrr::map} iterations
     
-    pb <- dplyr::progress_estimated(length(3:ncol(data_id)))
+    pb <- dplyr::progress_estimated(length(2:ncol(data_id)))
     
     # Very important coffee console message
     
@@ -315,20 +316,20 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     # Compute accuracies for each feature
     
-    fit_single_feature_models_safe <- purrr::possibly(fit_single_feature_models, otherwise = NULL)
+    fit_single_feature_models2_safe <- purrr::possibly(fit_single_feature_models2, otherwise = NULL)
     
-    output <- 3:ncol(data_id) %>%
-      purrr::map(~ fit_single_feature_models_safe(data = data_id, 
-                                                  test_method = test_method,
-                                                  use_balanced_accuracy = use_balanced_accuracy,
-                                                  use_k_fold = use_k_fold,
-                                                  num_folds = num_folds,
-                                                  use_empirical_null = use_empirical_null,
-                                                  null_testing_method = null_testing_method,
-                                                  num_permutations = num_permutations,
-                                                  feature = .x,
-                                                  pb = pb,
-                                                  seed = seed))
+    output <- 2:ncol(data_id) %>%
+      purrr::map(~ fit_single_feature_models2_safe(data = data_id, 
+                                                   test_method = test_method,
+                                                   use_balanced_accuracy = use_balanced_accuracy,
+                                                   use_k_fold = use_k_fold,
+                                                   num_folds = num_folds,
+                                                   use_empirical_null = use_empirical_null,
+                                                   null_testing_method = null_testing_method,
+                                                   num_permutations = num_permutations,
+                                                   feature = .x,
+                                                   pb = pb,
+                                                   seed = seed))
     
     output <- output[!sapply(output, is.null)]
     output <- do.call(rbind, output)
