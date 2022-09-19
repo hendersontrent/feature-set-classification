@@ -164,7 +164,8 @@ all_mains2[is.na(all_mains2)] <- 0 # Gets pie graph to work
 cases <- all_mains2 %>%
   filter(top_performer %ni% c("Non-significant difference", "Zero variance for one/more sets")) %>%
   mutate(abs_distance = abs(ifelse(top_performer == "All features", balanced_accuracy_all - balanced_accuracy, balanced_accuracy - balanced_accuracy_all))) %>%
-  slice_max(abs_distance, n = 5)
+  slice_max(abs_distance, n = 3) %>%
+  dplyr::select(c(problem, top_performer, abs_distance))
 
 #---------------------- Separate dataframes for plot control -------------------
 
