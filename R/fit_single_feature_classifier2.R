@@ -1,8 +1,77 @@
 #--------------- Helper functions ---------------
 
+#----------------
+# Random shuffles
+#----------------
+
+simulate_null_acc <- function(x, num_permutations = 10000, use_balanced_accuracy){
+  
+  # Run function over num_permutations
+  
+  pb <- dplyr::progress_estimated(num_permutations)
+  
+  outs <- 1:num_permutations %>%
+    purrr::map_df(~ calculate_accuracy(x, seed = .x, use_balanced_accuracy = use_balanced_accuracy, pb = pb))
+  
+  return(outs)
+}
+
+#-------------------------------------
+# Calculate balanced accuracy in caret
+#-------------------------------------
+
+calculate_balanced_accuracy <- function(data, lev = NULL, model = NULL) {
+  
+  # Calculate balanced accuracy from confusion matrix as the average of class recalls as per https://arxiv.org/pdf/2008.05756.pdf
+  
+  cm <- t(as.matrix(caret::confusionMatrix(data$pred, data$obs)$table))
+  
+  recall <- 1:nrow(cm) %>%
+    purrr::map(~ calculate_recall(cm, x = .x)) %>%
+    unlist()
+  
+  balanced_accuracy <- sum(recall) / length(recall)
+  
+  # Calculate accuracy
+  
+  accuracy <- sum(diag(cm)) / sum(cm)
+  
+  # Return results
+  
+  out <- c(accuracy, balanced_accuracy)
+  names(out) <- c("Accuracy", "Balanced_Accuracy")
+  return(out)
+}
+
 #--------------
 # Model fitting
 #--------------
+
+# Function for returning accuracies over the train procedure
+
+extract_prediction_accuracy <- function(mod, use_balanced_accuracy = FALSE) {
+  
+  results <- as.data.frame(mod$results)
+  
+  if (use_balanced_accuracy) {
+    
+    results <- results %>%
+      dplyr::select(c(.data$Accuracy, .data$AccuracySD, .data$Balanced_Accuracy, .data$Balanced_AccuracySD)) %>%
+      janitor::clean_names() %>%
+      dplyr::slice_max(.data$balanced_accuracy, n = 1) # Catches cases where multiple results are returned by {caret} in `mod`
+    
+  } else {
+    
+    results <- results %>%
+      dplyr::select(c(.data$Accuracy, .data$AccuracySD)) %>%
+      janitor::clean_names() %>%
+      dplyr::slice_max(.data$accuracy, n = 1) # Catches cases where multiple results are returned by {caret} in `mod`
+  }
+  
+  return(results)
+}
+
+# Core calculations
 
 fit_single_feature_models2 <- function(data, test_method, use_balanced_accuracy, use_k_fold, num_folds, use_empirical_null, null_testing_method, num_permutations, feature, pb, seed){
   
@@ -226,8 +295,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
   
   # Run cleaner to retain only non-constant features with no NAs or Infs
   
-  data_id <- clean_by_feature2(data = data_id) %>%
-    dplyr::select(-c(.data$id))
+  data_id <- clean_by_feature2(data = data_id)
   
   #------------- Fit classifiers -------------
   
@@ -266,7 +334,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     mean_diff_calculator_safe <- purrr::possibly(mean_diff_calculator, otherwise = NULL)
     
-    output <- 2:ncol(data_id) %>%
+    output <- 3:ncol(data_id) %>%
       purrr::map_df(~ mean_diff_calculator_safe(data = data_id, x = .x, method = test_method)) %>%
       dplyr::distinct() %>%
       dplyr::mutate(feature = gsub(" .*", "\\1", .data$feature),
@@ -279,7 +347,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     mean_diff_calculator_safe <- purrr::possibly(mean_diff_calculator, otherwise = NULL)
     
-    output <- 2:ncol(data_id) %>%
+    output <- 3:ncol(data_id) %>%
       purrr::map_df(~ mean_diff_calculator_safe(data = data_id, x = .x, method = test_method)) %>%
       dplyr::distinct() %>%
       dplyr::mutate(feature = gsub(" .*", "\\1", .data$feature),
@@ -295,7 +363,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     data_id <- data_id %>%
       dplyr::mutate(group = as.factor(.data$group))
     
-    output <- 2:ncol(data_id) %>%
+    output <- 3:ncol(data_id) %>%
       purrr::map_df(~ gather_binomial_info_safe(data_id, .x)) %>%
       dplyr::mutate(classifier_name = classifier_name,
                     statistic_name = statistic_name)
@@ -306,7 +374,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     # Set up progress bar for {purrr::map} iterations
     
-    pb <- dplyr::progress_estimated(length(2:ncol(data_id)))
+    pb <- dplyr::progress_estimated(length(3:ncol(data_id)))
     
     # Very important coffee console message
     
@@ -318,7 +386,7 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     fit_single_feature_models2_safe <- purrr::possibly(fit_single_feature_models2, otherwise = NULL)
     
-    output <- 2:ncol(data_id) %>%
+    output <- 3:ncol(data_id) %>%
       purrr::map(~ fit_single_feature_models2_safe(data = data_id, 
                                                    test_method = test_method,
                                                    use_balanced_accuracy = use_balanced_accuracy,
@@ -333,11 +401,6 @@ fit_single_feature_classifier2 <- function(data, id_var = "id", group_var = "gro
     
     output <- output[!sapply(output, is.null)]
     output <- do.call(rbind, output)
-    
-    if(nrow(output) < (ncol(data_id) - 2)){
-      difference <- (ncol(data_id) - 2) - nrow(output)
-      message(paste0(difference, " features failed due to NAs or other errors."))
-    }
     
     # Run nulls if random shuffles are to be used
     
