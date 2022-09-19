@@ -163,20 +163,20 @@ plot_samples(data = plane, n = 2, seed = 123)
 
 # Identify top features
 
-plane_top <- compute_top_features(plane_feats, 
-                                  id_var = "id", 
-                                  group_var = "group",
-                                  num_features = 40, 
-                                  method = "z-score",
-                                  test_method = "svmLinear",
-                                  use_balanced_accuracy = TRUE,
-                                  use_k_fold = TRUE,
-                                  num_folds = 10,
-                                  use_empirical_null =  TRUE,
-                                  null_testing_method = "ModelFreeShuffles",
-                                  p_value_method = "gaussian",
-                                  num_permutations = 1000,
-                                  seed = 123)
+plane_top <- compute_top_features2(plane_feats, 
+                                   id_var = "id", 
+                                   group_var = "group",
+                                   num_features = 40, 
+                                   method = "z-score",
+                                   test_method = "svmLinear",
+                                   use_balanced_accuracy = TRUE,
+                                   use_k_fold = TRUE,
+                                   num_folds = 10,
+                                   use_empirical_null =  TRUE,
+                                   null_testing_method = "ModelFreeShuffles",
+                                   p_value_method = "gaussian",
+                                   num_permutations = 1000,
+                                   seed = 123)
 
 save(plane_top, file = "data/plane_top.Rda")
 
@@ -199,20 +199,20 @@ plot_samples(data = phalanges, n = 3, seed = 123)
 
 # Identify top features
 
-phalanges_top <- compute_top_features(phalanges_feats, 
-                                      id_var = "id", 
-                                      group_var = "group",
-                                      num_features = 40, 
-                                      method = "z-score",
-                                      test_method = "svmLinear",
-                                      use_balanced_accuracy = TRUE,
-                                      use_k_fold = TRUE,
-                                      num_folds = 10,
-                                      use_empirical_null =  TRUE,
-                                      null_testing_method = "ModelFreeShuffles",
-                                      p_value_method = "gaussian",
-                                      num_permutations = 1000,
-                                      seed = 123)
+phalanges_top <- compute_top_features2(phalanges_feats, 
+                                       id_var = "id", 
+                                       group_var = "group",
+                                       num_features = 40, 
+                                       method = "z-score",
+                                       test_method = "svmLinear",
+                                       use_balanced_accuracy = TRUE,
+                                       use_k_fold = TRUE,
+                                       num_folds = 10,
+                                       use_empirical_null =  TRUE,
+                                       null_testing_method = "ModelFreeShuffles",
+                                       p_value_method = "gaussian",
+                                       num_permutations = 1000,
+                                       seed = 123)
 
 save(phalanges_top, file = "data/phalanges_top.Rda")
 
