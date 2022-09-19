@@ -40,9 +40,9 @@ rm(TimeSeriesData)
 load("data/feature-calcs/z-scored/Plane.Rda")
 plane_feats <- outs_z
 load("data/feature-calcs/z-scored/PhalangesOutlinesCorrect.Rda")
-coffee_feats <- outs_z
+phalanges_feats <- outs_z
 load("data/feature-calcs/z-scored/FreezerSmallTrain.Rda")
-phalanx_feats <- outs_z
+freezer_feats <- outs_z
 rm(outs_z)
 
 # Calculate overall mean performance for each problem and set
