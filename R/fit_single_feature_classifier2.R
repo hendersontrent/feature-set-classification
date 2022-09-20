@@ -1,8 +1,69 @@
 #--------------- Helper functions ---------------
 
+#-----------------------
+# Classification metrics
+#-----------------------
+
+# Recall (for use in computing balanced classification accuracy)
+
+calculate_recall <- function(matrix, x){
+  tp <- as.numeric(matrix[x, x])
+  fn <- sum(matrix[x, -x])
+  
+  # Add a catch for when 0s occupy the entire row in the confusion matrix
+  # NOTE: Is this the correct way to handle? Seems consistent with {caret}'s default matrix
+  
+  if(tp + fn == 0){
+    recall <- 0
+  } else{
+    recall <- tp / (tp + fn)
+  }
+  return(recall)
+}
+
 #----------------
 # Random shuffles
 #----------------
+
+calculate_accuracy <- function(x, seed, use_balanced_accuracy, pb){
+  
+  # Print {purrr} iteration progress updates in the console
+  
+  pb$tick()$print()
+  
+  # Randomly shuffle class labels and generate confusion matrix
+  
+  set.seed(seed)
+  y <- sample(x, replace = FALSE)
+  u <- dplyr::union(y, x)
+  mytable <- table(factor(y, u), factor(x, u))
+  cm <- t(as.matrix(caret::confusionMatrix(mytable)$table)) # Transpose as {caret} has reversed format
+  
+  if(use_balanced_accuracy){
+    
+    # Calculate balanced accuracy from confusion matrix as the average of class recalls as per https://arxiv.org/pdf/2008.05756.pdf
+    
+    recall <- 1:nrow(cm) %>%
+      purrr::map(~ calculate_recall(cm, x = .x)) %>%
+      unlist()
+    
+    balanced_accuracy <- sum(recall) / length(recall)
+  }
+  
+  # Calculate accuracy
+  
+  accuracy <- sum(diag(cm)) / sum(cm)
+  
+  # Return results
+  
+  if(use_balanced_accuracy){
+    out <- data.frame(accuracy = accuracy, 
+                      balanced_accuracy = balanced_accuracy)
+  } else{
+    out <- data.frame(accuracy = accuracy)
+  }
+  return(out)
+}
 
 simulate_null_acc <- function(x, num_permutations = 10000, use_balanced_accuracy){
   
@@ -71,7 +132,80 @@ extract_prediction_accuracy <- function(mod, use_balanced_accuracy = FALSE) {
   return(results)
 }
 
+# Function for iterating over random shuffle permutations of class labels
+
+fit_empirical_null_models <- function(data, s, test_method, theControl, pb = NULL, univariable = FALSE, use_balanced_accuracy = FALSE){
+  
+  # Print {purrr} iteration progress updates in the console
+  
+  if(!is.null(pb)){
+    pb$tick()$print()
+  } else{
+  }
+  
+  # Null shuffles and computations
+  
+  y <- data %>% dplyr::pull(.data$group)
+  y <- as.character(y)
+  
+  set.seed(s)
+  shuffles <- sample(y, replace = FALSE)
+  
+  shuffledtest <- data %>%
+    dplyr::mutate(group = shuffles) %>%
+    dplyr::mutate(group = as.factor(.data$group))
+  
+  if(univariable){
+    processes <- c("center", "scale")
+  } else{
+    processes <- c("center", "scale", "nzv")
+  }
+  
+  modNull <- caret::train(group ~ .,
+                          data = shuffledtest,
+                          method = test_method,
+                          trControl = theControl,
+                          preProcess = processes)
+  
+  if(theControl$method == "none"){
+    
+    u <- dplyr::union(predict(modNull, newdata = shuffledtest), shuffledtest$group)
+    mytable <- table(factor(stats::predict(modNull, newdata = shuffledtest), u), factor(shuffledtest$group, u))
+    cm <- t(as.matrix(caret::confusionMatrix(mytable)$table)) # Transpose as {caret} has reversed format
+    
+    if(use_balanced_accuracy){
+      
+      recall <- 1:nrow(cm) %>%
+        purrr::map(~ calculate_recall(cm, x = .x)) %>%
+        unlist()
+      
+      balanced_accuracy <- sum(recall) / length(recall)
+    }
+    
+    # Calculate accuracy
+    
+    accuracy <- sum(diag(cm)) / sum(cm)
+    
+    if(use_balanced_accuracy){
+      null_models <- data.frame(accuracy = accuracy, 
+                                balanced_accuracy = balanced_accuracy)
+    } else{
+      null_models <- data.frame(accuracy = accuracy)
+    }
+    
+    null_models <- null_models%>%
+      dplyr::mutate(category = "Null")
+    
+  } else{
+    null_models <- extract_prediction_accuracy(mod = modNull, use_balanced_accuracy = use_balanced_accuracy)
+  }
+  
+  return(null_models)
+}
+
+#------------------
 # Core calculations
+#------------------
 
 fit_single_feature_models2 <- function(data, test_method, use_balanced_accuracy, use_k_fold, num_folds, use_empirical_null, null_testing_method, num_permutations, feature, pb, seed){
   
@@ -187,6 +321,283 @@ fit_single_feature_models2 <- function(data, test_method, use_balanced_accuracy,
     dplyr::mutate(feature = colnames(tmp[2]))
   
   return(finalOuts)
+}
+
+#--------------------------
+# Calculation of statistics
+# for empirical nulls
+#--------------------------
+
+calculate_against_null_vector <- function(nulls, main_matrix, main_matrix_balanced = NULL, x, p_value_method, use_balanced_accuracy){
+  
+  if(use_balanced_accuracy) {
+    
+    true_val_acc <- main_matrix %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    true_val_bal_acc <- main_matrix_balanced %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    stopifnot(length(true_val_acc) == 1)
+    stopifnot(length(true_val_bal_acc) == 1)
+    
+    # Null models
+    
+    nulls_acc <- nulls$accuracy
+    nulls_bal_acc <- nulls$balanced_accuracy
+    
+    # Catch cases when SD = 0
+    
+    if(stats::sd(nulls_acc) == 0){
+      p_value_acc <- NA
+      message("Insufficient variance to calculate p-value, returning NA.")
+      
+    } else{
+      
+      if(p_value_method == "empirical"){
+        
+        # Use ECDF to calculate p-value
+        
+        fn <- stats::ecdf(nulls_acc)
+        p_value_acc <- 1 - fn(true_val_acc)
+        
+      } else{
+        
+        # Calculate p-value from Gaussian with null distribution parameters
+        
+        p_value_acc <- stats::pnorm(true_val_acc, mean = mean(nulls_acc), sd = stats::sd(nulls_acc), lower.tail = FALSE)
+      }
+    }
+    
+    if(stats::sd(nulls_bal_acc) == 0){
+      p_value_bal_acc <- NA
+      message("Insufficient variance to calculate p-value, returning NA.")
+      
+    } else{
+      
+      if(p_value_method == "empirical"){
+        
+        # Use ECDF to calculate p-value
+        
+        fn_bal_acc <- stats::ecdf(nulls_bal_acc)
+        p_value_bal_acc <- 1 - fn_bal_acc(true_val_bal_acc)
+        
+      } else{
+        
+        # Calculate p-value from Gaussian with null distribution parameters
+        
+        p_value_bal_acc <- stats::pnorm(true_val_bal_acc, mean = mean(nulls_bal_acc), sd = stats::sd(nulls_bal_acc), lower.tail = FALSE)
+      }
+    }
+    
+    tmp_outputs <- data.frame(feature = names(main_matrix)[x],
+                              accuracy = true_val_acc,
+                              p_value_accuracy = p_value_acc,
+                              balanced_accuracy = true_val_bal_acc,
+                              p_value_balanced_accuracy = p_value_bal_acc)
+    
+  } else{
+    
+    true_val_acc <- main_matrix %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    stopifnot(length(true_val_acc) == 1)
+    nulls_acc <- nulls
+    
+    # Catch cases when SD = 0
+    
+    if(stats::sd(nulls_acc) == 0){
+      p_value_acc <- NA
+      message("Insufficient variance to calculate p-value, returning NA.")
+      
+    } else{
+      
+      if(p_value_method == "empirical"){
+        
+        # Use ECDF to calculate p-value
+        
+        fn <- stats::ecdf(nulls_acc)
+        p_value_acc <- 1 - fn(true_val_acc)
+        
+      } else{
+        
+        # Calculate p-value from Gaussian with null distribution parameters
+        
+        p_value_acc <- stats::pnorm(true_val_acc, mean = mean(nulls_acc), sd = stats::sd(nulls_acc), lower.tail = FALSE)
+      }
+    }
+    
+    tmp_outputs <- data.frame(feature = names(main_matrix)[x],
+                              accuracy = true_val_acc,
+                              p_value_accuracy = p_value_acc)
+  }
+  
+  return(tmp_outputs)
+}
+
+# Unpooled
+
+calculate_unpooled_null <- function(main_matrix, main_matrix_balanced = NULL, x, p_value_method, use_balanced_accuracy = FALSE){
+  
+  if(use_balanced_accuracy) {
+    
+    true_val_acc <- main_matrix %>%
+      dplyr::filter(.data$category == "Main") %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    true_val_bal_acc <- main_matrix_balanced %>%
+      dplyr::filter(.data$category == "Main") %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    stopifnot(length(true_val_acc) == 1)
+    stopifnot(length(true_val_bal_acc) == 1)
+    
+    # Null models
+    
+    nulls_acc <- main_matrix %>%
+      dplyr::filter(.data$category == "Null") %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    nulls_bal_acc <- main_matrix_balanced %>%
+      dplyr::filter(.data$category == "Null") %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    # Catch cases when SD = 0
+    
+    if(stats::sd(nulls_acc) == 0){
+      p_value_acc <- NA
+      message("Insufficient variance to calculate p-value, returning NA.")
+      
+    } else{
+      
+      if(p_value_method == "empirical"){
+        
+        # Use ECDF to calculate p-value
+        
+        fn <- stats::ecdf(nulls_acc)
+        p_value_acc <- 1 - fn(true_val_acc)
+        
+      } else{
+        
+        # Calculate p-value from Gaussian with null distribution parameters
+        
+        p_value_acc <- stats::pnorm(true_val_acc, mean = mean(nulls_acc), sd = stats::sd(nulls_acc), lower.tail = FALSE)
+      }
+    }
+    
+    if(stats::sd(nulls_bal_acc) == 0){
+      p_value_bal_acc <- NA
+      message("Insufficient variance to calculate p-value, returning NA.")
+      
+    } else{
+      
+      if(p_value_method == "empirical"){
+        
+        # Use ECDF to calculate p-value
+        
+        fn_bal_acc <- stats::ecdf(nulls_bal_acc)
+        p_value_bal_acc <- 1 - fn_bal_acc(true_val_bal_acc)
+        
+      } else{
+        
+        # Calculate p-value from Gaussian with null distribution parameters
+        
+        p_value_bal_acc <- stats::pnorm(true_val_bal_acc, mean = mean(nulls_bal_acc), sd = stats::sd(nulls_bal_acc), lower.tail = FALSE)
+      }
+    }
+    
+    tmp_outputs <- data.frame(feature = names(main_matrix)[x],
+                              accuracy = true_val_acc,
+                              p_value_accuracy = p_value_acc,
+                              balanced_accuracy = true_val_bal_acc,
+                              p_value_balanced_accuracy = p_value_bal_acc)
+    
+  } else{
+    
+    true_val_acc <- main_matrix %>%
+      dplyr::filter(.data$category == "Main") %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    stopifnot(length(true_val_acc) == 1)
+    
+    nulls_acc <- main_matrix %>%
+      dplyr::filter(.data$category == "Null") %>%
+      dplyr::select(dplyr::all_of(x)) %>%
+      dplyr::pull()
+    
+    # Catch cases when SD = 0
+    
+    if(stats::sd(nulls_acc) == 0){
+      p_value_acc <- NA
+      message("Insufficient variance to calculate p-value, returning NA.")
+      
+    } else{
+      
+      if(p_value_method == "empirical"){
+        
+        # Use ECDF to calculate p-value
+        
+        fn <- stats::ecdf(nulls_acc)
+        p_value_acc <- 1 - fn(true_val_acc)
+        
+      } else{
+        
+        # Calculate p-value from Gaussian with null distribution parameters
+        
+        p_value_acc <- stats::pnorm(true_val_acc, mean = mean(nulls_acc), sd = stats::sd(nulls_acc), lower.tail = FALSE)
+      }
+    }
+    
+    tmp_outputs <- data.frame(feature = names(main_matrix)[x],
+                              accuracy = true_val_acc,
+                              p_value_accuracy = p_value_acc)
+  }
+  
+  return(tmp_outputs)
+}
+
+#------------------------
+# Binomial GLM extraction
+#------------------------
+
+gather_binomial_info <- function(data, x){
+  
+  tmp <- clean_by_feature(data = data, x = x)
+  mod <- stats::glm(formula = stats::formula(paste0("group ~ ", colnames(tmp[3]))), data = tmp, family = stats::binomial())
+  
+  tmp <- data.frame(feature = as.character(mod$terms[[3]]),
+                    statistic_value = as.numeric(summary(mod)$coefficients[,3][2]),
+                    p_value = as.numeric(summary(mod)$coefficients[,4][2]))
+  
+  return(tmp)
+}
+
+#------------------------------
+# t-test and wilcox comparisons
+#------------------------------
+
+mean_diff_calculator <- function(data, x, method){
+  
+  tmp <- clean_by_feature(data = data, x = x)
+  
+  if(method == "t-test"){
+    results <- stats::t.test(formula = stats::formula(paste0(colnames(tmp[3]), " ~ group")), data = tmp)
+  } else{
+    results <- stats::wilcox.test(formula = stats::formula(paste0(colnames(tmp[3]), " ~ group")), data = tmp)
+  }
+  
+  results <- data.frame(feature = results$data.name, 
+                        statistic_value = results$statistic, 
+                        p_value = results$p.value)
+  return(results)
 }
 
 #--------------------
