@@ -5,9 +5,9 @@
 # performs well or poorly on it
 #----------------------------------------
 
-#-------------------------------------------
-# Author: Trent Henderson, 19 September 2022
-#-------------------------------------------
+#----------------------------------------
+# Author: Trent Henderson, 18 August 2022
+#----------------------------------------
 
 # Load classification results
 
@@ -18,31 +18,31 @@ outputs_z <- outputs_z %>%
     method == "tsfel" ~ "TSFEL",
     method == "kats"  ~ "Kats",
     TRUE              ~ method)) %>%
-  filter(problem %in% c("Plane", "PhalangesOutlinesCorrect", "FreezerSmallTrain")) # Case study problems of interest
+  filter(problem %in% c("Coffee", "MiddlePhalanxTW", "Plane")) # Case study problems of interest
 
 # Load raw time series
 
 load("data/TimeSeriesData.Rda")
 
+coffee <- TimeSeriesData %>%
+  filter(problem == "Coffee")
+
+phalanx <- TimeSeriesData %>%
+  filter(problem == "MiddlePhalanxTW")
+
 plane <- TimeSeriesData %>%
   filter(problem == "Plane")
-
-phalanges <- TimeSeriesData %>%
-  filter(problem == "PhalangesOutlinesCorrect")
-
-freezer <- TimeSeriesData %>%
-  filter(problem == "FreezerSmallTrain")
 
 rm(TimeSeriesData)
 
 # Load feature calculations
 
+load("data/feature-calcs/z-scored/Coffee.Rda")
+coffee_feats <- outs_z
+load("data/feature-calcs/z-scored/MiddlePhalanxTW.Rda")
+phalanx_feats <- outs_z
 load("data/feature-calcs/z-scored/Plane.Rda")
 plane_feats <- outs_z
-load("data/feature-calcs/z-scored/PhalangesOutlinesCorrect.Rda")
-phalanges_feats <- outs_z
-load("data/feature-calcs/z-scored/FreezerSmallTrain.Rda")
-freezer_feats <- outs_z
 rm(outs_z)
 
 # Calculate overall mean performance for each problem and set
@@ -127,7 +127,7 @@ plot_all_ts <- function(data){
     ungroup()
   
   # Draw plot
-  
+
   p <- data %>%
     mutate(id = as.factor(id),
            target = as.factor(target))
@@ -150,20 +150,20 @@ plot_all_ts <- function(data){
   return(p)
 }
 
-#------------------ Case study I: Plane ----------------
+#------------------ Case study I: Coffee ------------------
 
-#--------------------------------------------
-# PREMISE: catch22 performs far above average
+#----------------------------------------
+# PREMISE: All sets perform about average
 # and we want to understand why
-#--------------------------------------------
+#----------------------------------------
 
 # Draw plot
 
-plot_samples(data = plane, n = 2, seed = 123)
+plot_samples(data = coffee, n = 3, seed = 123)
 
 # Identify top features
 
-plane_top <- compute_top_features2(plane_feats, 
+coffee_top <- compute_top_features(coffee_feats, 
                                    id_var = "id", 
                                    group_var = "group",
                                    num_features = 40, 
@@ -178,51 +178,26 @@ plane_top <- compute_top_features2(plane_feats,
                                    num_permutations = 1000,
                                    seed = 123)
 
-save(plane_top, file = "data/plane_top.Rda")
+save(coffee_top, file = "data/coffee_top.Rda")
+
+# Statistical version as we have a two-class problem
+
+coffee_top2 <- compute_top_features(coffee_feats, 
+                                    id_var = "id", 
+                                    group_var = "group",
+                                    num_features = 40, 
+                                    method = "z-score",
+                                    test_method = "t-test",
+                                    p_value_method = "gaussian",
+                                    seed = 123)
 
 # Draw plots like in the catch22 paper
 
-plane_plot <- plot_all_ts(data = plane)
-print(plane_plot)
-ggsave("output/plane_sample.pdf", plot = plane_plot, units = "in", height = 12, width = 8)
+coffee_plot <- plot_all_ts(data = coffee)
+print(coffee_plot)
+ggsave("output/coffee_sample.pdf", plot = coffee_plot)
 
-#------------------ Case study II: PhalangesOutlinesCorrect ------------------
-
-#----------------------------------------
-# PREMISE: All sets perform about average
-# and we want to understand why
-#----------------------------------------
-
-# Draw plot
-
-plot_samples(data = phalanges, n = 3, seed = 123)
-
-# Identify top features
-
-phalanges_top <- compute_top_features2(phalanges_feats, 
-                                       id_var = "id", 
-                                       group_var = "group",
-                                       num_features = 40, 
-                                       method = "z-score",
-                                       test_method = "svmLinear",
-                                       use_balanced_accuracy = TRUE,
-                                       use_k_fold = TRUE,
-                                       num_folds = 10,
-                                       use_empirical_null =  TRUE,
-                                       null_testing_method = "ModelFreeShuffles",
-                                       p_value_method = "gaussian",
-                                       num_permutations = 1000,
-                                       seed = 123)
-
-save(phalanges_top, file = "data/phalanges_top.Rda")
-
-# Draw plots like in the catch22 paper
-
-phalanges_plot <- plot_all_ts(data = phalanges)
-print(phalanges_plot)
-ggsave("output/phalanges_sample.pdf", plot = phalanges_plot)
-
-#------------------ Case study III: FreezerSmallTrain -----------------
+#------------------ Case study II: MiddlePhalanxTW -----------------
 
 #--------------------------------------------
 # PREMISE: tsfresh performs below average and 
@@ -231,11 +206,11 @@ ggsave("output/phalanges_sample.pdf", plot = phalanges_plot)
 
 # Draw plot
 
-plot_samples(data = freezer, n = 2, seed = 123)
+plot_samples(data = phalanx, n = 2, seed = 123)
 
 # Identify top features
 
-freezer_top <- compute_top_features2(freezer_feats, 
+phalanx_top <- compute_top_features2(phalanx_feats, 
                                      id_var = "id", 
                                      group_var = "group",
                                      num_features = 40, 
@@ -250,10 +225,46 @@ freezer_top <- compute_top_features2(freezer_feats,
                                      num_permutations = 1000,
                                      seed = 123)
 
-save(freezer_top, file = "data/freezer_top.Rda")
+save(phalanx_top, file = "data/phalanx_top.Rda")
 
 # Draw plots like in the catch22 paper
 
-freezer_plot <- plot_all_ts(data = freezer)
-print(freezer_plot)
-ggsave("output/freezer_sample.pdf", plot = freezer_plot, units = "in", height = 12, width = 8)
+phalanx_plot <- plot_all_ts(data = phalanx)
+print(phalanx_plot)
+ggsave("output/phalanx_sample.pdf", plot = phalanx_plot, units = "in", height = 12, width = 8)
+
+#------------------ Case study III: Plane ----------------
+
+#--------------------------------------------
+# PREMISE: catch22 performs far above average
+# and we want to understand why
+#--------------------------------------------
+
+# Draw plot
+
+plot_samples(data = plane, n = 2, seed = 123)
+
+# Identify top features
+
+plane_top <- compute_top_features(plane_feats, 
+                                  id_var = "id", 
+                                  group_var = "group",
+                                  num_features = 40, 
+                                  method = "z-score",
+                                  test_method = "svmLinear",
+                                  use_balanced_accuracy = TRUE,
+                                  use_k_fold = TRUE,
+                                  num_folds = 10,
+                                  use_empirical_null =  TRUE,
+                                  null_testing_method = "ModelFreeShuffles",
+                                  p_value_method = "gaussian",
+                                  num_permutations = 1000,
+                                  seed = 123)
+
+save(plane_top, file = "data/plane_top.Rda")
+
+# Draw plots like in the catch22 paper
+
+plane_plot <- plot_all_ts(data = plane)
+print(plane_plot)
+ggsave("output/plane_sample.pdf", plot = plane_plot, units = "in", height = 12, width = 8)
