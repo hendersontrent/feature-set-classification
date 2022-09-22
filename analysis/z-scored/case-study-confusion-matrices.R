@@ -83,6 +83,8 @@ conf_mats_set <- data_files %>%
 # Plane
 #------
 
+conf_mats[[1]]$Resample_1
+
 # Each individual confusion matrix for comparison
 
 conf_mats_set[[1]]$catch22$Resample_1
@@ -96,6 +98,10 @@ conf_mats_set[[1]]$kats$Resample_1
 # PhalangesOutlinesCorrect
 #-------------------------
 
+conf_mats[[2]]$Resample_1
+
+# Each individual confusion matrix for comparison
+
 conf_mats_set[[2]]$catch22$Resample_1
 conf_mats_set[[2]]$feasts$Resample_1
 conf_mats_set[[2]]$tsfeatures$Resample_1
@@ -106,6 +112,10 @@ conf_mats_set[[2]]$kats$Resample_1
 #------------------
 # FreezerSmallTrain
 #------------------
+
+conf_mats[[3]]$Resample_1
+
+# Each individual confusion matrix for comparison
 
 conf_mats_set[[3]]$catch22$Resample_1
 conf_mats_set[[3]]$feasts$Resample_1
