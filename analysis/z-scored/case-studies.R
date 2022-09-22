@@ -192,7 +192,7 @@ plot_samples(data = phalanges, n = 3, seed = 123)
 phalanges_top <- compute_top_features2(phalanges_feats, 
                                        id_var = "id", 
                                        group_var = "group",
-                                       num_features = 40, 
+                                       num_features = 10, # The others are 40 but everything past 10 here is 50% accuracy and clouds correlation plot
                                        method = "z-score",
                                        test_method = "svmLinear",
                                        use_balanced_accuracy = TRUE,
