@@ -152,11 +152,6 @@ plot_all_ts <- function(data){
 
 #------------------ Case study I: Plane ----------------
 
-#--------------------------------------------
-# PREMISE: catch22 performs far above average
-# and we want to understand why
-#--------------------------------------------
-
 # Draw plot
 
 plot_samples(data = plane, n = 2, seed = 123)
@@ -188,11 +183,6 @@ ggsave("output/plane_sample.pdf", plot = plane_plot, units = "in", height = 12, 
 
 #------------------ Case study II: PhalangesOutlinesCorrect ------------------
 
-#----------------------------------------
-# PREMISE: All sets perform about average
-# and we want to understand why
-#----------------------------------------
-
 # Draw plot
 
 plot_samples(data = phalanges, n = 3, seed = 123)
@@ -223,11 +213,6 @@ print(phalanges_plot)
 ggsave("output/phalanges_sample.pdf", plot = phalanges_plot)
 
 #------------------ Case study III: FreezerSmallTrain -----------------
-
-#--------------------------------------------
-# PREMISE: tsfresh performs below average and 
-# we want to understand why
-#--------------------------------------------
 
 # Draw plot
 
