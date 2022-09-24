@@ -83,6 +83,8 @@ conf_mats_set <- data_files %>%
 # Plane
 #------
 
+conf_mats[[1]]$Resample_1
+
 # Each individual confusion matrix for comparison
 
 conf_mats_set[[1]]$catch22$Resample_1
@@ -96,6 +98,10 @@ conf_mats_set[[1]]$kats$Resample_1
 # PhalangesOutlinesCorrect
 #-------------------------
 
+conf_mats[[2]]$Resample_1
+
+# Each individual confusion matrix for comparison
+
 conf_mats_set[[2]]$catch22$Resample_1
 conf_mats_set[[2]]$feasts$Resample_1
 conf_mats_set[[2]]$tsfeatures$Resample_1
@@ -106,6 +112,10 @@ conf_mats_set[[2]]$kats$Resample_1
 #------------------
 # FreezerSmallTrain
 #------------------
+
+conf_mats[[3]]$Resample_1
+
+# Each individual confusion matrix for comparison
 
 conf_mats_set[[3]]$catch22$Resample_1
 conf_mats_set[[3]]$feasts$Resample_1
@@ -136,70 +146,70 @@ plane_binary <- plane_binary %>%
 
 # Compute top features
 
-plane_bin_top_1 <- compute_top_features(plane_binary[plane_binary$method == "catch22", ], 
-                                        id_var = "id", 
-                                        group_var = "group_1",
-                                        num_features = 22, 
-                                        method = "z-score",
-                                        test_method = "svmLinear",
-                                        use_balanced_accuracy = TRUE,
-                                        use_k_fold = TRUE,
-                                        num_folds = 10,
-                                        use_empirical_null =  TRUE,
-                                        null_testing_method = "ModelFreeShuffles",
-                                        p_value_method = "gaussian",
-                                        num_permutations = 1e4,
-                                        seed = 123)
+plane_bin_top_1 <- compute_top_features2(plane_binary[plane_binary$method == "catch22", ], 
+                                         id_var = "id", 
+                                         group_var = "group_1",
+                                         num_features = 22, 
+                                         method = "z-score",
+                                         test_method = "svmLinear",
+                                         use_balanced_accuracy = TRUE,
+                                         use_k_fold = TRUE,
+                                         num_folds = 10,
+                                         use_empirical_null =  TRUE,
+                                         null_testing_method = "ModelFreeShuffles",
+                                         p_value_method = "gaussian",
+                                         num_permutations = 1e4,
+                                         seed = 123)
 
 View(plane_bin_top_1$ResultsTable)
 
-plane_bin_top_1_all <- compute_top_features(plane_binary, 
-                                            id_var = "id", 
-                                            group_var = "group_1",
-                                            num_features = 22, 
-                                            method = "z-score",
-                                            test_method = "svmLinear",
-                                            use_balanced_accuracy = TRUE,
-                                            use_k_fold = TRUE,
-                                            num_folds = 10,
-                                            use_empirical_null =  TRUE,
-                                            null_testing_method = "ModelFreeShuffles",
-                                            p_value_method = "gaussian",
-                                            num_permutations = 1e4,
-                                            seed = 123)
+plane_bin_top_1_all <- compute_top_features2(plane_binary, 
+                                             id_var = "id", 
+                                             group_var = "group_1",
+                                             num_features = 22, 
+                                             method = "z-score",
+                                             test_method = "svmLinear",
+                                             use_balanced_accuracy = TRUE,
+                                             use_k_fold = TRUE,
+                                             num_folds = 10,
+                                             use_empirical_null =  TRUE,
+                                             null_testing_method = "ModelFreeShuffles",
+                                             p_value_method = "gaussian",
+                                             num_permutations = 1e4,
+                                             seed = 123)
 
 View(plane_bin_top_1_all$ResultsTable)
 
-plane_bin_top_2 <- compute_top_features(plane_binary[plane_binary$method == "catch22", ], 
-                                        id_var = "id", 
-                                        group_var = "group_2",
-                                        num_features = 22, 
-                                        method = "z-score",
-                                        test_method = "svmLinear",
-                                        use_balanced_accuracy = TRUE,
-                                        use_k_fold = TRUE,
-                                        num_folds = 10,
-                                        use_empirical_null =  TRUE,
-                                        null_testing_method = "ModelFreeShuffles",
-                                        p_value_method = "gaussian",
-                                        num_permutations = 1e4,
-                                        seed = 123)
+plane_bin_top_2 <- compute_top_features2(plane_binary[plane_binary$method == "catch22", ], 
+                                         id_var = "id", 
+                                         group_var = "group_2",
+                                         num_features = 22, 
+                                         method = "z-score",
+                                         test_method = "svmLinear",
+                                         use_balanced_accuracy = TRUE,
+                                         use_k_fold = TRUE,
+                                         num_folds = 10,
+                                         use_empirical_null =  TRUE,
+                                         null_testing_method = "ModelFreeShuffles",
+                                         p_value_method = "gaussian",
+                                         num_permutations = 1e4,
+                                         seed = 123)
 
 View(plane_bin_top_2$ResultsTable)
 
-plane_bin_top_2_all <- compute_top_features(plane_binary, 
-                                            id_var = "id", 
-                                            group_var = "group_2",
-                                            num_features = 22, 
-                                            method = "z-score",
-                                            test_method = "svmLinear",
-                                            use_balanced_accuracy = TRUE,
-                                            use_k_fold = TRUE,
-                                            num_folds = 10,
-                                            use_empirical_null =  TRUE,
-                                            null_testing_method = "ModelFreeShuffles",
-                                            p_value_method = "gaussian",
-                                            num_permutations = 1e4,
-                                            seed = 123)
+plane_bin_top_2_all <- compute_top_features2(plane_binary, 
+                                             id_var = "id", 
+                                             group_var = "group_2",
+                                             num_features = 22, 
+                                             method = "z-score",
+                                             test_method = "svmLinear",
+                                             use_balanced_accuracy = TRUE,
+                                             use_k_fold = TRUE,
+                                             num_folds = 10,
+                                             use_empirical_null =  TRUE,
+                                             null_testing_method = "ModelFreeShuffles",
+                                             p_value_method = "gaussian",
+                                             num_permutations = 1e4,
+                                             seed = 123)
 
 View(plane_bin_top_2_all$ResultsTable)
