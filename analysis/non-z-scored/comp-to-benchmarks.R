@@ -16,8 +16,6 @@
 # Grab benchmark results
 
 benchmarks <- pull_benchmark_results() %>%
-  filter(method != "catch22") %>%
-  dplyr::select(-c(balanced_accuracy)) %>%
   mutate(accuracy_bench = accuracy * 100) %>%
   group_by(problem) %>%
   mutate(ranker = dense_rank(-accuracy_bench)) %>%
@@ -26,40 +24,109 @@ benchmarks <- pull_benchmark_results() %>%
   dplyr::select(c(method, problem, accuracy_bench)) %>%
   rename(method_bench = method)
 
- # Load classification results
+#---------------- Compute best feature set ----------------
+
+ # Load classification results for feature sets and compute winner
 
 load("data/outputs.Rda")
 load("data/outputs_aggregate.Rda")
 
-# Concatenate the three datasets
+#' Find best set for each problem
+#' @param outputs_data \code{data.frame} of individual feature set classification results
+#' @param outputs_agg_data \code{data.frame} of all features classification results
+#' @author Trent Henderson
+#' 
 
-outputs <- outputs %>%
-  dplyr::select(c(method, problem, accuracy))
-
-outputs_aggregate <- outputs_aggregate %>%
-  mutate(method = "All features") %>%
-  dplyr::select(c(method, problem, accuracy))
-
-main_models <- bind_rows(outputs, outputs_aggregate) %>%
-  group_by(problem, method) %>%
-  summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(accuracy = accuracy * 100) %>%
-  group_by(problem) %>%
-  mutate(ranker = dense_rank(-accuracy)) %>%
-  ungroup() %>%
-  filter(ranker == 1) %>%
-  dplyr::select(-c(ranker))
-
-main_models <- main_models %>%
-  inner_join(benchmarks, by = c("problem" = "problem")) %>%
-  mutate(method = case_when(
-          method == "tsfel" ~ "TSFEL",
-          method == "kats"  ~ "Kats",
-          TRUE              ~ method)) %>%
-  mutate(top_performer = ifelse(accuracy > accuracy_bench, method, method_bench))
-
-rm(benchmarks, outputs, outputs_aggregate)
+find_feature_winners <- function(outputs_data, outputs_agg_data){
+  
+  outputs_data <- outputs_data %>%
+    mutate(method = case_when(
+      method == "tsfel" ~ "TSFEL",
+      method == "kats"  ~ "Kats",
+      TRUE              ~ method))
+  
+  # Calculate means
+  
+  main_models <- outputs_data %>%
+    group_by(problem, method) %>%
+    summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
+    ungroup()
+  
+  main_models_aggregate <- outputs_agg_data %>%
+    mutate(accuracy = accuracy * 100,
+           method = "All features") %>%
+    group_by(problem, method) %>%
+    summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
+    ungroup()
+  
+  all_models <- bind_rows(main_models, main_models_aggregate) %>%
+    group_by(problem) %>%
+    slice_max(order_by = accuracy, n = 1) %>%
+    ungroup()
+  
+  #---------------------- Calculate p-values -----------------------
+  
+  # Set up single dataframe
+  
+  reduced <- outputs_data %>%
+    dplyr::select(c(problem, method, accuracy))
+  
+  reduced2 <- outputs_agg_data %>%
+    mutate(method = "All features") %>%
+    dplyr::select(c(problem, method, accuracy))
+  
+  reduced <- bind_rows(reduced, reduced2)
+  
+  # Iterate over every pairwise comparison to all features for each problem
+  
+  combns <- crossing(unique(outputs_data$method), c("All features")) %>%
+    rename(set1 = 1, set2 = 2)
+  
+  problem <- rep(unique(reduced$problem), times = 1, each = 6)
+  combns <- combns[rep(1:nrow(combns), length(unique(reduced$problem)),), ]
+  combns <- cbind(combns, problem)
+  
+  comps <- 1:nrow(combns) %>%
+    purrr::map_df(~ calculate_p_values_acc(data = reduced, combn_data = combns, rownum = .x))
+  
+  # Add in accuracy values to get direction
+  
+  single_accs <- outputs_data %>%
+    group_by(problem, method) %>%
+    summarise(accuracy_set = mean(accuracy, na.rm = TRUE)) %>%
+    ungroup()
+  
+  all_accs <- outputs_agg_data %>%
+    group_by(problem) %>%
+    summarise(accuracy_all = mean(accuracy, na.rm = TRUE)) %>%
+    ungroup()
+  
+  comps <- comps %>%
+    inner_join(single_accs, by = c("problem" = "problem", "method" = "method")) %>%
+    inner_join(all_accs, by = c("problem" = "problem")) %>%
+    mutate(flag = case_when(
+      is.na(p_value)                                                 ~ "Zero variance for one/more sets",
+      p_value > .05                                                  ~ "Non-Significant difference",
+      p_value < .05 & accuracy_set > accuracy_all                    ~ method,
+      TRUE                                                           ~ "All features"))
+  
+  # Get list of problems without a defined winner
+  
+  comps <- comps %>%
+    group_by(problem) %>%
+    slice_max(order_by = accuracy_set, n = 1) %>%
+    ungroup() %>%
+    mutate(best = case_when(
+            flag == "Zero variance for one/more sets" & accuracy_set > accuracy_all  ~ method,
+            flag == "Zero variance for one/more sets" & accuracy_set < accuracy_all  ~ "All features",
+            flag == "Zero variance for one/more sets" & accuracy_set == accuracy_all ~ method,
+            flag == "Non-Significant difference" & accuracy_set > accuracy_all       ~ method,
+            flag == "Non-Significant difference" & accuracy_set < accuracy_all       ~ "All features",
+            TRUE                                                                     ~ flag)) %>%
+    dplyr::select(c(problem, best))
+  
+  return(comps)
+}
 
 #--------------------- Draw plots ------------------
 
