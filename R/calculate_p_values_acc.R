@@ -29,7 +29,7 @@ calculate_p_values_acc <- function(data, combn_data, rownum){
   # Check for only 1 feature set present
   
   if(length(unique(tmp_data$method)) <= 1){
-    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, t_statistic = NA, p_value = NA)
     return(outs)
   }
   
@@ -41,7 +41,7 @@ calculate_p_values_acc <- function(data, combn_data, rownum){
     ungroup()
   
   if(min(group_check$resamples) <= 2){
-    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, t_statistic = NA, p_value = NA)
     return(outs)
   }
   
@@ -55,11 +55,12 @@ calculate_p_values_acc <- function(data, combn_data, rownum){
   # Do calculation
   
   if(0 %in% sd_check$stddev){
-    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, t_statistic = NA, p_value = NA)
     return(outs)
   } else{
     t_test <- t.test(accuracy ~ method, data = tmp_data, var.equal = FALSE)
-    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = t_test$statistic, p_value = t_test$p.value)
+    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, 
+                       t_statistic = t_test$statistic, p_value = t_test$p.value)
     return(outs)
   }
 }
