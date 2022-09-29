@@ -127,7 +127,12 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
     dplyr::select(c(problem, winner_set)) %>%
     distinct()
   
+  
+  #----------------------------------------
   # Find best "benchmarks" for each problem
+  #----------------------------------------
+  
+  # Overall results
   
   comps_benches <- comps2 %>%
     mutate(flag = ifelse(set1 %in% benches & set2 %in% benches, TRUE, FALSE)) %>%
@@ -136,7 +141,39 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
     mutate(winning_accuracy = case_when(
       set1_accuracy > set2_accuracy  ~ set1_accuracy,
       set2_accuracy > set1_accuracy  ~ set2_accuracy,
-      set1_accuracy == set2_accuracy ~ NA)) %>% # Need solution for ties here...
+      set1_accuracy == set2_accuracy ~ 999)) %>%
+    mutate(winning_accuracy = ifelse(winning_accuracy == 999, NA, winning_accuracy))
+  
+  # Find problems where a tie exists
+  
+  comps_benches_tie_list <- comps_benches %>%
+    mutate(flag = ifelse(is.na(winning_accuracy), TRUE, FALSE)) %>%
+    group_by(problem, flag) %>%
+    summarise(counter = n()) %>%
+    group_by(problem) %>%
+    summarise(counter = n()) %>%
+    ungroup()
+  
+  ties_probs <- comps_benches_tie_list %>%
+    filter(counter == 2) %>%
+    dplyr::select(c(problem)) %>%
+    pull()
+  
+  no_ties_probs <- comps_benches_tie_list %>%
+    filter(counter == 1) %>%
+    dplyr::select(c(problem)) %>%
+    pull()
+  
+  # Handle majority cases with no ties
+  
+  comps_benches_no_ties <- comps_benches %>%
+    filter(!is.na(winning_accuracy))
+  
+  # Handle minority cases with no ties
+  
+  comps_benches_ties <- comps_benches %>%
+    filter(is.na(winning_accuracy))
+  
     group_by(problem) %>%
     slice_max(order_by = winning_accuracy, n = 1) %>%
     ungroup() %>%
@@ -156,10 +193,10 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
     filter(flag) %>%
     dplyr::select(-c(flag)) %>%
     mutate(flag = case_when(
-      is.na(p_value)                                                 ~ "Zero variance for one/more sets",
-      p_value > .05                                                  ~ "Non-Significant difference",
-      p_value < .05 & set1_accuracy > set2_accuracy                  ~ set1,
-      p_value < .05 & set1_accuracy < set2_accuracy                  ~ set2))
+      is.na(p_value)                                  ~ "Zero variance for one/more sets",
+      p_value > .05                                   ~ "Non-Significant difference",
+      p_value < .05 & set1_accuracy > set2_accuracy   ~ set1,
+      p_value < .05 & set1_accuracy < set2_accuracy   ~ set2))
 
   return(comps)
 }
