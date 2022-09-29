@@ -110,28 +110,56 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
       set2 %in% benches      ~ accuracy_bench.y,
       set2 == "All features" ~ accuracy_all.y)) %>%
     dplyr::select(c(problem, set1, set2, set1_accuracy, set2_accuracy, t_statistic, p_value))
-  
+
   # Find best "features" for each problem
   
+  comps_feats <- comps2 %>%
+    mutate(flag = ifelse(set1 %in% append(sets, "All features") & set2 %in% append(sets, "All features"), TRUE, FALSE)) %>%
+    filter(flag) %>%
+    dplyr::select(-c(flag)) %>%
+    mutate(winning_accuracy = case_when(
+      set1_accuracy > set2_accuracy  ~ set1_accuracy,
+      set2_accuracy > set1_accuracy  ~ set2_accuracy)) %>%
+    group_by(problem) %>%
+    slice_max(order_by = winning_accuracy, n = 1) %>%
+    ungroup() %>%
+    mutate(winner = ifelse(set1_accuracy == winning_accuracy, set1, set2)) %>%
+    dplyr::select(c(problem, winner_set)) %>%
+    distinct()
   
+  # Find best "benchmarks" for each problem
   
-  # Find best benchmark for each problem
+  comps_benches <- comps2 %>%
+    mutate(flag = ifelse(set1 %in% benches & set2 %in% benches, TRUE, FALSE)) %>%
+    filter(flag) %>%
+    dplyr::select(-c(flag)) %>%
+    mutate(winning_accuracy = case_when(
+      set1_accuracy > set2_accuracy  ~ set1_accuracy,
+      set2_accuracy > set1_accuracy  ~ set2_accuracy,
+      set1_accuracy == set2_accuracy ~ NA)) %>% # Need solution for ties here...
+    group_by(problem) %>%
+    slice_max(order_by = winning_accuracy, n = 1) %>%
+    ungroup() %>%
+    mutate(winner = ifelse(set1_accuracy == winning_accuracy, set1, set2)) %>%
+    dplyr::select(c(problem, winner_bench)) %>%
+    distinct()
   
-  
+  winners <- comps_feats %>%
+    inner_join(comps_benches, by = c("problem" = "problem")) %>%
+    mutate(flag = TRUE)
   
   # Filter overall results by "best of" lists and determine significance
   
-  
-  comps <- comps %>%
+  comps3 <- comps2 %>%
+    left_join(winners, by = c("problem" = "problem", "set1" = "winner_set", "set2" = "winner_bench")) %>%
+    left_join(winners, by = c("problem" = "problem", "set1" = "winner_bench", "set2" = "winner_set")) %>%
+    filter(flag) %>%
+    dplyr::select(-c(flag)) %>%
     mutate(flag = case_when(
       is.na(p_value)                                                 ~ "Zero variance for one/more sets",
       p_value > .05                                                  ~ "Non-Significant difference",
-      p_value < .05 & set1 %in% sets & accuracy_set > accuracy_all   ~ method,
-      p_value < .05 & set1 %in% sets & accuracy_set > accuracy_bench ~ method,
-      p_value < .05 & accuracy_all > accuracy_set                    ~ "All features",
-      p_value < .05 & accuracy_all > accuracy_bench                  ~ "All features",
-      p_value < .05 & accuracy_bench > accuracy_set                  ~ method_bench,
-      p_value < .05 & accuracy_bench > accuracy_all                  ~ method_bench))
+      p_value < .05 & set1_accuracy > set2_accuracy                  ~ set1,
+      p_value < .05 & set1_accuracy < set2_accuracy                  ~ set2))
 
   return(comps)
 }
@@ -200,7 +228,7 @@ p <- both %>%
   annotate("text", x = 80, y = 10, label = "Time-series features better") +
   annotate("text", x = 20, y = 90, label = "Leading benchmark better") +
   labs(title = "Comparison of feature sets versus benchmark algorithms across UCR/UEA repository univariate problems",
-       subtitle = "Plots a subset of 54 problems where preliminary analysis showed mean and variance did not outperform chance",
+       subtitle = "Plots a subset of 53 problems where preliminary analysis showed mean and variance did not outperform chance",
        x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
        colour = NULL,
