@@ -123,10 +123,9 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
     group_by(problem) %>%
     slice_max(order_by = winning_accuracy, n = 1) %>%
     ungroup() %>%
-    mutate(winner = ifelse(set1_accuracy == winning_accuracy, set1, set2)) %>%
+    mutate(winner_set = ifelse(set1_accuracy == winning_accuracy, set1, set2)) %>%
     dplyr::select(c(problem, winner_set)) %>%
     distinct()
-  
   
   #----------------------------------------
   # Find best "benchmarks" for each problem
@@ -163,6 +162,8 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
     filter(counter == 1) %>%
     dplyr::select(c(problem)) %>%
     pull()
+  
+  stopifnot(length(ties_probs) + length(no_ties_probs) == length(unique(comps_benches_tie_list$problem)))
   
   # Handle majority cases with no ties
   
