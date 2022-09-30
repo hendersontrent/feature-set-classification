@@ -186,51 +186,11 @@ find_winners <- function(outputs_data, outputs_agg_data, benchmark_data){
 
 winners <- find_winners(outputs_data = outputs, outputs_agg_data = outputs_aggregate, benchmark_data = benchmarks)
 
+# Retrieve mean accuracy and +/- 1 SD bars for each problem to plot
+
+
+
 #--------------------- Draw plots ------------------
-
-# Create palette for whoever is top performer
-
-mypal <- c("All Features" = "grey50",
-           "TS-CHIEF" = "black",
-           "HIVE-COTE v1.0" = "black",
-           "ROCKET" = "black",
-           "InceptionTime" = "black",
-           "STC" = "black",
-           "ResNet" = "black",
-           "ProximityForest" = "black",
-           "WEASEL" = "black",
-           "S-BOSS" = "black",
-           "cBOSS" = "black",
-           "BOSS" = "black",
-           "RISE" = "black",
-           "TSF" = "black",
-           "catch22" = "#1B9E77",
-           "feasts" = "#D95F02",
-           "Kats" = "#7570B3",
-           "tsfeatures" = "#E7298A",
-           "TSFEL" = "#66A61E",
-           "tsfresh" = "#E6AB02")
-
-myshapes <- c("All Features" = 16,
-              "TS-CHIEF" = 0,
-              "HIVE-COTE v1.0" = 1,
-              "ROCKET" = 2,
-              "InceptionTime" = 3,
-              "STC" = 4,
-              "ResNet" = 5,
-              "ProximityForest" = 6,
-              "WEASEL" = 7,
-              "S-BOSS" = 8,
-              "cBOSS" = 9,
-              "BOSS" = 10,
-              "RISE" = 11,
-              "TSF" = 12,
-              "catch22" = 16,
-              "feasts" = 16,
-              "Kats" = 16,
-              "tsfeatures" = 16,
-              "TSFEL" = 16,
-              "tsfresh" = 16)
 
 # Define coordinates for upper triangle to shade
 
@@ -255,10 +215,7 @@ p <- both %>%
        shape = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_colour_manual(values = mypal,
-                      name = "Algorithm and Set") +
-  scale_shape_manual(values = myshapes,
-                     name = "Algorithm and Set") +
+  scale_colour_distiller(palette = "Dark2") +
   theme_bw() +
   theme(legend.position = "bottom",
         legend.title = element_blank(),
