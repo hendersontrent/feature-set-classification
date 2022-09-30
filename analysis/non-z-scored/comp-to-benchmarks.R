@@ -38,7 +38,7 @@ benchmarks <- benchmarks %>%
 #' @author Trent Henderson
 #' 
 
-find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data){
+find_winners <- function(outputs_data, outputs_agg_data, benchmark_data){
   
   outputs_data <- outputs_data %>%
     mutate(method = case_when(
@@ -184,7 +184,7 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
   return(comps3)
 }
 
-winners <- find_feature_winners(outputs_data = outputs, outputs_agg_data = outputs_aggregate, benchmark_data = benchmarks)
+winners <- find_winners(outputs_data = outputs, outputs_agg_data = outputs_aggregate, benchmark_data = benchmarks)
 
 #--------------------- Draw plots ------------------
 
