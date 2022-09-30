@@ -127,11 +127,7 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
     dplyr::select(c(problem, winner_set)) %>%
     distinct()
   
-  #----------------------------------------
   # Find best "benchmarks" for each problem
-  #----------------------------------------
-  
-  # Overall results
   
   comps_benches <- comps2 %>%
     mutate(flag = ifelse(set1 %in% benches & set2 %in% benches, TRUE, FALSE)) %>%
@@ -141,46 +137,30 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
       set1_accuracy > set2_accuracy  ~ set1_accuracy,
       set2_accuracy > set1_accuracy  ~ set2_accuracy,
       set1_accuracy == set2_accuracy ~ 999)) %>%
-    mutate(winning_accuracy = ifelse(winning_accuracy == 999, NA, winning_accuracy))
-  
-  # Find problems where a tie exists
-  
-  comps_benches_tie_list <- comps_benches %>%
-    mutate(flag = ifelse(is.na(winning_accuracy), TRUE, FALSE)) %>%
-    group_by(problem, flag) %>%
-    summarise(counter = n()) %>%
-    group_by(problem) %>%
-    summarise(counter = n()) %>%
-    ungroup()
-  
-  ties_probs <- comps_benches_tie_list %>%
-    filter(counter == 2) %>%
-    dplyr::select(c(problem)) %>%
-    pull()
-  
-  no_ties_probs <- comps_benches_tie_list %>%
-    filter(counter == 1) %>%
-    dplyr::select(c(problem)) %>%
-    pull()
-  
-  stopifnot(length(ties_probs) + length(no_ties_probs) == length(unique(comps_benches_tie_list$problem)))
-  
-  # Handle majority cases with no ties
-  
-  comps_benches_no_ties <- comps_benches %>%
-    filter(!is.na(winning_accuracy))
-  
-  # Handle minority cases with no ties
-  
-  comps_benches_ties <- comps_benches %>%
-    filter(is.na(winning_accuracy))
-  
+    mutate(winning_accuracy = ifelse(winning_accuracy == 999, NA, winning_accuracy)) %>%
+    filter(!is.na(winning_accuracy)) %>%
     group_by(problem) %>%
     slice_max(order_by = winning_accuracy, n = 1) %>%
     ungroup() %>%
-    mutate(winner = ifelse(set1_accuracy == winning_accuracy, set1, set2)) %>%
+    mutate(winning_accuracy = case_when(
+      set1_accuracy > set2_accuracy  ~ set1_accuracy,
+      set2_accuracy > set1_accuracy  ~ set2_accuracy)) %>%
+    mutate(winner_bench = ifelse(set1_accuracy == winning_accuracy, set1, set2)) %>%
     dplyr::select(c(problem, winner_bench)) %>%
-    distinct()
+    distinct() %>%
+    group_by(problem) %>%
+    mutate(winner_id = paste0("winner_", row_number())) %>%
+    ungroup() %>%
+    pivot_wider(id_cols = "problem", names_from = "winner_id", values_from = "winner_bench") %>%
+    mutate(winner_bench = case_when(
+            is.na(winner_2)                    ~ winner_1,
+            !is.na(winner_2) & is.na(winner_3) ~ paste(winner_1, winner_2, sep = "/"),
+            TRUE                               ~ paste(winner_1, winner_2, winner_3, winner_4, 
+                                                       winner_5, winner_6, winner_7, winner_8,
+                                                       winner_9, winner_10, winner_11, sep = "/"))) %>%
+    dplyr::select(c(problem, winner_1, winner_bench)) # Where there is a tie we just pick one as each winner got 100% across the board
+  
+  # Merge
   
   winners <- comps_feats %>%
     inner_join(comps_benches, by = c("problem" = "problem")) %>%
@@ -189,8 +169,9 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
   # Filter overall results by "best of" lists and determine significance
   
   comps3 <- comps2 %>%
-    left_join(winners, by = c("problem" = "problem", "set1" = "winner_set", "set2" = "winner_bench")) %>%
-    left_join(winners, by = c("problem" = "problem", "set1" = "winner_bench", "set2" = "winner_set")) %>%
+    left_join(winners, by = c("problem" = "problem", "set1" = "winner_set", "set2" = "winner_1")) %>%
+    left_join(winners, by = c("problem" = "problem", "set1" = "winner_1", "set2" = "winner_set", 
+                              "winner_bench" = "winner_bench", "flag" = "flag")) %>%
     filter(flag) %>%
     dplyr::select(-c(flag)) %>%
     mutate(flag = case_when(
