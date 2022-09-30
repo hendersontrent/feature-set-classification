@@ -163,15 +163,16 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
   # Merge
   
   winners <- comps_feats %>%
-    inner_join(comps_benches, by = c("problem" = "problem")) %>%
-    mutate(flag = TRUE)
+    inner_join(comps_benches, by = c("problem" = "problem"))
   
   # Filter overall results by "best of" lists and determine significance
   
   comps3 <- comps2 %>%
-    left_join(winners, by = c("problem" = "problem", "set1" = "winner_set", "set2" = "winner_1")) %>%
-    left_join(winners, by = c("problem" = "problem", "set1" = "winner_1", "set2" = "winner_set", 
-                              "winner_bench" = "winner_bench", "flag" = "flag")) %>%
+    left_join(winners, by = c("problem" = "problem")) %>%
+    mutate(flag = case_when(
+            set1 == winner_set & set2 == winner_bench ~ TRUE,
+            set2 == winner_set & set1 == winner_bench ~ TRUE,
+            TRUE                                      ~ FALSE)) %>% 
     filter(flag) %>%
     dplyr::select(-c(flag)) %>%
     mutate(flag = case_when(
@@ -183,7 +184,7 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
   return(comps)
 }
 
-winners <- find_feature_winners(outputs_data = outputs, outputs_agg_data = outputs_aggregate)
+winners <- find_feature_winners(outputs_data = outputs, outputs_agg_data = outputs_aggregate, benchmark_data = benchmarks)
 
 #--------------------- Draw plots ------------------
 
@@ -247,7 +248,7 @@ p <- both %>%
   annotate("text", x = 80, y = 10, label = "Time-series features better") +
   annotate("text", x = 20, y = 90, label = "Leading benchmark better") +
   labs(title = "Comparison of feature sets versus benchmark algorithms across UCR/UEA repository univariate problems",
-       subtitle = "Plots a subset of 53 problems where preliminary analysis showed mean and variance did not outperform chance",
+       subtitle = "Plots a subset of 50 problems where preliminary analysis showed mean and variance did not outperform chance",
        x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
        colour = NULL,
