@@ -181,7 +181,7 @@ find_feature_winners <- function(outputs_data, outputs_agg_data, benchmark_data)
       p_value < .05 & set1_accuracy > set2_accuracy   ~ set1,
       p_value < .05 & set1_accuracy < set2_accuracy   ~ set2))
 
-  return(comps)
+  return(comps3)
 }
 
 winners <- find_feature_winners(outputs_data = outputs, outputs_agg_data = outputs_aggregate, benchmark_data = benchmarks)
