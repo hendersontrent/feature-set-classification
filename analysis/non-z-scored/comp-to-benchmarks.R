@@ -264,9 +264,27 @@ winner_final <- set_bars %>%
 
 # Draw scatterplot
 
+mypal <- c("Non-Significant difference" = "grey50",
+           "Zero variance for one/more sets" = "grey75",
+           "cBOSS" = "#E41A1C",
+           "HIVE-COTEv1_0" = "#377EB8",
+           "InceptionTime" = "#4DAF4A",
+           "ResNet" = "#984EA3",
+           "ROCKET" = "#FF7F00",
+           "S-BOSS" = "#FFFF33",
+           "STC" = "#A65628",
+           "TS-CHIEF" = "#F781BF",
+           "WEASEL" = "#66C2A5")
+
 p <- winner_final %>%
   mutate(across(c(mean_x, lower_x, upper_x,
                   mean_y, lower_y, upper_y), ~ .x * 100)) %>%
+  mutate(flag_adj = factor(flag_adj, levels = c("Non-Significant difference",
+                                                "Zero variance for one/more sets",
+                                                "cBOSS", "HIVE-COTEv1_0",
+                                                "InceptionTime", "ResNet",
+                                                "ROCKET", "S-BOSS",
+                                                "STC", "TS-CHIEF", "WEASEL"), ordered = TRUE)) %>%
   ggplot(aes(x = mean_x, y = mean_y)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
@@ -275,15 +293,15 @@ p <- winner_final %>%
   geom_point(aes(colour = flag_adj), size = 2) +
   annotate("text", x = 80, y = 10, label = "Time-series features better") +
   annotate("text", x = 20, y = 90, label = "Leading benchmark better") +
-  labs(title = "Comparison of feature sets versus benchmark algorithms across UCR/UEA repository univariate problems",
-       subtitle = "Plots a subset of 50 problems where preliminary analysis showed mean and variance did not outperform chance",
+  labs(title = "Comparison of feature sets vs benchmark algorithms across UCR/UEA univariate problems",
+       subtitle = "Plots a subset of 50 problems where mean and variance did not outperform chance",
        x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
-       caption = "Statistical significance computed on Holm-Bonferroni corrected p-values across every pairwise combination of problems/feature sets/benchmark algorithms.",
+       caption = "Statistical significance computed on Holm-Bonferroni corrected p-values across every pairwise combination of\nproblems/feature sets/benchmark algorithms.",
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_colour_manual(values = RColorBrewer::brewer.pal(11, "Paired")) +
+  scale_colour_manual(values = mypal) +
   theme_bw() +
   theme(legend.position = "bottom",
         legend.title = element_blank(),
