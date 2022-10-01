@@ -25,6 +25,12 @@ benchmarks <- pull_benchmark_results() %>%
 load("data/outputs.Rda")
 load("data/outputs_aggregate.Rda")
 
+outputs <- outputs %>%
+  mutate(method = case_when(
+    method == "tsfel" ~ "TSFEL",
+    method == "kats"  ~ "Kats",
+    TRUE              ~ method))
+
 # Filter to just problems in calculated sets
 
 benchmarks <- benchmarks %>%
@@ -41,10 +47,6 @@ benchmarks <- benchmarks %>%
 find_winners <- function(outputs_data, outputs_agg_data, benchmark_data){
   
   outputs_data <- outputs_data %>%
-    mutate(method = case_when(
-      method == "tsfel" ~ "TSFEL",
-      method == "kats"  ~ "Kats",
-      TRUE              ~ method)) %>%
     dplyr::select(c(problem, method, accuracy))
   
   #---------------------- Calculate p-values -----------------------
@@ -194,10 +196,6 @@ winners <- find_winners(outputs_data = outputs, outputs_agg_data = outputs_aggre
 
 #--------------------- Draw plots ------------------
 
-# Define coordinates for upper triangle to shade
-
-upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
-
 # Quickly arrange into "benchmark" and "features" columns for plotting then re-join
 
 set_data1 <- winner %>%
@@ -262,7 +260,11 @@ winner_final <- set_bars %>%
   inner_join(bench_bars, by = c("problem" = "problem",
                                 "flag" = "flag", "flag_adj" = "flag_adj"))
 
-# Draw scatterplot
+# Define coordinates for upper triangle to shade
+
+upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
+
+# Define colour palette
 
 mypal <- c("Non-Significant difference" = "grey50",
            "Zero variance for one/more sets" = "grey75",
@@ -275,6 +277,8 @@ mypal <- c("Non-Significant difference" = "grey50",
            "STC" = "#A65628",
            "TS-CHIEF" = "#F781BF",
            "WEASEL" = "#66C2A5")
+
+# Draw scatterplot
 
 p <- winner_final %>%
   mutate(across(c(mean_x, lower_x, upper_x,
