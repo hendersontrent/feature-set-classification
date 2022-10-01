@@ -17,27 +17,36 @@ pull_benchmark_results <- function(){
   
   # Download results files
   
-  url <- "https://www.timeseriesclassification.com/results/AllAccuracies.zip"
+  url <- "https://www.timeseriesclassification.com/results/tsml/tsmlUnivariateResults.zip"
   temp <- tempfile()
   download.file(url, temp, mode = "wb")
-  path_bal <- "MegaComparison/BALACC/TEST/TESTBALACC_MEANS.csv"
-  vals_bal <- "balanced_accuracy"
-  path <- "MegaComparison/ACC/TEST/TESTACC_MEANS.csv"
-  vals <- "accuracy"
+  
+  paths <- c("ResultsByClassifier/BOSS_TESTFOLDS.csv", "ResultsByClassifier/cBOSS_TESTFOLDS.csv",
+             "ResultsByClassifier/HIVE-COTEv1_0_TESTFOLDS.csv", "ResultsByClassifier/InceptionTime_TESTFOLDS.csv",
+             "ResultsByClassifier/ProximityForest_TESTFOLDS.csv", "ResultsByClassifier/ResNet_TESTFOLDS.csv",
+             "ResultsByClassifier/RISE_TESTFOLDS.csv", "ResultsByClassifier/ROCKET_TESTFOLDS.csv",
+             "ResultsByClassifier/S-BOSS_TESTFOLDS.csv", "ResultsByClassifier/STC_TESTFOLDS.csv",
+             "ResultsByClassifier/TS-CHIEF_TESTFOLDS.csv", "ResultsByClassifier/TSF_TESTFOLDS.csv",
+             "ResultsByClassifier/WEASEL_TESTFOLDS.csv")
   
   # Extract .csv files and tidy up
   
-  tmp_bal <- readr::read_csv(unz(temp, filename = path_bal)) %>%
-    rename(problem = 1) %>%
-    pivot_longer(cols = !problem, names_to = "method", values_to = vals_bal)
+  accs <- list()
   
-  tmp_acc <- readr::read_csv(unz(temp, filename = path)) %>%
-    rename(problem = 1) %>%
-    pivot_longer(cols = !problem, names_to = "method", values_to = vals)
+  for(i in paths){
+    
+    themethod <- gsub("ResultsByClassifier/", "\\1", i)
+    themethod <- gsub("_TESTFOLDS.csv", "\\1", themethod)
+    
+    tmp <- readr::read_csv(unz(temp, filename = i)) %>%
+      rename(problem = "folds:") %>%
+      pivot_longer(cols = "0":"29", names_to = "resample", values_to = "accuracy") %>%
+      mutate(method = themethod)
+    
+    accs[[i]] <- tmp
+  }
   
-  tmp <- tmp_acc %>%
-    left_join(tmp_bal, by = c("problem" = "problem", "method" = "method")) %>%
-    mutate(method = ifelse(method == "Catch22", "catch22", method)) # Formatting with {theft}
-  
-  return(tmp)
+  accs <- do.call("rbind", accs)
+  rownames(accs) <- NULL
+  return(accs)
 }
