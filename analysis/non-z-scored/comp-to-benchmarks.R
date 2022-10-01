@@ -279,6 +279,7 @@ p <- winner_final %>%
        subtitle = "Plots a subset of 50 problems where preliminary analysis showed mean and variance did not outperform chance",
        x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
+       caption = "Statistical significance computed on Holm-Bonferroni corrected p-values across every pairwise combination of problems/feature sets/benchmark algorithms.",
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
