@@ -35,7 +35,7 @@ corr_t_test <- function(x, y, n, n1, n2){
 }
 
 
-#' Function to compute Nadeau & Bengio (2003) correlated t-statistic p-value for k-fold
+#' Function to compute Nadeau & Bengio (2003) correlated t-statistic p-value for k-fold CV
 #' @param x vector of classification accuracy values for classifier A
 #' @param y vector of classification accuracy values for classifier B
 #' @param n integer denoting total sample size
