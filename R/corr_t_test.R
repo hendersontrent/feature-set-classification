@@ -11,7 +11,7 @@
 #' Function to compute Nadeau & Bengio (2003) correlated t-statistic p-value for train-test splits
 #' @param x vector of classification accuracy values for classifier A
 #' @param y vector of classification accuracy values for classifier B
-#' @param n integer denoting total sample size
+#' @param n integer denoting number of repeat samples
 #' @param n1 integer denoting train set size
 #' @param n2 integer denoting test set size
 #' @author Trent Henderson
@@ -22,7 +22,7 @@ corr_t_test <- function(x, y, n, n1, n2){
   d <- y - x # Calculate differences
   d_bar <- mean(d, na.rm = TRUE) # Calculate mean of differences
   sigma_2 <- var(d, na.rm = TRUE) # Calculate variance
-  sigma_2_mod <- sigma_2 * (1/n + n1/n2) # Calculate modified variance
+  sigma_2_mod <- sigma_2 * (1/n + n2/n1) # Calculate modified variance
   t_stat <- d_bar / sqrt(sigma_2_mod) # Calculate t-statistic
   
   if(t_stat < 0){
