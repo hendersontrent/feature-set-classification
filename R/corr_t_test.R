@@ -11,7 +11,7 @@
 #' Function to compute Nadeau & Bengio (2003) correlated t-statistic p-value for train-test splits
 #' @param x vector of classification accuracy values for classifier A
 #' @param y vector of classification accuracy values for classifier B
-#' @param n integer denoting total sample size
+#' @param n integer denoting number of repeat samples
 #' @param n1 integer denoting train set size
 #' @param n2 integer denoting test set size
 #' @author Trent Henderson
