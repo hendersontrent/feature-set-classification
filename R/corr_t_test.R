@@ -19,7 +19,7 @@
 
 corr_t_test <- function(x, y, n, n1, n2){
   
-  d <- y - x # Calculate differences
+  d <- x - y # Calculate differences
   d_bar <- mean(d, na.rm = TRUE) # Calculate mean of differences
   sigma_2 <- var(d, na.rm = TRUE) # Calculate variance
   sigma_2_mod <- sigma_2 * (1/n + n2/n1) # Calculate modified variance
@@ -45,7 +45,7 @@ corr_t_test <- function(x, y, n, n1, n2){
 
 corr_t_test_folds <- function(x, y, n, k){
   
-  d <- y - x # Calculate differences
+  d <- x - y # Calculate differences
   d_bar <- mean(d, na.rm = TRUE) # Calculate mean of differences
   sigma_2 <- var(d, na.rm = TRUE) # Calculate variance
   t_stat <- d_bar / sqrt(sigma_2 * ((1/n + (1/k)) / (1 - 1/k))) # Calculate t-statistic
