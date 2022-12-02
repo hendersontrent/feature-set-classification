@@ -14,6 +14,7 @@
 #' @param n integer denoting number of repeat samples
 #' @param n1 integer denoting train set size
 #' @param n2 integer denoting test set size
+#' @return object of class \code{data.frame}
 #' @author Trent Henderson
 #' 
 
@@ -31,7 +32,8 @@ corr_t_test <- function(x, y, n, n1, n2){
     p_val <- pt(t_stat, n - 1, lower.tail = FALSE) # p-value for right tail
   }
   
-  return(p_val)
+  tmp <- data.frame(statistic = t_stat, p.value = p_val)
+  return(tmp)
 }
 
 
@@ -40,6 +42,7 @@ corr_t_test <- function(x, y, n, n1, n2){
 #' @param y vector of classification accuracy values for classifier B
 #' @param n integer denoting total sample size
 #' @param k number of folds
+#' @return object of class \code{data.frame}
 #' @author Trent Henderson
 #' 
 
@@ -56,5 +59,6 @@ corr_t_test_folds <- function(x, y, n, k){
     p_val <- pt(t_stat, n - 1, lower.tail = FALSE) # p-value for right tail
   }
   
-  return(p_val)
+  tmp <- data.frame(statistic = t_stat, p.value = p_val)
+  return(tmp)
 }

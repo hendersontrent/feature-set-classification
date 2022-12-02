@@ -1,6 +1,6 @@
 #--------------------------------------
-# This script sets defines a function
-# to calculate p-values between accuracy
+# This script defines a function to 
+# calculate p-values between accuracy
 # resamples for two feature sets
 #--------------------------------------
 

@@ -1,4 +1,4 @@
-#------------------------------------------
+#-----------------------------------------
 # This script sets out to load all the 
 # packages and folders necessary for the 
 # project

@@ -14,6 +14,10 @@ source("setup.R")
 
 source("analysis/prepare-time-series-data.R")
 
+#---------------- Problem summaries ------------------
+
+source("analysis/summarise-problems.R")
+
 #---------------- Problem scaling identificaiton -----
 
 source("analysis/check-z-score.R")
