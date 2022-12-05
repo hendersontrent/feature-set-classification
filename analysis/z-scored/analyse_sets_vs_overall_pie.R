@@ -84,7 +84,7 @@ combns <- combns[rep(1:nrow(combns), length(unique(reduced$problem)),), ]
 combns <- cbind(combns, problem)
 
 comps <- 1:nrow(combns) %>%
-  purrr::map_df(~ calculate_p_values2(data = reduced, combn_data = combns, rownum = .x))
+  purrr::map_df(~ calculate_p_values2(data = reduced, combn_data = combns, rownum = .x, problem_data = problem_summaries))
 
 # Add in accuracy values to get direction
 
@@ -107,8 +107,8 @@ comps <- comps %>%
   inner_join(all_accs, by = c("problem" = "problem")) %>%
   mutate(flag = case_when(
           is.na(p_value)                                                 ~ "Zero variance for one/more sets",
-          p_value > .05                                                  ~ "Non-Significant difference",
-          p_value < .05 & balanced_accuracy_mean > balanced_accuracy_all ~ method,
+          p.value > .05                                                  ~ "Non-Significant difference",
+          p.value < .05 & balanced_accuracy_mean > balanced_accuracy_all ~ method,
           TRUE                                                           ~ "All features"))
 
 #---------------------- Set up final dataframe -------------------

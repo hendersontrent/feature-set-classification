@@ -12,11 +12,12 @@
 #' @param data the dataframe of raw classification accuracy results
 #' @param combn_data the dataframe of pairwise combinations
 #' @param rownum the row number of combn_data to use
+#' @param problem_data the dataframe contain problem summary information
 #' @returns object of class dataframe
 #' @author Trent Henderson
 #' 
 
-calculate_p_values2 <- function(data, combn_data, rownum){
+calculate_p_values2 <- function(data, combn_data, rownum, problem_data){
   
   combn_filt <- combn_data[rownum, ]
   
@@ -29,7 +30,7 @@ calculate_p_values2 <- function(data, combn_data, rownum){
   # Check for only 1 feature set present
   
   if(length(unique(tmp_data$method)) <= 1){
-    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   }
   
@@ -41,7 +42,7 @@ calculate_p_values2 <- function(data, combn_data, rownum){
     ungroup()
   
   if(min(group_check$resamples) <= 2){
-    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   }
   
@@ -52,14 +53,30 @@ calculate_p_values2 <- function(data, combn_data, rownum){
     summarise(stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
     ungroup()
   
+  # Set up vectors
+  
+  x <- tmp_data %>%
+    filter(method == combn_filt$set1) %>%
+    pull(balanced_accuracy)
+  
+  y <- tmp_data %>%
+    filter(method == combn_filt$set2) %>%
+    pull(balanced_accuracy)
+  
+  # Filter to get parameters for correlated t-test
+  
+  params <- problem_data %>%
+    filter(problem == unique(tmp_data$problem))
+  
   # Do calculation
   
   if(0 %in% sd_check$stddev){
-    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   } else{
-    t_test <- t.test(balanced_accuracy ~ method, data = tmp_data, var.equal = FALSE)
-    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, t_statistic = t_test$statistic, p_value = t_test$p.value)
+    t_test <- corr_t_test(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
+    outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1)
+    outs <- cbind(outs, t_test)
     return(outs)
   }
 }
