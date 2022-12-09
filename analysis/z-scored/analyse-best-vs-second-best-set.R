@@ -62,16 +62,17 @@ both <- best %>%
          lower_y = best_balanced_accuracy_mean - 1 * best_balanced_accuracy_sd,
          upper_y = best_balanced_accuracy_mean + 1 * best_balanced_accuracy_sd) %>%
   group_by(problem) %>%
-  slice(which.min(worst_balanced_accuracy_sd)) # THere is 1 tie for BeetleFly so take smallest SD one for now
+  slice(which.min(worst_balanced_accuracy_sd)) # There is 1 tie for BeetleFly so take smallest SD one for now
 
 #---------------------- Calculate p-values -----------------------
 
 p_values <- unique(both$problem) %>%
-  purrr::map_df(~ calculate_p_values(data = outputs_z, summary_data = both, theproblem = .x, all_features = FALSE))
+  purrr::map_df(~ calculate_p_values(data = outputs_z, summary_data = both, theproblem = .x, all_features = FALSE, problem_data = problem_summaries))
 
 both <- both %>%
   inner_join(p_values, by = c("problem" = "problem")) %>%
-  mutate(significant = ifelse(p_value < 0.05, "Significant difference", "Non-significant difference"),
+  mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
+  mutate(significant = ifelse(p.value.adj < 0.05, "Significant difference", "Non-significant difference"),
          top_performer = ifelse(significant == "Significant difference", best_method, "Non-Significant difference")) %>%
   mutate(significant = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", significant),
          top_performer = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", top_performer))

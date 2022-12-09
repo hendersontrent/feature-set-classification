@@ -84,7 +84,7 @@ combns <- combns[rep(1:nrow(combns), length(unique(reduced$problem)),), ]
 combns <- cbind(combns, problem)
 
 comps <- 1:nrow(combns) %>%
-  purrr::map_df(~ calculate_p_values2(data = reduced, combn_data = combns, rownum = .x))
+  purrr::map_df(~ calculate_p_values2(data = reduced, combn_data = combns, rownum = .x, problem_data = problem_summaries))
 
 # Add in accuracy values to get direction
 
@@ -103,13 +103,16 @@ all_accs <- outputs_aggregate_z %>%
   ungroup()
 
 comps <- comps %>%
+  group_by(problem) %>%
+  mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
+  ungroup() %>%
   inner_join(single_accs, by = c("problem" = "problem", "method" = "method")) %>%
   inner_join(all_accs, by = c("problem" = "problem")) %>%
   mutate(flag = case_when(
-          is.na(p_value)                                                 ~ "Zero variance for one/more sets",
-          p_value > .05                                                  ~ "Non-Significant difference",
-          p_value < .05 & balanced_accuracy_mean > balanced_accuracy_all ~ method,
-          TRUE                                                           ~ "All features"))
+         is.na(p.value.adj)                                                 ~ "Zero variance for one/more sets",
+         p.value.adj > .05                                                  ~ "Non-Significant difference",
+         p.value.adj < .05 & balanced_accuracy_mean > balanced_accuracy_all ~ method,
+         TRUE                                                               ~ "All features"))
 
 #---------------------- Set up final dataframe -------------------
 
@@ -215,7 +218,7 @@ p <- point_df %>%
   geom_point(aes(colour = top_performer), size = 2) +
   geom_errorbar(data = pie_df, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_errorbarh(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
-  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 1.25,
+  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 1.75,
                    cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
   annotate("text", x = 75, y = 10, label = "Best single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +

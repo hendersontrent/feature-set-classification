@@ -13,11 +13,12 @@
 #' @param summary_data the dataframe of best and worst results
 #' @param theproblem the string name of the problem to calculate for
 #' @param all_features Boolean whether "All features" is part of the analysis
+#' @param problem_data the dataframe contain problem summary information
 #' @returns object of class dataframe
 #' @author Trent Henderson
 #' 
 
-calculate_p_values <- function(data, summary_data, theproblem, all_features = FALSE){
+calculate_p_values <- function(data, summary_data, theproblem, all_features = FALSE, problem_data){
   
   tmp_summ_data <- summary_data %>%
     filter(problem == theproblem)
@@ -35,7 +36,7 @@ calculate_p_values <- function(data, summary_data, theproblem, all_features = FA
   # Check for only 1 feature set present
   
   if(length(unique(tmp_data$method)) <= 1){
-    outs <- data.frame(problem = theproblem, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = theproblem, statistic = NA, p.value = NA)
     return(outs)
   }
   
@@ -46,14 +47,30 @@ calculate_p_values <- function(data, summary_data, theproblem, all_features = FA
     summarise(stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
     ungroup()
   
+  # Set up vectors
+  
+  x <- tmp_data %>%
+    filter(method == tmp_summ_data$best_method) %>%
+    pull(balanced_accuracy)
+  
+  y <- tmp_data %>%
+    filter(method == tmp_summ_data$worst_method) %>%
+    pull(balanced_accuracy)
+  
+  # Filter to get parameters for correlated t-test
+  
+  params <- problem_data %>%
+    filter(problem == unique(tmp_data$problem))
+  
   # Do calculation
   
   if(0 %in% sd_check$stddev){
-    outs <- data.frame(problem = theproblem, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = theproblem, statistic = NA, p.value = NA)
     return(outs)
   } else{
-    t_test <- t.test(balanced_accuracy ~ method, data = tmp_data, var.equal = FALSE)
-    outs <- data.frame(problem = theproblem, t_statistic = t_test$statistic, p_value = t_test$p.value)
+    t_test <- corr_t_test(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
+    outs <- data.frame(problem = theproblem)
+    outs <- cbind(outs, t_test)
     return(outs)
   }
 }

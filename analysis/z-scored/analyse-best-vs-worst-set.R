@@ -65,18 +65,22 @@ both <- best %>%
 #---------------------- Calculate p-values -----------------------
 
 p_values <- unique(both$problem) %>%
-  purrr::map_df(~ calculate_p_values(data = outputs_z, summary_data = both, theproblem = .x, all_features = FALSE))
+  purrr::map_df(~ calculate_p_values(data = outputs_z, summary_data = both, theproblem = .x, all_features = FALSE, problem_data = problem_summaries))
 
 both <- both %>%
   inner_join(p_values, by = c("problem" = "problem")) %>%
-  mutate(significant = ifelse(p_value < 0.05, "Significant difference", "Non-significant difference"),
-         top_performer = ifelse(significant == "Significant difference", best_method, "Non-Significant difference"))
+  mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
+  mutate(significant = ifelse(p.value.adj < 0.05, "Significant difference", "Non-significant difference"),
+         top_performer = ifelse(significant == "Significant difference", best_method, "Non-Significant difference")) %>%
+  mutate(significant = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", significant),
+         top_performer = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", top_performer))
 
 rm(outputs_z, best, worst)
 
 #---------------------- Draw summary graphic ---------------------
 
 # Create palette for whoever is top performer
+
 mypal <- c("Non-Significant difference" = "grey50",
            "catch22" = "#256676",
            "feasts" = "#f6a39f",
