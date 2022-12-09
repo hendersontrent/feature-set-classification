@@ -185,4 +185,4 @@ p <- wins %>%
         panel.grid = element_blank())
 
 print(p)
-ggsave("output/z-scored/head-to-head-matrix.pdf", p)
+ggsave("output/z-scored/head-to-head-matrix.pdf", p, units = "in", height = 9, width = 9)
