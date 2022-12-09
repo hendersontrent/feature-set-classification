@@ -21,3 +21,5 @@ problem_summaries <- TimeSeriesData %>%
   ungroup() %>%
   pivot_wider(id_cols = "problem", names_from = "set_split", values_from = "counter") %>%
   dplyr::select(c(problem, Train, Test))
+
+rm(TimeSeriesData)
