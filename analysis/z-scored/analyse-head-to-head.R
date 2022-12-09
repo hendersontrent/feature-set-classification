@@ -33,11 +33,12 @@ outputs_z <- outputs_z %>%
 #' @param data the \code{data.frame} to operate on
 #' @param theproblem string name of the problem to analyse
 #' @param set1name string of the benchmark set to focus on
+#' @param problem_data the dataframe contain problem summary information
 #' @return object of class \code{data.frame}
 #' @author Trent Henderson
 #' 
 
-find_winner <- function(data, theproblem, set1name){
+find_winner <- function(data, theproblem, set1name, problem_data){
   
   tmp2 <- data %>%
     filter(problem == theproblem) %>%
@@ -49,9 +50,21 @@ find_winner <- function(data, theproblem, set1name){
       dplyr::select(c(1, 3, 2))
   }
   
+  # Filter to get parameters for correlated t-test
+  
+  params <- problem_data %>%
+    filter(problem == theproblem)
+  
+  # Set up vectors
+  
+  x <- as.vector(unlist(tmp2[, 2]))
+  y <- as.vector(unlist(tmp2[, 3]))
+  
+  # Do calcs
+  
   set1_name <- colnames(tmp2)[2]
   set2_name <- colnames(tmp2)[3]
-  fit <- stats::t.test(x = tmp2[, 2], y = tmp2[, 3], data = tmp2)
+  t_test <- corr_t_test(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
   
   tmp2 <- data %>%
     filter(problem == theproblem) %>%
@@ -66,7 +79,7 @@ find_winner <- function(data, theproblem, set1name){
   }
   
   tmp2 <- tmp2 %>%
-    mutate(p_value = fit$p.value)
+    mutate(p.value = as.numeric(t_test$p.value))
   
   return(tmp2)
 }
@@ -109,14 +122,14 @@ calculate_wins <- function(data, combn_data, rownum){
     find_winner_safe <- purrr::possibly(find_winner, otherwise = NULL)
     
     outs <- unique(tmp$problem) %>%
-      purrr::map_df(~ find_winner_safe(data = tmp, theproblem = .x, set1name = thesets$set1)) %>%
+      purrr::map_df(~ find_winner_safe(data = tmp, theproblem = .x, set1name = thesets$set1, problem_data = problem_summaries)) %>%
       rename(set1 = 2,
              set2 = 3) %>%
-      mutate(p_adj = p.adjust(p_value, method = "holm"),
+      mutate(p.value.adj = p.adjust(p.value, method = "holm"),
              winner = case_when(
-               p_adj < .05 & set1 > set2 ~ thesets$set1,
-               p_adj < .05 & set2 > set1 ~ thesets$set2,
-               TRUE                      ~ "tie")) %>%
+               p.value.adj < .05 & set1 > set2 ~ thesets$set1,
+               p.value.adj < .05 & set2 > set1 ~ thesets$set2,
+               TRUE                            ~ "tie")) %>%
       group_by(winner) %>%
       summarise(counter = n()) %>%
       ungroup() %>%
