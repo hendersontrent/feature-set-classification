@@ -40,13 +40,6 @@ source("analysis/fit-classifiers-z-score.R")
 #-------------
 
 source("analysis/non-z-scored/comp-to-benchmarks.R")
-source("analysis/non-z-scored/analyse-best-vs-worst-set.R")
-source("analysis/non-z-scored/analyse-best-vs-second-best-set.R")
-source("analysis/non-z-scored/analyse_sets_vs_overall.R")
-source("analysis/non-z-scored/analyse_sets_vs_overall_pie.R")
-source("analysis/non-z-scored/normalised-performance-score.R")
-source("analysis/non-z-scored/normalised-performance-score-distribution.R")
-source("analysis/non-z-scored/best-tsfresh-tsfel-features.R")
 
 #---------
 # z-scored
