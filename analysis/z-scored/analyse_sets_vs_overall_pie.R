@@ -237,4 +237,4 @@ p <- point_df %>%
         panel.grid.minor = element_blank())
 
 print(p)
-ggsave("output/z-scored/all_versus_sets_pie.pdf", p)
+ggsave("output/z-scored/all_versus_sets_pie.pdf", p, units = "in", height = 9, width = 9)

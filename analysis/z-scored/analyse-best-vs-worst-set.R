@@ -117,4 +117,4 @@ p <- both %>%
         panel.grid.minor = element_blank())
 
 print(p)
-ggsave("output/z-scored/best_versus_worst_set.pdf", p)
+ggsave("output/z-scored/best_versus_worst_set.pdf", p, units = "in", height = 9, width = 9)
