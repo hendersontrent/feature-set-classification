@@ -202,79 +202,15 @@ find_winners <- function(outputs_data, benchmark_data){
       set2 %in% sets         ~ accuracy_set.y,
       set2 %in% benches      ~ accuracy_bench.y)) %>%
     dplyr::select(c(problem, set1, set2, set1_accuracy, set2_accuracy, statistic, p.value)) %>%
-    filter(!is.na(set1_accuracy) & !is.na(set2_accuracy))
-
-  # Find best "features" for each problem
-  
-  comps_feats <- comps2 %>%
-    mutate(flag = ifelse(set1 %in% append(sets, "All features") & set2 %in% append(sets, "All features"), TRUE, FALSE)) %>%
-    filter(flag) %>%
-    dplyr::select(-c(flag)) %>%
-    mutate(winning_accuracy = case_when(
-      set1_accuracy > set2_accuracy  ~ set1_accuracy,
-      set2_accuracy > set1_accuracy  ~ set2_accuracy)) %>%
-    group_by(problem) %>%
-    slice_max(order_by = winning_accuracy, n = 1) %>%
-    ungroup() %>%
-    mutate(winner_set = ifelse(set1_accuracy == winning_accuracy, set1, set2)) %>%
-    dplyr::select(c(problem, winner_set)) %>%
-    distinct()
-  
-  # Find best "benchmarks" for each problem
-  
-  comps_benches <- comps2 %>%
-    mutate(flag = ifelse(set1 %in% benches & set2 %in% benches, TRUE, FALSE)) %>%
-    filter(flag) %>%
-    dplyr::select(-c(flag)) %>%
-    mutate(winning_accuracy = case_when(
-      set1_accuracy > set2_accuracy  ~ set1_accuracy,
-      set2_accuracy > set1_accuracy  ~ set2_accuracy,
-      set1_accuracy == set2_accuracy ~ 999)) %>%
-    mutate(winning_accuracy = ifelse(winning_accuracy == 999, NA, winning_accuracy)) %>%
-    filter(!is.na(winning_accuracy)) %>%
-    group_by(problem) %>%
-    slice_max(order_by = winning_accuracy, n = 1) %>%
-    ungroup() %>%
-    mutate(winning_accuracy = case_when(
-      set1_accuracy > set2_accuracy  ~ set1_accuracy,
-      set2_accuracy > set1_accuracy  ~ set2_accuracy)) %>%
-    mutate(winner_bench = ifelse(set1_accuracy == winning_accuracy, set1, set2)) %>%
-    dplyr::select(c(problem, winner_bench)) %>%
-    distinct() %>%
-    group_by(problem) %>%
-    mutate(winner_id = paste0("winner_", row_number())) %>%
-    ungroup() %>%
-    pivot_wider(id_cols = "problem", names_from = "winner_id", values_from = "winner_bench") %>%
-    mutate(winner_bench = case_when(
-            is.na(winner_2)                    ~ winner_1,
-            !is.na(winner_2) & is.na(winner_3) ~ paste(winner_1, winner_2, sep = "/"),
-            TRUE                               ~ paste(winner_1, winner_2, winner_3, winner_4, 
-                                                       winner_5, winner_6, winner_7, winner_8,
-                                                       winner_9, winner_10, winner_11, sep = "/"))) %>%
-    dplyr::select(c(problem, winner_1, winner_bench)) # Where there is a tie we just pick one as each winner got 100% across the board
-  
-  # Merge
-  
-  winners <- comps_feats %>%
-    inner_join(comps_benches, by = c("problem" = "problem"))
-  
-  # Filter overall results by "best of" lists and determine significance
-  
-  comps3 <- comps2 %>%
-    left_join(winners, by = c("problem" = "problem")) %>%
-    mutate(flag = case_when(
-            set1 == winner_set & set2 == winner_bench ~ TRUE,
-            set2 == winner_set & set1 == winner_bench ~ TRUE,
-            TRUE                                      ~ FALSE)) %>% 
-    filter(flag) %>%
-    dplyr::select(-c(flag)) %>%
+    filter(!is.na(set1_accuracy) & !is.na(set2_accuracy)) %>%
+    mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
     mutate(flag = case_when(
       is.na(p.value.adj)                                  ~ "Zero variance for one/more sets",
       p.value.adj > .05                                   ~ "Non-Significant difference",
       p.value.adj < .05 & set1_accuracy > set2_accuracy   ~ set1,
       p.value.adj < .05 & set1_accuracy < set2_accuracy   ~ set2))
 
-  return(comps3)
+  return(comps2)
 }
 
 winners <- find_winners(outputs_data = outputs_filt, benchmark_data = benchmarks)
@@ -287,7 +223,7 @@ set_data1 <- winner %>%
   mutate(set_ind = ifelse(set1 %in% append(unique(outputs$method), "All features"),
                           TRUE, FALSE)) %>%
   filter(set_ind) %>%
-  dplyr::select(c(problem, set1, set1_accuracy, flag, flag_adj)) %>%
+  dplyr::select(c(problem, set1, set1_accuracy, flag)) %>%
   rename(method = set1,
          set_accuracy = set1_accuracy)
 
@@ -295,7 +231,7 @@ set_data2 <- winner %>%
   mutate(set_ind = ifelse(set2 %in% append(unique(outputs$method), "All features"),
                           TRUE, FALSE)) %>%
   filter(set_ind) %>%
-  dplyr::select(c(problem, set2, set2_accuracy, flag, flag_adj)) %>%
+  dplyr::select(c(problem, set2, set2_accuracy, flag)) %>%
   rename(method = set2,
          set_accuracy = set2_accuracy)
 
@@ -303,7 +239,7 @@ bench_data1 <- winner %>%
   mutate(set_ind = ifelse(set1 %in% unique(benchmarks$method),
                           TRUE, FALSE)) %>%
   filter(set_ind) %>%
-  dplyr::select(c(problem, set1, set1_accuracy, flag, flag_adj)) %>%
+  dplyr::select(c(problem, set1, set1_accuracy, flag)) %>%
   rename(method_bench = set1,
          bench_accuracy = set1_accuracy)
 
@@ -311,7 +247,7 @@ bench_data2 <- winner %>%
   mutate(set_ind = ifelse(set2 %in% unique(benchmarks$method),
                           TRUE, FALSE)) %>%
   filter(set_ind) %>%
-  dplyr::select(c(problem, set2, set2_accuracy, flag, flag_adj)) %>%
+  dplyr::select(c(problem, set2, set2_accuracy, flag)) %>%
   rename(method_bench = set2,
          bench_accuracy = set2_accuracy)
 
