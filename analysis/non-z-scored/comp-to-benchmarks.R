@@ -109,7 +109,10 @@ outputs_filt_aggregate <- outputs_aggregate %>%
 
 outputs_filt <- bind_rows(outputs_filt, outputs_filt_aggregate) %>%
   inner_join(main_models, by = c("problem" = "problem", "method" = "method")) %>%
-  dplyr::select(-c(keeper))
+  dplyr::select(-c(keeper)) %>%
+  mutate(catcher = ifelse(problem == "Trace" & method == "All features", TRUE, FALSE)) %>% # There is a tie, so reward {feasts} instead of 'All features'
+  filter(!catcher) %>%
+  dplyr::select(-c(catcher))
 
 rm(outputs, outputs_aggregate, main_models, main_models_aggregate, outputs_filt_aggregate)
 
@@ -217,69 +220,31 @@ winners <- find_winners(outputs_data = outputs_filt, benchmark_data = benchmarks
 
 #--------------------- Draw plots ------------------
 
-# Quickly arrange into "benchmark" and "features" columns for plotting then re-join
-
-set_data1 <- winner %>%
-  mutate(set_ind = ifelse(set1 %in% append(unique(outputs$method), "All features"),
-                          TRUE, FALSE)) %>%
-  filter(set_ind) %>%
-  dplyr::select(c(problem, set1, set1_accuracy, flag)) %>%
-  rename(method = set1,
-         set_accuracy = set1_accuracy)
-
-set_data2 <- winner %>%
-  mutate(set_ind = ifelse(set2 %in% append(unique(outputs$method), "All features"),
-                          TRUE, FALSE)) %>%
-  filter(set_ind) %>%
-  dplyr::select(c(problem, set2, set2_accuracy, flag)) %>%
-  rename(method = set2,
-         set_accuracy = set2_accuracy)
-
-bench_data1 <- winner %>%
-  mutate(set_ind = ifelse(set1 %in% unique(benchmarks$method),
-                          TRUE, FALSE)) %>%
-  filter(set_ind) %>%
-  dplyr::select(c(problem, set1, set1_accuracy, flag)) %>%
-  rename(method_bench = set1,
-         bench_accuracy = set1_accuracy)
-
-bench_data2 <- winner %>%
-  mutate(set_ind = ifelse(set2 %in% unique(benchmarks$method),
-                          TRUE, FALSE)) %>%
-  filter(set_ind) %>%
-  dplyr::select(c(problem, set2, set2_accuracy, flag)) %>%
-  rename(method_bench = set2,
-         bench_accuracy = set2_accuracy)
-
-set_final <- bind_rows(set_data1, set_data2)
-bench_final <- bind_rows(bench_data1, bench_data2)
-
 # Retrieve mean accuracy and +/- 1 SD bars for each problem to plot
 
-set_bars <- outputs_aggregate %>%
-  mutate(method = "All features") %>%
-  bind_rows(outputs) %>%
-  inner_join(set_final, by = c("problem" = "problem",
-                               "method" = "method")) %>%
-  group_by(problem, method, set_accuracy, flag, flag_adj) %>%
+set_bars <- outputs_filt %>%
+  group_by(problem, method) %>%
   summarise(mean_x = mean(accuracy, na.rm = TRUE),
             lower_x = mean(accuracy, na.rm = TRUE) - 1 * sd(accuracy, na.rm = TRUE),
             upper_x = mean(accuracy, na.rm = TRUE) + 1 * sd(accuracy, na.rm = TRUE)) %>%
-  ungroup()
+  ungroup() %>%
+  rename(method_set = method)
 
 bench_bars <- benchmarks %>%
-  inner_join(bench_final, by = c("problem" = "problem",
-                                 "method" = "method_bench")) %>%
-  group_by(problem, method, bench_accuracy, flag, flag_adj) %>%
+  group_by(problem, method) %>%
   summarise(mean_y = mean(accuracy, na.rm = TRUE),
             lower_y = mean(accuracy, na.rm = TRUE) - 1 * sd(accuracy, na.rm = TRUE),
             upper_y = mean(accuracy, na.rm = TRUE) + 1 * sd(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   rename(method_bench = method)
 
-winner_final <- set_bars %>%
-  inner_join(bench_bars, by = c("problem" = "problem",
-                                "flag" = "flag", "flag_adj" = "flag_adj"))
+bars <- set_bars %>%
+  inner_join(bench_bars, by = c("problem" = "problem"))
+
+winners <- winners %>%
+  inner_join(bars, by = c("problem" = "problem"))
+
+rm(set_bars, bench_bars, bars)
 
 # Define coordinates for upper triangle to shade
 
@@ -301,28 +266,22 @@ mypal <- c("Non-Significant difference" = "grey50",
 
 # Draw scatterplot
 
-p <- winner_final %>%
+p <- winners %>%
   mutate(across(c(mean_x, lower_x, upper_x,
                   mean_y, lower_y, upper_y), ~ .x * 100)) %>%
-  mutate(flag_adj = factor(flag_adj, levels = c("Non-Significant difference",
-                                                "Zero variance for one/more sets",
-                                                "cBOSS", "HIVE-COTEv1_0",
-                                                "InceptionTime", "ResNet",
-                                                "ROCKET", "S-BOSS",
-                                                "STC", "TS-CHIEF", "WEASEL"), ordered = TRUE)) %>%
   ggplot(aes(x = mean_x, y = mean_y)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
-  geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = flag_adj)) +
-  geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = flag_adj)) +
-  geom_point(aes(colour = flag_adj), size = 2) +
-  annotate("text", x = 80, y = 10, label = "Time-series features better") +
-  annotate("text", x = 20, y = 90, label = "Leading benchmark better") +
+  geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = flag)) +
+  geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = flag)) +
+  geom_point(aes(colour = flag), size = 2) +
+  annotate("text", x = 80, y = 10, label = "Best time-series feature set better") +
+  annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better") +
   labs(title = "Comparison of feature sets vs benchmark algorithms across UCR/UEA univariate problems",
-       subtitle = "Plots a subset of 50 problems where mean and variance did not outperform chance",
+       subtitle = "Error bars are +/- 1SD from the mean",
        x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
-       caption = "Statistical significance computed on Holm-Bonferroni corrected p-values across every pairwise combination of\nproblems/feature sets/benchmark algorithms.",
+       caption = "Statistical significance computed on Holm-Bonferroni corrected p-values after\ncalculating test statistics between the best feature set and benchmark on each problem.",
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
@@ -333,4 +292,4 @@ p <- winner_final %>%
         panel.grid.minor = element_blank())
 
 print(p)
-ggsave("output/non-z-scored/features-vs-bench.pdf", p)
+ggsave("output/non-z-scored/features-vs-bench.pdf", p, units = "in", height = 9, width = 9)
