@@ -1,22 +1,24 @@
-#--------------------------------------
-# This script sets defines a function
-# to calculate p-values between accuracy
-# resamples for two feature sets
-#--------------------------------------
+#------------------------------------------
+# This script sets defines a function to 
+# calculate p-values between accuracy
+# resamples for a feature set and a
+# benchmark classifier
+#------------------------------------------
 
-#-------------------------------------------
-# Author: Trent Henderson, 28 September 2022
-#-------------------------------------------
+#------------------------------------------
+# Author: Trent Henderson, 12 December 2022
+#------------------------------------------
 
-#' Function to calculate p-values between two feature sets using resamples
+#' Function to calculate p-values between a feature set and benchmark algorithm using resamples
 #' @param data the dataframe of raw classification accuracy results
 #' @param combn_data the dataframe of pairwise combinations
 #' @param rownum the row number of combn_data to use
+#' @param problem_data the dataframe contain problem summary information
 #' @returns object of class dataframe
 #' @author Trent Henderson
 #' 
 
-calculate_p_values_acc <- function(data, combn_data, rownum){
+calculate_p_values_acc <- function(data, combn_data, rownum, problem_data){
   
   combn_filt <- combn_data[rownum, ]
   
@@ -29,7 +31,7 @@ calculate_p_values_acc <- function(data, combn_data, rownum){
   # Check for only 1 feature set present
   
   if(length(unique(tmp_data$method)) <= 1){
-    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   }
   
@@ -41,7 +43,7 @@ calculate_p_values_acc <- function(data, combn_data, rownum){
     ungroup()
   
   if(min(group_check$resamples) <= 2){
-    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   }
   
@@ -52,15 +54,30 @@ calculate_p_values_acc <- function(data, combn_data, rownum){
     summarise(stddev = sd(accuracy, na.rm = TRUE)) %>%
     ungroup()
   
+  # Set up vectors
+  
+  x <- tmp_data %>%
+    filter(method == combn_filt$set1) %>%
+    pull(accuracy)
+  
+  y <- tmp_data %>%
+    filter(method == combn_filt$set2) %>%
+    pull(accuracy)
+  
+  # Filter to get parameters for correlated t-test
+  
+  params <- problem_data %>%
+    filter(problem == unique(tmp_data$problem))
+  
   # Do calculation
   
   if(0 %in% sd_check$stddev){
-    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, t_statistic = NA, p_value = NA)
+    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   } else{
-    t_test <- t.test(accuracy ~ method, data = tmp_data, var.equal = FALSE)
-    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, 
-                       t_statistic = t_test$statistic, p_value = t_test$p.value)
+    t_test <- corr_t_test(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
+    outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, method = combn_filt$set1)
+    outs <- cbind(outs, t_test)
     return(outs)
   }
 }

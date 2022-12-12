@@ -13,10 +13,25 @@
 # Author: Trent Henderson, 5 July 2022
 #-------------------------------------
 
-# Grab benchmark results
+# Grab benchmark results and find best per problem
 
 benchmarks <- pull_benchmark_results() %>%
   dplyr::select(c(problem, method, accuracy))
+
+benchmarks_avg <- benchmarks%>%
+  group_by(problem, method) %>%
+  summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(problem) %>%
+  mutate(ranker = dense_rank(-accuracy)) %>%
+  ungroup() %>%
+  filter(ranker == 1) %>%
+  dplyr::select(-c(ranker, accuracy)) %>%
+  mutate(flag = TRUE)
+
+benchmarks <- benchmarks %>%
+  inner_join(benchmarks_avg, by = c("problem" = "problem", "method" = "method")) %>%
+  dplyr::select(-c(flag))
 
 #---------------- Compute best feature set ----------------
 
@@ -31,38 +46,65 @@ outputs <- outputs %>%
     method == "kats"  ~ "Kats",
     TRUE              ~ method))
 
-# Filter to just problems in calculated sets
+main_models <- outputs %>%
+  group_by(problem, method) %>%
+  summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(problem) %>%
+  mutate(ranker = dense_rank(-accuracy)) %>%
+  ungroup() %>%
+  filter(ranker == 1) %>%
+  dplyr::select(-c(ranker))
+
+main_models_aggregate <- outputs_aggregate %>%
+  mutate(method = "All features") %>%
+  group_by(problem, method) %>%
+  summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
+  ungroup()
+
+main_models <- bind_rows(main_models, main_models_aggregate) %>%
+  group_by(problem) %>%
+  slice_max(order_by = accuracy, n = 1) %>%
+  ungroup() %>%
+  dplyr::select(c(problem, method)) %>%
+  mutate(keeper = TRUE)
+
+outputs_filt <- outputs %>%
+  dplyr::select(c(problem, method, accuracy))
+
+outputs_filt_aggregate <- outputs_aggregate %>%
+  mutate(method = "All features") %>%
+  dplyr::select(c(problem, method, accuracy))
+
+outputs_filt <- bind_rows(outputs_filt, outputs_filt_aggregate) %>%
+  inner_join(main_models, by = c("problem" = "problem", "method" = "method")) %>%
+  dplyr::select(-c(keeper))
+
+rm(outputs, outputs_aggregate, main_models, main_models_aggregate, outputs_filt_aggregate)
+
+# Filter benchmarks to just problems in calculated sets
 
 benchmarks <- benchmarks %>%
-  filter(problem %in% unique(outputs$problem))
+  filter(problem %in% unique(outputs_filt$problem))
+
+# Compare best feature set and benchmark
 
 #' Find best set for each problem
-#' @param outputs_data \code{data.frame} of individual feature set classification results
-#' @param outputs_agg_data \code{data.frame} of all features classification results
+#' @param outputs_data \code{data.frame} of best feature set results
 #' @param benchmark_data \code{data.frame} of benchmark algorithm results
-#' @return object of class \code{list}
+#' @return object of class \code{data.frame}
 #' @author Trent Henderson
 #' 
 
-find_winners <- function(outputs_data, outputs_agg_data, benchmark_data){
+find_winners <- function(outputs_data, benchmark_data){
   
-  outputs_data <- outputs_data %>%
-    dplyr::select(c(problem, method, accuracy))
+  '%ni' <- Negate('%in%')
   
   #---------------------- Calculate p-values -----------------------
   
-  # Set up single dataframe
+  all_data <- bind_rows(outputs_data, benchmark_data)
   
-  reduced <- outputs_data %>%
-    dplyr::select(c(problem, method, accuracy))
-  
-  reduced2 <- outputs_agg_data %>%
-    mutate(method = "All features") %>%
-    dplyr::select(c(problem, method, accuracy))
-  
-  all_data <- bind_rows(reduced, reduced2, benchmark_data)
-  
-  # Iterate over every pairwise comparison to all features for each problem
+  # Get pairwise combinations to iterate over
   
   combns <- crossing(unique(all_data$method), unique(all_data$method), unique(all_data$problem), .name_repair = "unique") %>%
     rename(set1 = 1, 
@@ -72,22 +114,42 @@ find_winners <- function(outputs_data, outputs_agg_data, benchmark_data){
   combns <- combns[!duplicated(data.frame(t(apply(combns, 1, sort)))), ] # Remove duplicates since we get both set's values in the function
   combns <- combns[combns$set1 != combns$set2, ]
   
+  combns <- combns %>%
+    mutate(flag = ifelse(set1 %ni% unique(outputs_data$method) & set2 %ni% unique(outputs_data$method), FALSE, TRUE)) %>%
+    filter(flag) %>%
+    dplyr::select(-c(flag))
+  
+  correct_pairs <- outputs_data %>%
+    dplyr::select(-c(accuracy)) %>%
+    mutate(flag = TRUE) %>%
+    distinct()
+  
+  correct_pairs2 <- outputs_data %>%
+    dplyr::select(-c(accuracy)) %>%
+    mutate(flag2 = TRUE) %>%
+    distinct()
+  
+  combns <- combns %>%
+    left_join(correct_pairs, by = c("problem" = "problem", "set1" = "method")) %>%
+    left_join(correct_pairs2, by = c("problem" = "problem", "set2" = "method")) %>%
+    filter(flag | flag2) %>%
+    mutate(flag3 = ifelse((set1 %in% unique(outputs_data$method) & set2 %ni% unique(outputs_data$method)) |
+                            (set2 %in% unique(outputs_data$method) & set1 %ni% unique(outputs_data$method)),
+                          TRUE, FALSE)) %>%
+    filter(flag3) %>%
+    dplyr::select(-c(flag, flag2, flag3))
+  
+  # Iterate over every pairwise comparison to all features for each problem
+  
   comps <- 1:nrow(combns) %>%
-    purrr::map_df(~ calculate_p_values_acc(data = all_data, combn_data = combns, rownum = .x)) %>%
-    mutate(p_value_adj = p.adjust(p_value, method = "holm"))
+    purrr::map_df(~ calculate_p_values_acc(data = all_data, combn_data = combns, rownum = .x, problem_data = problem_summaries))
   
   # Add in accuracy values to get direction
   
-  single_accs <- outputs_data %>%
+  feature_accs <- outputs_data %>%
     group_by(problem, method) %>%
     summarise(accuracy_set = mean(accuracy, na.rm = TRUE)) %>%
     ungroup()
-  
-  all_accs <- outputs_agg_data %>%
-    group_by(problem) %>%
-    summarise(accuracy_all = mean(accuracy, na.rm = TRUE)) %>%
-    ungroup() %>%
-    mutate(method = "All features")
   
   bench_accs <- benchmark_data %>%
     group_by(problem, method) %>%
@@ -98,21 +160,17 @@ find_winners <- function(outputs_data, outputs_agg_data, benchmark_data){
   benches <- unique(benchmark_data$method)
   
   comps2 <- comps %>%
-    left_join(single_accs, by = c("problem" = "problem", "set1" = "method")) %>%
-    left_join(all_accs, by = c("problem" = "problem", "set1" = "method")) %>%
+    left_join(feature_accs, by = c("problem" = "problem", "set1" = "method")) %>%
     left_join(bench_accs, by = c("problem" = "problem", "set1" = "method")) %>%
-    left_join(single_accs, by = c("problem" = "problem", "set2" = "method")) %>%
-    left_join(all_accs, by = c("problem" = "problem", "set2" = "method")) %>%
+    left_join(feature_accs, by = c("problem" = "problem", "set2" = "method")) %>%
     left_join(bench_accs, by = c("problem" = "problem", "set2" = "method")) %>%
     mutate(set1_accuracy = case_when(
             set1 %in% sets         ~ accuracy_set.x,
-            set1 %in% benches      ~ accuracy_bench.x,
-            set1 == "All features" ~ accuracy_all.x)) %>%
+            set1 %in% benches      ~ accuracy_bench.x)) %>%
     mutate(set2_accuracy = case_when(
       set2 %in% sets         ~ accuracy_set.y,
-      set2 %in% benches      ~ accuracy_bench.y,
-      set2 == "All features" ~ accuracy_all.y)) %>%
-    dplyr::select(c(problem, set1, set2, set1_accuracy, set2_accuracy, t_statistic, p_value, p_value_adj))
+      set2 %in% benches      ~ accuracy_bench.y)) %>%
+    dplyr::select(c(problem, set1, set2, set1_accuracy, set2_accuracy, statistic, p.value))
 
   # Find best "features" for each problem
   
@@ -179,20 +237,15 @@ find_winners <- function(outputs_data, outputs_agg_data, benchmark_data){
     filter(flag) %>%
     dplyr::select(-c(flag)) %>%
     mutate(flag = case_when(
-      is.na(p_value)                                  ~ "Zero variance for one/more sets",
-      p_value > .05                                   ~ "Non-Significant difference",
-      p_value < .05 & set1_accuracy > set2_accuracy   ~ set1,
-      p_value < .05 & set1_accuracy < set2_accuracy   ~ set2),
-      flag_adj = case_when(
-        is.na(p_value_adj)                                ~ "Zero variance for one/more sets",
-        p_value_adj > .05                                 ~ "Non-Significant difference",
-        p_value_adj < .05 & set1_accuracy > set2_accuracy ~ set1,
-        p_value_adj < .05 & set1_accuracy < set2_accuracy ~ set2))
+      is.na(p.value.adj)                                  ~ "Zero variance for one/more sets",
+      p.value.adj > .05                                   ~ "Non-Significant difference",
+      p.value.adj < .05 & set1_accuracy > set2_accuracy   ~ set1,
+      p.value.adj < .05 & set1_accuracy < set2_accuracy   ~ set2))
 
   return(comps3)
 }
 
-winners <- find_winners(outputs_data = outputs, outputs_agg_data = outputs_aggregate, benchmark_data = benchmarks)
+winners <- find_winners(outputs_data = outputs_filt, benchmark_data = benchmarks)
 
 #--------------------- Draw plots ------------------
 
