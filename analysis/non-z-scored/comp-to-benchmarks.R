@@ -13,10 +13,12 @@
 # Author: Trent Henderson, 5 July 2022
 #-------------------------------------
 
-# Grab benchmark results and find best per problem
+# Grab benchmark results
 
 benchmarks <- pull_benchmark_results() %>%
   dplyr::select(c(problem, method, accuracy))
+
+# Find best per problem
 
 benchmarks_avg <- benchmarks%>%
   group_by(problem, method) %>%
@@ -27,11 +29,40 @@ benchmarks_avg <- benchmarks%>%
   ungroup() %>%
   filter(ranker == 1) %>%
   dplyr::select(-c(ranker, accuracy)) %>%
-  mutate(flag = TRUE)
+  mutate(flag = TRUE) %>%
+  group_by(problem) %>%
+  mutate(names = ifelse(n() > 1, paste(method, collapse = "/"), method)) %>%
+  ungroup()
 
-benchmarks <- benchmarks %>%
-  inner_join(benchmarks_avg, by = c("problem" = "problem", "method" = "method")) %>%
-  dplyr::select(-c(flag))
+#----------------------------------------
+# Handle ties and extract accuracy values
+#----------------------------------------
+
+# No ties
+
+no_ties <- benchmarks_avg %>%
+  filter(!grepl("\\/", names))
+
+benchmarks_no_ties <- benchmarks %>%
+  inner_join(no_ties, by = c("problem" = "problem", "method" = "method")) %>%
+  dplyr::select(-c(flag, names))
+
+# Ties
+
+ties_not_100 <- benchmarks_avg %>%
+  filter(grepl("\\/", names))
+
+benchmarks_ties <- benchmarks %>%
+  inner_join(ties_not_100, by = c("problem" = "problem", "method" = "method")) %>%
+  group_by(problem) %>%
+  arrange(method) %>%
+  slice_min(order_by = method, n = 1) %>% # Take earliest in alphabet
+  ungroup() %>%
+  dplyr::select(-c(method, flag)) %>%
+  rename(method = names)
+
+benchmarks <- bind_rows(benchmarks_no_ties, benchmarks_ties)
+rm(benchmarks_avg, no_ties, benchmarks_no_ties, ties_not_100, benchmarks_ties)
 
 #---------------- Compute best feature set ----------------
 
@@ -170,7 +201,8 @@ find_winners <- function(outputs_data, benchmark_data){
     mutate(set2_accuracy = case_when(
       set2 %in% sets         ~ accuracy_set.y,
       set2 %in% benches      ~ accuracy_bench.y)) %>%
-    dplyr::select(c(problem, set1, set2, set1_accuracy, set2_accuracy, statistic, p.value))
+    dplyr::select(c(problem, set1, set2, set1_accuracy, set2_accuracy, statistic, p.value)) %>%
+    filter(!is.na(set1_accuracy) & !is.na(set2_accuracy))
 
   # Find best "features" for each problem
   
