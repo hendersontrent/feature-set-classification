@@ -18,7 +18,7 @@ source("analysis/prepare-time-series-data.R")
 
 source("analysis/summarise-problems.R")
 
-#---------------- Problem scaling identificaiton -----
+#---------------- Problem scaling identification -----
 
 source("analysis/check-z-score.R")
 source("analysis/mean-and-sd-check.R")
