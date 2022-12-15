@@ -254,15 +254,15 @@ upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 
 mypal <- c("Non-Significant difference" = "grey50",
            "Zero variance for one/more sets" = "grey75",
-           "cBOSS" = "#E41A1C",
-           "HIVE-COTEv1_0" = "#377EB8",
-           "InceptionTime" = "#4DAF4A",
-           "ResNet" = "#984EA3",
-           "ROCKET" = "#FF7F00",
-           "S-BOSS" = "#FFFF33",
-           "STC" = "#A65628",
-           "TS-CHIEF" = "#F781BF",
-           "WEASEL" = "#66C2A5")
+           "cBOSS" = mypal[1],
+           "HIVE-COTEv1_0" = mypal[2],
+           "InceptionTime" = mypal[3],
+           "ResNet" = mypal[4],
+           "ROCKET" = mypal[5],
+           "S-BOSS" = mypal[6],
+           "STC" = mypal[7],
+           "TS-CHIEF" = mypal[8],
+           "WEASEL" = mypal[9])
 
 # Draw scatterplot
 
