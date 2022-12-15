@@ -194,8 +194,8 @@ pie_df <- separates %>%
 # Create palette for whoever is top performer
 
 mypal <- c("All features" = "black",
-           "Non-Significant difference" = "grey50",
-           "Zero variance for one/more sets" = "grey75",
+           "Non-Significant difference" = "grey80",
+           "Zero variance for one/more sets" = "grey50",
            "catch22" = mypal[1],
            "feasts" = mypal[2],
            "Kats" = mypal[3],
@@ -211,7 +211,7 @@ upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 
 p <- point_df %>%
   ggplot(aes(x = balanced_accuracy, y = balanced_accuracy_all)) +
-  geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
+  geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.1) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +

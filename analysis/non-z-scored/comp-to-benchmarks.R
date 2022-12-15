@@ -252,8 +252,8 @@ upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 
 # Define colour palette
 
-mypal <- c("Non-Significant difference" = "grey50",
-           "Zero variance for one/more sets" = "grey75",
+mypal <- c("Non-Significant difference" = "grey80",
+           "Zero variance for one/more sets" = "grey50",
            "cBOSS" = mypal[1],
            "HIVE-COTEv1_0" = mypal[2],
            "InceptionTime" = mypal[3],
@@ -270,7 +270,7 @@ p <- winners %>%
   mutate(across(c(mean_x, lower_x, upper_x,
                   mean_y, lower_y, upper_y), ~ .x * 100)) %>%
   ggplot(aes(x = mean_x, y = mean_y)) +
-  geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
+  geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.1) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = flag)) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = flag)) +
