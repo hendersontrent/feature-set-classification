@@ -83,14 +83,14 @@ rm(outputs_z, best, best_2)
 
 # Create palette for whoever is top performer
 
-mypal <- c("Non-Significant difference" = "grey50",
-           "Zero variance for one/more sets" = "grey75",
-           "catch22" = "#256676",
-           "feasts" = "#f6a39f",
-           "Kats" = "#1fc468",
-           "tsfeatures" = "#b41e51",
-           "TSFEL" = "#3eeaef",
-           "tsfresh" = "#5f3e3f")
+mypal <- c("Non-Significant difference" = "grey80",
+           "Zero variance for one/more sets" = "grey50",
+           "catch22" = mypal[1],
+           "feasts" = mypal[2],
+           "Kats" = mypal[3],
+           "tsfeatures" = mypal[4],
+           "TSFEL" = mypal[5],
+           "tsfresh" = mypal[6])
 
 # Define coordinates for upper triangle to shade
 
@@ -100,7 +100,7 @@ upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 
 p <- both %>%
   ggplot(aes(x = worst_balanced_accuracy_mean, y = best_balanced_accuracy_mean)) +
-  geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
+  geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.1) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer)) +

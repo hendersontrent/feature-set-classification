@@ -41,12 +41,12 @@ calcs <- calcs %>%
 
 #---------------------- Plotting ----------------------
 
-mypal <- c("catch22" = "#256676",
-           "feasts" = "#f6a39f",
-           "Kats" = "#1fc468",
-           "tsfeatures" = "#b41e51",
-           "TSFEL" = "#3eeaef",
-           "tsfresh" = "#5f3e3f")
+mypal <- c("catch22" = mypal[1],
+           "feasts" = mypal[2],
+           "Kats" = mypal[3],
+           "tsfeatures" = mypal[4],
+           "TSFEL" = mypal[5],
+           "tsfresh" = mypal[6])
 
 p <- calcs %>%
   ggplot(aes(x = reorder(problem, -orders), y = avg, group = method, colour = method)) +

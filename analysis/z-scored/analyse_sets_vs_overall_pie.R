@@ -194,14 +194,14 @@ pie_df <- separates %>%
 # Create palette for whoever is top performer
 
 mypal <- c("All features" = "black",
-           "Non-Significant difference" = "grey50",
-           "Zero variance for one/more sets" = "grey75",
-           "catch22" = "#256676",
-           "feasts" = "#f6a39f",
-           "Kats" = "#1fc468",
-           "tsfeatures" = "#b41e51",
-           "TSFEL" = "#3eeaef",
-           "tsfresh" = "#5f3e3f")
+           "Non-Significant difference" = "grey80",
+           "Zero variance for one/more sets" = "grey50",
+           "catch22" = mypal[1],
+           "feasts" = mypal[2],
+           "Kats" = mypal[3],
+           "tsfeatures" = mypal[4],
+           "TSFEL" = mypal[5],
+           "tsfresh" = mypal[6])
 
 # Define coordinates for upper triangle to shade
 
@@ -211,19 +211,19 @@ upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 
 p <- point_df %>%
   ggplot(aes(x = balanced_accuracy, y = balanced_accuracy_all)) +
-  geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.3) +
+  geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.1) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
   geom_point(aes(colour = top_performer), size = 2) +
-  geom_errorbar(data = pie_df, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
-  geom_errorbarh(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
-  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 1.75,
+  geom_linerange(data = pie_df, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
+  geom_linerange(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
+  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 2,
                    cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
   annotate("text", x = 75, y = 10, label = "Best single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +
   labs(title = "Comparison of top feature sets across UCR/UEA repository univariate problems",
-       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples for 'All features' and top individual set.\nColour indicates p < .05 difference in accuracy for individual feature set(s) over all features.\nPie/point size scales proportionately to the number of individual sets that outperformed 'All features', with points\nindicating one or none. Pie proportions map to rank with the top performer occupying the largest space.",
+       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples.\nPie proportions map to rank with the top performer occupying the largest space.",
        x = "Balanced classification accuracy of the best individual set (%)",
        y = "Balanced classification accuracy of all features (%)",
        fill = "Feature set",

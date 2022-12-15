@@ -52,3 +52,8 @@ rm(r_files)
 # Suppress dplyr::summarise info
 
 options(dplyr.summarise.inform = FALSE)
+
+# Define reusable colour palette
+
+mypal <- c("#69ef7b", "#cb1775", "#5e9222", "#d130ff", "#a4d483", 
+           "#60249e", "#c7e11f", "#5e5698", "#fcd107", "#ee84ec")
