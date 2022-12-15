@@ -55,5 +55,5 @@ options(dplyr.summarise.inform = FALSE)
 
 # Define reusable colour palette
 
-mypal <- c("#a0b7ff", "#6fdf11", "#262cd1", "#00d49b", "#b300b6", 
-           "#5a7200", "#ff93e4", "#ff9d54", "#00568f", "#550039")
+mypal <- c("#69ef7b", "#cb1775", "#5e9222", "#d130ff", "#a4d483", 
+           "#60249e", "#c7e11f", "#5e5698", "#fcd107", "#ee84ec")
