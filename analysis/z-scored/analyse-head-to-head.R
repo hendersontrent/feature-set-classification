@@ -159,27 +159,41 @@ combns <- combns[!duplicated(data.frame(t(apply(combns, 1, sort)))), ] # Remove 
 
 wins <- 1:nrow(combns) %>%
   purrr::map_df(~ calculate_wins(data = outputs_z, combn_data = combns, rownum = .x)) %>%
-  mutate(label_wins = ifelse(set1 == set2, "-", counter),
-         label_total = ifelse(set1 == set2, "-", total_probs),
-         label_ties = ifelse(set1 == set2, "-", ties),
-         label_losses = ifelse(set1 == set2, "-", total_probs - (counter + ties))) 
+  mutate(my_lab = ifelse(set1 == set2, "-", paste0(counter, "-", total_probs - (counter + ties)))) %>%
+  dplyr::select(-c(props))
+
+# Invert dataframe to get lower triangle of matrix graphic
+
+losses <- wins %>%
+  mutate(set3 = set2,
+         set4 = set1) %>%
+  dplyr::select(-c(set1, set2, my_lab)) %>%
+  rename(set1 = set3,
+         set2 = set4) %>%
+  mutate(my_lab = ifelse(set1 == set2, "-", paste0(total_probs - (counter + ties), "-", counter)),
+         counter = total_probs - (counter + ties)) %>%
+  dplyr::select(c(set1, set2, counter, my_lab))
+
+# Row bind both
+
+both <- wins %>%
+  dplyr::select(c(set1, set2, counter, my_lab)) %>%
+  bind_rows(losses)
 
 #---------------------- Draw graphic -----------------------
 
-p <- wins %>%
+p <- both %>%
   ggplot(aes(x = set2, y = set1, fill = counter)) +
   geom_tile() +
-  geom_text(aes(label = paste0(label_wins, "/", label_ties, "/", label_losses)), colour = "black") +
-  labs(title = paste0("Head to head of feature sets over maximum of ", max(wins$total_probs, na.rm = TRUE), " problems"),
-       subtitle = "t-tests between accuracy distributions for each feature set and problem combination were calculated\nand p-values corrected using Holm-Bonferroni method for each pairwise feature set comparison over all problems.\nTile labels follow a wins/ties/losses format.",
-       x = "Comparator feature set",
-       y = "Focus feature set",
+  geom_text(aes(label = my_lab), colour = "black") +
+  labs(title = "Head to head between feature sets",
+       x = "Feature set",
+       y = "Feature set",
        fill = "Number of statistical wins") +
-  scale_fill_gradient2(low = "#67A9CF",
-                       mid = "#F7F7F7",
-                       high = "#EF8A62",
-                       midpoint = median(wins$counter, na.rm = TRUE),
-                       na.value = "grey50") +
+  scale_fill_gradient(low = "white", high = "#cb1775", na.value = "grey50",
+                      limits = c(0, 10),
+                      breaks = c(0, 2, 4, 6, 8, 10),
+                      labels = c(0, 2, 4, 6, 8, 10)) +
   theme_bw() +
   theme(legend.position = "bottom",
         panel.grid = element_blank())
