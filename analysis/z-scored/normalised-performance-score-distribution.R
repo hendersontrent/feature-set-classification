@@ -82,12 +82,12 @@ set_averages <- outputs_z %>%
 
 set.seed(123)
 
-mypal <- c("catch22" = "#256676",
-           "feasts" = "#f6a39f",
-           "Kats" = "#1fc468",
-           "tsfeatures" = "#b41e51",
-           "TSFEL" = "#3eeaef",
-           "tsfresh" = "#5f3e3f")
+mypal <- c("catch22" =  mypal[1],
+           "feasts" = mypal[2],
+           "Kats" = mypal[3],
+           "tsfeatures" = mypal[4],
+           "TSFEL" = mypal[5],
+           "tsfresh" = mypal[6])
 
 p <- z_scores %>%
   inner_join(set_averages, by = c("method" = "method", "problem" = "problem")) %>%
@@ -95,12 +95,9 @@ p <- z_scores %>%
   geom_violin() +
   geom_hline(yintercept = 0, lty = "dashed", colour = "black") +
   geom_jitter(size = 0.7, alpha = 0.9, height = 0, width = 0.1) +
-  labs(title = "Distributions of z-score accuracy across UEA/UCR repository univariate problems",
-       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.",
-       x = "Feature set",
+  labs(x = "Feature set",
        y = "Normalised performance score",
-       colour = NULL,
-       caption = "Value of 0 indicates no difference from the mean. Value of |1| indicates 1 standard deviation away from mean.") +
+       colour = NULL) +
   scale_colour_manual(values = mypal) +
   theme_bw() +
   theme(legend.position = "none")

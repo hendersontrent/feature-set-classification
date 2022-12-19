@@ -51,8 +51,7 @@ mypal <- c("catch22" = mypal[1],
 p <- calcs %>%
   ggplot(aes(x = reorder(problem, -orders), y = avg, group = method, colour = method)) +
   geom_line() +
-  labs(title = "Mean balanced accuracy across all problems by feature set",
-       x = "Problem",
+  labs(x = "Problem",
        y = "Mean balanced accuracy",
        colour = NULL) +
   scale_colour_manual(values = mypal) +

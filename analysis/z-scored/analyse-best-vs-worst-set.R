@@ -104,11 +104,9 @@ p <- both %>%
   geom_point(aes(colour = top_performer), size = 2) +
   annotate("text", x = 75, y = 10, label = "Worst feature set") +
   annotate("text", x = 25, y = 90, label = "Best feature set") +
-  labs(title = "Comparison of best and worst feature sets across UCR/UEA repository univariate problems",
-       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples. Colour indicates p < .05 difference",
-       x = "Balanced classification accuracy worst set (%)",
+  labs(x = "Balanced classification accuracy worst set (%)",
        y = "Balanced classification accuracy best set (%)",
-       colour = "Best feature set") +
+       colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
   scale_colour_manual(values = mypal) +
