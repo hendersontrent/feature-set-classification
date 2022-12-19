@@ -277,11 +277,8 @@ p <- winners %>%
   geom_point(aes(colour = flag), size = 2) +
   annotate("text", x = 80, y = 10, label = "Best time-series feature set better") +
   annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better") +
-  labs(title = "Comparison of feature sets vs benchmark algorithms across UCR/UEA univariate problems",
-       subtitle = "Error bars are +/- 1SD from the mean",
-       x = "Classification accuracy time-series features (%)",
+  labs(x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
-       caption = "Statistical significance computed on Holm-Bonferroni corrected p-values after\ncalculating test statistics between the best feature set and benchmark on each problem.",
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 

@@ -222,11 +222,9 @@ p <- point_df %>%
                    cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
   annotate("text", x = 75, y = 10, label = "Best single feature set better") +
   annotate("text", x = 25, y = 90, label = "All features better") +
-  labs(title = "Comparison of top feature sets across UCR/UEA repository univariate problems",
-       subtitle = "Error bars are +/- 1 SD obtained over 30 resamples.\nPie proportions map to rank with the top performer occupying the largest space.",
-       x = "Balanced classification accuracy of the best individual set (%)",
+  labs(x = "Balanced classification accuracy of the best individual set (%)",
        y = "Balanced classification accuracy of all features (%)",
-       fill = "Feature set",
+       fill = NULL,
        group = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 

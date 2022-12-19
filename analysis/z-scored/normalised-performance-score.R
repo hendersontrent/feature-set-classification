@@ -92,12 +92,9 @@ z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
 p <- z_scores_mat %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
-  labs(title = "Comparison of z-score accuracy across UEA/UCR repository univariate problems",
-       subtitle = "Performance scores calculated relative to mean and SD across all sets for each problem.\nColumns organised by descending overall mean balanced accuracy. Rows organised by hierarchical clustering.",
-       x = "Feature set",
+  labs(x = "Feature set",
        y = "Problem",
-       fill = "Normalised performance score",
-       caption = "Value of 0 indicates no difference from the mean. Value of |1| indicates 1 standard deviation away from mean.") +
+       fill = "Normalised performance score") +
   scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
                        breaks = c(-2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
                        labels = c(-2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),

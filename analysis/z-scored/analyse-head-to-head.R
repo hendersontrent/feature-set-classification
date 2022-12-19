@@ -186,8 +186,7 @@ p <- both %>%
   ggplot(aes(x = set2, y = set1, fill = counter)) +
   geom_tile() +
   geom_text(aes(label = my_lab), colour = "black") +
-  labs(title = "Head to head between feature sets",
-       x = "Feature set",
+  labs(x = "Feature set",
        y = "Feature set",
        fill = "Number of statistical wins") +
   scale_fill_gradient(low = "white", high = "#cb1775", na.value = "grey50",
