@@ -178,12 +178,15 @@ losses <- wins %>%
 
 both <- wins %>%
   dplyr::select(c(set1, set2, counter, my_lab)) %>%
-  bind_rows(losses)
+  bind_rows(losses) %>%
+  group_by(set1) %>%
+  mutate(total_wins = sum(counter, na.rm = TRUE)) %>%
+  ungroup()
 
 #---------------------- Draw graphic -----------------------
 
 p <- both %>%
-  ggplot(aes(x = set2, y = set1, fill = counter)) +
+  ggplot(aes(x = reorder(set2, -total_wins), y = reorder(set1, -total_wins), fill = counter)) +
   geom_tile() +
   geom_text(aes(label = my_lab), colour = "black", size = 5) +
   labs(x = "Comparison feature set",
