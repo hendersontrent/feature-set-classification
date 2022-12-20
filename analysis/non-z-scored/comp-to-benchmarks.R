@@ -209,7 +209,7 @@ find_winners <- function(outputs_data, benchmark_data){
     mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
     mutate(flag = case_when(
       is.na(p.value.adj)                                  ~ "Zero variance for one/more sets",
-      p.value.adj > .05                                   ~ "Non-Significant difference",
+      p.value.adj > .05                                   ~ "Non-significant difference",
       p.value.adj < .05 & set1_accuracy > set2_accuracy   ~ set1,
       p.value.adj < .05 & set1_accuracy < set2_accuracy   ~ set2))
 
@@ -250,9 +250,25 @@ rm(set_bars, bench_bars, bars)
 
 upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 
+# Separate into significant and non-significant for point sizing
+
+'%ni%' <- Negate('%in%')
+
+winners <- winners %>%
+  mutate(across(c(mean_x, lower_x, upper_x,
+                  mean_y, lower_y, upper_y), ~ .x * 100))
+
+ns <- winners %>%
+  filter(flag %in% c("Non-significant difference", "Zero variance for one/more sets"))
+
+sig <- winners %>%
+  filter(flag %ni% c("Non-significant difference", "Zero variance for one/more sets"))
+
+stopifnot(nrow(ns) + nrow(sig) == nrow(winners))
+
 # Define colour palette
 
-mypal <- c("Non-Significant difference" = "grey80",
+mypal <- c("Non-significant difference" = "grey80",
            "Zero variance for one/more sets" = "grey50",
            "cBOSS" = mypal[1],
            "HIVE-COTEv1_0" = mypal[2],
@@ -266,17 +282,18 @@ mypal <- c("Non-Significant difference" = "grey80",
 
 # Draw scatterplot
 
-p <- winners %>%
-  mutate(across(c(mean_x, lower_x, upper_x,
-                  mean_y, lower_y, upper_y), ~ .x * 100)) %>%
+p <- ns %>%
   ggplot(aes(x = mean_x, y = mean_y)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.1) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = flag)) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = flag)) +
   geom_point(aes(colour = flag), size = 2) +
-  annotate("text", x = 80, y = 10, label = "Best time-series feature set better") +
-  annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better") +
+  geom_linerange(data = sig, aes(ymin = lower_y, ymax = upper_y, colour = flag)) +
+  geom_linerange(data = sig, aes(xmin = lower_x, xmax = upper_x, colour = flag)) +
+  geom_point(data = sig, aes(colour = flag), size = 3) +
+  annotate("text", x = 80, y = 10, label = "Best time-series feature set better", size = 4) +
+  annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better", size = 4) +
   labs(x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
        colour = NULL) +
@@ -286,7 +303,10 @@ p <- winners %>%
   theme_bw() +
   theme(legend.position = "bottom",
         legend.title = element_blank(),
-        panel.grid.minor = element_blank())
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12),
+        legend.text = element_text(size = 11))
 
 print(p)
 ggsave("output/non-z-scored/features-vs-bench.pdf", p, units = "in", height = 9, width = 9)
