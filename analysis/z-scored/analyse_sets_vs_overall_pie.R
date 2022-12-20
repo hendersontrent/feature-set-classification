@@ -110,7 +110,7 @@ comps <- comps %>%
   inner_join(all_accs, by = c("problem" = "problem")) %>%
   mutate(flag = case_when(
          is.na(p.value.adj)                                                 ~ "Zero variance for one/more sets",
-         p.value.adj > .05                                                  ~ "Non-Significant difference",
+         p.value.adj > .05                                                  ~ "Non-significant difference",
          p.value.adj < .05 & balanced_accuracy_mean > balanced_accuracy_all ~ method,
          TRUE                                                               ~ "All features"))
 
@@ -124,7 +124,7 @@ comps <- comps %>%
 # Individual set wins
 
 wide <- comps %>%
-  mutate(balanced_accuracy_mean = ifelse(flag %in% c("All features", "Zero variance for one/more sets", "Non-Significant difference"),
+  mutate(balanced_accuracy_mean = ifelse(flag %in% c("All features", "Zero variance for one/more sets", "Non-significant difference"),
                                          0, balanced_accuracy_mean)) %>%
   dplyr::select(c(problem, method, balanced_accuracy_mean)) %>%
   mutate(balanced_accuracy_mean = balanced_accuracy_mean / 100) %>%
@@ -136,10 +136,10 @@ main_models_filt <- main_models %>%
   dplyr::select(c(problem, method_set))
 
 wide2 <- comps %>%
-  filter(flag %in% c("All features", "Zero variance for one/more sets", "Non-Significant difference")) %>%
+  filter(flag %in% c("All features", "Zero variance for one/more sets", "Non-significant difference")) %>%
   mutate(`All features` = ifelse(flag == "All features", 1, 0),
          `Zero variance for one/more sets` = ifelse(flag == "Zero variance for one/more sets", 1, 0),
-         `Non-significant difference` = ifelse(flag == "Non-Significant difference", 1, 0)) %>%
+         `Non-significant difference` = ifelse(flag == "Non-significant difference", 1, 0)) %>%
   dplyr::select(c(problem, method, `All features`, `Zero variance for one/more sets`, `Non-significant difference`)) %>%
   inner_join(main_models_filt, by = c("problem" = "problem", "method" = "method_set")) %>%
   dplyr::select(c(problem, `All features`, `Zero variance for one/more sets`, `Non-significant difference`))
@@ -194,7 +194,7 @@ pie_df <- separates %>%
 # Create palette for whoever is top performer
 
 mypal <- c("All features" = "black",
-           "Non-Significant difference" = "grey80",
+           "Non-significant difference" = "grey80",
            "Zero variance for one/more sets" = "grey50",
            "catch22" = mypal[1],
            "feasts" = mypal[2],
@@ -218,21 +218,25 @@ p <- point_df %>%
   geom_point(aes(colour = top_performer), size = 2) +
   geom_linerange(data = pie_df, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_linerange(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
-  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 2,
+  geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 2.5,
                    cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
-  annotate("text", x = 75, y = 10, label = "Best single feature set better") +
-  annotate("text", x = 25, y = 90, label = "All features better") +
+  annotate("text", x = 75, y = 10, label = "Best single feature set better", size = 4) +
+  annotate("text", x = 25, y = 90, label = "All features better", size = 4) +
   labs(x = "Balanced classification accuracy of the best individual set (%)",
        y = "Balanced classification accuracy of all features (%)",
        fill = NULL,
        group = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_fill_manual(values = mypal) +
+  scale_fill_manual(values = mypal, drop = FALSE) +
   scale_colour_manual(values = mypal, guide = "none") +
   theme_bw() +
   theme(legend.position = "bottom",
-        panel.grid.minor = element_blank())
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 11))
 
 print(p)
 ggsave("output/z-scored/all_versus_sets_pie.pdf", p, units = "in", height = 9, width = 9)

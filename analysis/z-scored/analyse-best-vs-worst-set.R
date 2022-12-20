@@ -71,7 +71,7 @@ both <- both %>%
   inner_join(p_values, by = c("problem" = "problem")) %>%
   mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
   mutate(significant = ifelse(p.value.adj < 0.05, "Significant difference", "Non-significant difference"),
-         top_performer = ifelse(significant == "Significant difference", best_method, "Non-Significant difference")) %>%
+         top_performer = ifelse(significant == "Significant difference", best_method, "Non-significant difference")) %>%
   mutate(significant = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", significant),
          top_performer = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", top_performer))
 
@@ -81,7 +81,8 @@ rm(outputs_z, best, worst)
 
 # Create palette for whoever is top performer
 
-mypal <- c("Non-Significant difference" = "grey80",
+mypal <- c("Non-significant difference" = "grey80",
+           "Zero variance for one/more sets" = "grey50",
            "catch22" = mypal[1],
            "feasts" = mypal[2],
            "Kats" = mypal[3],
@@ -93,17 +94,30 @@ mypal <- c("Non-Significant difference" = "grey80",
 
 upper_tri <- data.frame(x = c(0, 0, 100), y = c(0, 100, 100))
 
+# Separate into significant and non-significant for point sizing
+
+ns <- both %>%
+  filter(top_performer %in% c("Non-significant difference", "Zero variance for one/more sets"))
+
+sig <- both %>%
+  filter(top_performer %in% c("catch22", "feasts", "Kats", "tsfeatures", "TSFEL", "tsfresh"))
+
+stopifnot(nrow(ns) + nrow(sig) == nrow(both))
+
 # Draw scatterplot
 
-p <- both %>%
+p <- ns %>%
   ggplot(aes(x = worst_balanced_accuracy_mean, y = best_balanced_accuracy_mean)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.1) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
   geom_errorbarh(aes(xmin = lower_x, xmax = upper_x, colour = top_performer)) +
   geom_point(aes(colour = top_performer), size = 2) +
-  annotate("text", x = 75, y = 10, label = "Worst feature set") +
-  annotate("text", x = 25, y = 90, label = "Best feature set") +
+  geom_linerange(data = sig, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
+  geom_linerange(data = sig, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
+  geom_point(data = sig, aes(colour = top_performer), size = 3) +
+  annotate("text", x = 75, y = 10, label = "Worst feature set", size = 4) +
+  annotate("text", x = 25, y = 90, label = "Best feature set", size = 4) +
   labs(x = "Balanced classification accuracy worst set (%)",
        y = "Balanced classification accuracy best set (%)",
        colour = NULL) +
@@ -112,7 +126,11 @@ p <- both %>%
   scale_colour_manual(values = mypal) +
   theme_bw() +
   theme(legend.position = "bottom",
-        panel.grid.minor = element_blank())
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 11))
 
 print(p)
 ggsave("output/z-scored/best_versus_worst_set.pdf", p, units = "in", height = 9, width = 9)

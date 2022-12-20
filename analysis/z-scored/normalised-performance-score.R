@@ -102,7 +102,11 @@ p <- z_scores_mat %>%
   theme_bw() +
   theme(legend.position = "bottom",
         legend.key.width = unit(1.5, "cm"),
-        panel.grid = element_blank())
+        panel.grid = element_blank(),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/z-scored/normalised-performance-score.pdf", p, units = "in", height = 11, width = 11)
+ggsave("output/z-scored/normalised-performance-score.pdf", p, units = "in", height = 14, width = 14)

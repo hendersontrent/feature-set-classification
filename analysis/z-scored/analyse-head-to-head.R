@@ -185,17 +185,21 @@ both <- wins %>%
 p <- both %>%
   ggplot(aes(x = set2, y = set1, fill = counter)) +
   geom_tile() +
-  geom_text(aes(label = my_lab), colour = "black") +
-  labs(x = "Feature set",
-       y = "Feature set",
+  geom_text(aes(label = my_lab), colour = "black", size = 5) +
+  labs(x = "Comparison feature set",
+       y = "Feature set (W-L)",
        fill = "Number of statistical wins") +
-  scale_fill_gradient(low = "white", high = "#cb1775", na.value = "grey50",
+  scale_fill_gradient(low = "white", high = "#FF0029", na.value = "grey50",
                       limits = c(0, 10),
                       breaks = c(0, 2, 4, 6, 8, 10),
                       labels = c(0, 2, 4, 6, 8, 10)) +
   theme_bw() +
   theme(legend.position = "bottom",
-        panel.grid = element_blank())
+        panel.grid = element_blank(),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 11))
 
 print(p)
 ggsave("output/z-scored/head-to-head-matrix.pdf", p, units = "in", height = 9, width = 9)
