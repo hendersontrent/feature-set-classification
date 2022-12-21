@@ -92,6 +92,13 @@ z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
 p <- z_scores_mat %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
+  geom_hline(yintercept = 66.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 45.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 34.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 31.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 24.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 18.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 3.5, lty = "solid", colour = "black", size = 0.7) +
   labs(x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score") +
@@ -100,6 +107,8 @@ p <- z_scores_mat %>%
                        labels = c(-2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
                        limits = c(-2.5, 2.5)) +
   theme_bw() +
+  coord_cartesian(xlim = c(1, 6), clip = "off") +
+  #annotate("text", x = 8, y = 84, label = "i\n(phase-aligned\nproblems)") +
   theme(legend.position = "bottom",
         legend.key.width = unit(1.5, "cm"),
         panel.grid = element_blank(),
