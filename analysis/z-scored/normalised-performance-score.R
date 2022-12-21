@@ -89,9 +89,18 @@ z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
 
 #---------------------- Draw graphic -----------------------
 
+# Main plot
+
 p <- z_scores_mat %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
+  geom_hline(yintercept = 66.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 45.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 34.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 31.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 24.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 18.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 3.5, lty = "solid", colour = "black", size = 0.7) +
   labs(x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score") +
@@ -100,6 +109,7 @@ p <- z_scores_mat %>%
                        labels = c(-2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
                        limits = c(-2.5, 2.5)) +
   theme_bw() +
+  coord_cartesian(xlim = c(1, 6), clip = "off") +
   theme(legend.position = "bottom",
         legend.key.width = unit(1.5, "cm"),
         panel.grid = element_blank(),
@@ -108,5 +118,24 @@ p <- z_scores_mat %>%
         legend.title = element_text(size = 12),
         legend.text = element_text(size = 11))
 
-print(p)
-ggsave("output/z-scored/normalised-performance-score.pdf", p, units = "in", height = 14, width = 14)
+# Side annotations
+
+label_data <- data.frame(x = rep(0.5, times = 8),
+                         y = c(86, 55.5, 39.5, 31.5, 25.5, 19, 7.5, -2),
+                         mylab = c("i\n(tsfresh zone)", "ii\n(Similar performance)", "iii\n(catch22 does poorly)", "iv\n(Kats does poorly)", 
+                                   "v\n(feasts does poorly)", "vi\n(Niche phase-aligned)", "vii\n(No clear pattern)", "viii\n(catch22 zone)"))
+
+ann <- ggplot(data = label_data) +
+  geom_text(aes(x = x, y = y, label = mylab), fontface = "bold", color = "black") +
+  coord_cartesian(xlim = c(0, 1), 
+                  ylim = c(1, 102),
+                  clip = "off") +
+  theme_void()
+
+print(ann)
+
+p2 <- p + ann  + 
+  plot_layout(widths = c(5, 1))
+
+print(p2)
+ggsave("output/z-scored/normalised-performance-score.pdf", p2, units = "in", height = 14, width = 14)

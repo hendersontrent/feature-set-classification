@@ -20,6 +20,7 @@ library(foreign)
 library(theft)
 library(Cairo)
 library(scatterpie)
+library(patchwork)
 
 # Create important folders if none exist
 
