@@ -49,15 +49,21 @@ mypal <- c("catch22" = mypal[1],
            "tsfresh" = mypal[6])
 
 p <- calcs %>%
+  mutate(avg = avg * 100) %>%
   ggplot(aes(x = reorder(problem, -orders), y = avg, group = method, colour = method)) +
   geom_line() +
   labs(x = "Problem",
-       y = "Mean balanced accuracy",
+       y = "Mean balanced accuracy (%)",
        colour = NULL) +
+  scale_y_continuous(labels = function(x)paste0(x, "%")) + 
   scale_colour_manual(values = mypal) +
   theme_bw() +
   theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 90))
+        axis.text.x = element_text(angle = 90),
+        axis.text = element_text(size = 11),
+        axis.title = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 11))
 
 print(p)
 ggsave("output/z-scored/mean-performance-line-plot.pdf", p, unit = "in", width = 15, height = 10)
