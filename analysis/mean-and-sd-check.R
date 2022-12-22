@@ -113,12 +113,30 @@ mean_sd_outputs <- unique(mean_sd_test$problem) %>%
 
 save(mean_sd_outputs, file = "data/mean_sd_outputs.Rda")
 
-#----------------------
-# Results visualisation
-#----------------------
+#------------- Final list of problems --------------
 
-mypal2 <- c("< chance" = mypal[2],
-            ">= chance" = mypal[1])
+# Find out for which problems mean and SD significantly outperformed chance
+
+benchmark_keepers <- mean_sd_outputs %>%
+  group_by(problem) %>%
+  summarise(mu = mean(accuracy, na.rm = TRUE),
+            sigma = sd(accuracy, na.rm = TRUE)) %>%
+  ungroup() %>%
+  left_join(num_classes, by = c("problem" = "problem")) %>%
+  mutate(p.value = pnorm(chance, 
+                         mean = mu,
+                         sd = sigma,
+                         lower.tail = FALSE),
+         p.value = 1 - p.value) %>%
+  mutate(category = ifelse(p.value <= 0.05, "Significant", "Non-significant")) %>%
+  dplyr::select(problem, p.value, category)
+
+save(benchmark_keepers, file = "data/benchmark_keepers.Rda")
+
+#------------- Results visualisation --------------
+
+mypal2 <- c("<= chance" = mypal[2],
+            "> chance" = mypal[1])
 
 p <- mean_sd_outputs %>%
   mutate(accuracy = accuracy * 100) %>%
@@ -128,10 +146,9 @@ p <- mean_sd_outputs %>%
             upper = mean(accuracy, na.rm = TRUE) + 1.96 * sd(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   left_join(num_classes, by = c("problem" = "problem")) %>%
+  left_join(benchmark_keepers, by = c("problem" = "problem")) %>%
   mutate(chance = chance * 100) %>%
-  mutate(performance = case_when(
-          upper < chance ~ "< chance",
-          TRUE            ~ ">= chance")) %>%
+  mutate(performance = ifelse(category == "Significant", "> chance", "<= chance")) %>%
   ggplot() +
   geom_errorbar(aes(ymin = lower, ymax = upper, x = reorder(problem, mu), y = mu, colour = performance)) +
   geom_point(aes(x = reorder(problem, mu), y = mu, colour = performance)) +
@@ -152,28 +169,4 @@ p <- mean_sd_outputs %>%
         legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/mean-and-sd-resamples.pdf", plot = p, units = "in", height = 14, width = 10)
-
-#------------- Final list of problems --------------
-
-# Find out for which problems mean and SD significantly outperformed chance
-
-benchmark_keepers <- mean_sd_outputs %>%
-  group_by(problem) %>%
-  summarise(mu = mean(accuracy, na.rm = TRUE),
-            sigma = sd(accuracy, na.rm = TRUE)) %>%
-  ungroup() %>%
-  left_join(num_classes, by = c("problem" = "problem")) %>%
-  mutate(p_value_false = pnorm(chance, 
-                               mean = mu,
-                               sd = sigma,
-                               lower.tail = FALSE),
-         p_value_true = pnorm(chance, 
-                              mean = mu,
-                              sd = sigma,
-                              lower.tail = TRUE)) %>%
-  mutate(p.value = ifelse(chance < mu, p_value_true, p_value_false)) %>%
-  dplyr::select(problem, p.value) %>%
-  mutate(category = ifelse(p.value <= 0.05, "Significant", "Non-significant"))
-
-save(benchmark_keepers, file = "data/benchmark_keepers.Rda")
+ggsave("output/mean-and-sd-resamples.pdf", plot = p, units = "in", height = 16, width = 11)
