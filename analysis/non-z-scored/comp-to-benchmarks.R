@@ -20,7 +20,7 @@ benchmarks <- pull_benchmark_results() %>%
 
 # Find best per problem
 
-benchmarks_avg <- benchmarks%>%
+benchmarks_avg <- benchmarks %>%
   group_by(problem, method) %>%
   summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%

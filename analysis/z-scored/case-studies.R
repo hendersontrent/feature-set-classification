@@ -18,31 +18,36 @@ outputs_z <- outputs_z %>%
     method == "tsfel" ~ "TSFEL",
     method == "kats"  ~ "Kats",
     TRUE              ~ method)) %>%
-  filter(problem %in% c("Plane", "PhalangesOutlinesCorrect", "FreezerSmallTrain")) # Case study problems of interest
+  filter(problem %in% c("EthanolLevel", "CricketY", "ChlorineConcentration", "ArrowHead")) # Case study problems of interest
 
 # Load raw time series
 
 load("data/TimeSeriesData.Rda")
 
-plane <- TimeSeriesData %>%
-  filter(problem == "Plane")
+EthanolLevel <- TimeSeriesData %>%
+  filter(problem == "EthanolLevel")
 
-phalanges <- TimeSeriesData %>%
-  filter(problem == "PhalangesOutlinesCorrect")
+CricketY <- TimeSeriesData %>%
+  filter(problem == "CricketY")
 
-freezer <- TimeSeriesData %>%
-  filter(problem == "FreezerSmallTrain")
+ChlorineConcentration <- TimeSeriesData %>%
+  filter(problem == "ChlorineConcentration")
+
+ArrowHead <- TimeSeriesData %>%
+  filter(problem == "ArrowHead")
 
 rm(TimeSeriesData)
 
 # Load feature calculations
 
-load("data/feature-calcs/z-scored/Plane.Rda")
-plane_feats <- outs_z
-load("data/feature-calcs/z-scored/PhalangesOutlinesCorrect.Rda")
-phalanges_feats <- outs_z
-load("data/feature-calcs/z-scored/FreezerSmallTrain.Rda")
-freezer_feats <- outs_z
+load("data/feature-calcs/z-scored/EthanolLevel.Rda")
+EthanolLevel_feats <- outs_z
+load("data/feature-calcs/z-scored/CricketY.Rda")
+CricketY_feats <- outs_z
+load("data/feature-calcs/z-scored/ChlorineConcentration.Rda")
+ChlorineConcentration_feats <- outs_z
+load("data/feature-calcs/z-scored/ArrowHead.Rda")
+ArrowHead_feats <- outs_z
 rm(outs_z)
 
 # Calculate overall mean performance for each problem and set
@@ -135,7 +140,7 @@ plot_all_ts <- function(data){
   p <- p %>%
     ggplot(aes(x = timepoint, y = values)) +
     geom_line(aes(group = id, colour = set_split), size = 0.6, alpha = 0.8) +
-    geom_line(data = mu, aes(x = timepoint, y = mu), size = 1, colour = "#b41e51") +
+    geom_line(data = mu, aes(x = timepoint, y = mu), size = 1, colour = mypal[1]) +
     labs(title = paste0("Time series plots for each class for ", unique(data$problem)),
          subtitle = "Mean is represented by thick red line.",
          x = "Time",
@@ -150,49 +155,111 @@ plot_all_ts <- function(data){
   return(p)
 }
 
-#------------------ Case study I: Plane ----------------
+#------------------ Case study I: EthanolLevel ----------------
 
 # Draw plot
 
-plot_samples(data = plane, n = 2, seed = 123)
+plot_samples(data = EthanolLevel, n = 2, seed = 123)
 
 # Identify top features
 
-plane_top <- compute_top_features2(plane_feats, 
-                                   id_var = "id", 
-                                   group_var = "group",
-                                   num_features = 40, 
-                                   method = "z-score",
-                                   test_method = "svmLinear",
-                                   use_balanced_accuracy = TRUE,
-                                   use_k_fold = TRUE,
-                                   num_folds = 10,
-                                   use_empirical_null =  TRUE,
-                                   null_testing_method = "ModelFreeShuffles",
-                                   p_value_method = "gaussian",
-                                   num_permutations = 1000,
-                                   seed = 123)
+EthanolLevel_top <- compute_top_features2(EthanolLevel_feats, 
+                                          id_var = "id", 
+                                          group_var = "group",
+                                          num_features = 40, 
+                                          method = "z-score",
+                                          test_method = "svmLinear",
+                                          use_balanced_accuracy = TRUE,
+                                          use_k_fold = TRUE,
+                                          num_folds = 10,
+                                          use_empirical_null =  TRUE,
+                                          null_testing_method = "ModelFreeShuffles",
+                                          p_value_method = "gaussian",
+                                          num_permutations = 1000,
+                                          seed = 123)
 
-save(plane_top, file = "data/plane_top.Rda")
+save(EthanolLevel_top, file = "data/EthanolLevel_top.Rda")
 
 # Draw plots like in the catch22 paper
 
-plane_plot <- plot_all_ts(data = plane)
-print(plane_plot)
-ggsave("output/plane_sample.pdf", plot = plane_plot, units = "in", height = 12, width = 8)
+EthanolLevel_plot <- plot_all_ts(data = EthanolLevel)
+print(EthanolLevel_plot)
+ggsave("output/EthanolLevel_sample.pdf", plot = EthanolLevel_plot, units = "in", height = 12, width = 10)
 
-#------------------ Case study II: PhalangesOutlinesCorrect ------------------
+#------------------ Case study II: CricketY ------------------
 
 # Draw plot
 
-plot_samples(data = phalanges, n = 3, seed = 123)
+plot_samples(data = CricketY, n = 3, seed = 123)
 
 # Identify top features
 
-phalanges_top <- compute_top_features2(phalanges_feats, 
+CricketY_top <- compute_top_features2(CricketY_feats, 
+                                      id_var = "id", 
+                                      group_var = "group",
+                                      num_features = 40,
+                                      method = "z-score",
+                                      test_method = "svmLinear",
+                                      use_balanced_accuracy = TRUE,
+                                      use_k_fold = TRUE,
+                                      num_folds = 10,
+                                      use_empirical_null =  TRUE,
+                                      null_testing_method = "ModelFreeShuffles",
+                                      p_value_method = "gaussian",
+                                      num_permutations = 1000,
+                                      seed = 123)
+
+save(CricketY_top, file = "data/CricketY_top.Rda")
+
+# Draw plots like in the catch22 paper
+
+CricketY_plot <- plot_all_ts(data = CricketY)
+print(CricketY_plot)
+ggsave("output/CricketY_sample.pdf", plot = CricketY_plot, units = "in", height = 12, width = 10)
+
+#------------------ Case study III: ChlorineConcentration -----------------
+
+# Draw plot
+
+plot_samples(data = ChlorineConcentration, n = 2, seed = 123)
+
+# Identify top features
+
+ChlorineConcentration_top <- compute_top_features2(ChlorineConcentration_feats, 
+                                                   id_var = "id", 
+                                                   group_var = "group",
+                                                   num_features = 40, 
+                                                   method = "z-score",
+                                                   test_method = "svmLinear",
+                                                   use_balanced_accuracy = TRUE,
+                                                   use_k_fold = TRUE,
+                                                   num_folds = 10,
+                                                   use_empirical_null =  TRUE,
+                                                   null_testing_method = "ModelFreeShuffles",
+                                                   p_value_method = "gaussian",
+                                                   num_permutations = 1000,
+                                                   seed = 123)
+
+save(ChlorineConcentration_top, file = "data/ChlorineConcentration_top.Rda")
+
+# Draw plots like in the catch22 paper
+
+ChlorineConcentration_plot <- plot_all_ts(data = ChlorineConcentration)
+print(ChlorineConcentration_plot)
+ggsave("output/ChlorineConcentration_sample.pdf", plot = ChlorineConcentration_plot, units = "in", height = 12, width = 10)
+
+#------------------ Case study IV: ArrowHead -----------------
+
+# Draw plot
+
+plot_samples(data = ArrowHead, n = 2, seed = 123)
+
+# Identify top features
+
+ArrowHead_top <- compute_top_features2(ArrowHead_feats, 
                                        id_var = "id", 
                                        group_var = "group",
-                                       num_features = 10, # The others are 40 but everything past 10 here is 50% accuracy and clouds correlation plot
+                                       num_features = 40, 
                                        method = "z-score",
                                        test_method = "svmLinear",
                                        use_balanced_accuracy = TRUE,
@@ -204,41 +271,10 @@ phalanges_top <- compute_top_features2(phalanges_feats,
                                        num_permutations = 1000,
                                        seed = 123)
 
-save(phalanges_top, file = "data/phalanges_top.Rda")
+save(ArrowHead_top, file = "data/ArrowHead_top.Rda")
 
 # Draw plots like in the catch22 paper
 
-phalanges_plot <- plot_all_ts(data = phalanges)
-print(phalanges_plot)
-ggsave("output/phalanges_sample.pdf", plot = phalanges_plot)
-
-#------------------ Case study III: FreezerSmallTrain -----------------
-
-# Draw plot
-
-plot_samples(data = freezer, n = 2, seed = 123)
-
-# Identify top features
-
-freezer_top <- compute_top_features2(freezer_feats, 
-                                     id_var = "id", 
-                                     group_var = "group",
-                                     num_features = 40, 
-                                     method = "z-score",
-                                     test_method = "svmLinear",
-                                     use_balanced_accuracy = TRUE,
-                                     use_k_fold = TRUE,
-                                     num_folds = 10,
-                                     use_empirical_null =  TRUE,
-                                     null_testing_method = "ModelFreeShuffles",
-                                     p_value_method = "gaussian",
-                                     num_permutations = 1000,
-                                     seed = 123)
-
-save(freezer_top, file = "data/freezer_top.Rda")
-
-# Draw plots like in the catch22 paper
-
-freezer_plot <- plot_all_ts(data = freezer)
-print(freezer_plot)
-ggsave("output/freezer_sample.pdf", plot = freezer_plot, units = "in", height = 12, width = 8)
+ArrowHead_plot <- plot_all_ts(data = ArrowHead)
+print(ArrowHead_plot)
+ggsave("output/ArrowHead_sample.pdf", plot = ArrowHead_plot, units = "in", height = 12, width = 10)
