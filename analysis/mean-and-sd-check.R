@@ -142,8 +142,8 @@ p <- mean_sd_outputs %>%
   mutate(accuracy = accuracy * 100) %>%
   group_by(problem) %>%
   summarise(mu = mean(accuracy, na.rm = TRUE),
-            lower = mean(accuracy, na.rm = TRUE) - 1.96 * sd(accuracy, na.rm = TRUE),
-            upper = mean(accuracy, na.rm = TRUE) + 1.96 * sd(accuracy, na.rm = TRUE)) %>%
+            lower = mean(accuracy, na.rm = TRUE) - 1 * sd(accuracy, na.rm = TRUE),
+            upper = mean(accuracy, na.rm = TRUE) + 1 * sd(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   left_join(num_classes, by = c("problem" = "problem")) %>%
   left_join(benchmark_keepers, by = c("problem" = "problem")) %>%
