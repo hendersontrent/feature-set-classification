@@ -13,10 +13,19 @@
 # Author: Trent Henderson, 5 July 2022
 #-------------------------------------
 
+# Get problems where mean and variance did not outperform chance
+
+load("data/benchmark_keepers.Rda")
+
+benchmark_keepers <- benchmark_keepers %>%
+  filter(category == "Non-significant") %>%
+  pull(problem)
+
 # Grab benchmark results
 
 benchmarks <- pull_benchmark_results() %>%
-  dplyr::select(c(problem, method, accuracy))
+  dplyr::select(c(problem, method, accuracy)) %>%
+  filter(problem %in% benchmark_keepers)
 
 # Find best per problem
 
@@ -112,9 +121,10 @@ outputs_filt <- bind_rows(outputs_filt, outputs_filt_aggregate) %>%
   dplyr::select(-c(keeper)) %>%
   mutate(catcher = ifelse(problem == "Trace" & method == "All features", TRUE, FALSE)) %>% # There is a tie, so reward {feasts} instead of 'All features'
   filter(!catcher) %>%
-  dplyr::select(-c(catcher))
+  dplyr::select(-c(catcher)) %>%
+  filter(problem %in% benchmark_keepers)
 
-rm(outputs, outputs_aggregate, main_models, main_models_aggregate, outputs_filt_aggregate)
+rm(outputs, outputs_aggregate, main_models, main_models_aggregate, outputs_filt_aggregate, benchmark_keepers)
 
 # Filter benchmarks to just problems in calculated sets
 

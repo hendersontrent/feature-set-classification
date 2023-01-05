@@ -122,8 +122,8 @@ p <- z_scores_mat %>%
 
 label_data <- data.frame(x = rep(0.5, times = 8),
                          y = c(86, 55.5, 39.5, 31.5, 25.5, 19, 7.5, -2),
-                         mylab = c("i\n(tsfresh zone)", "ii\n(Similar performance)", "iii\n(catch22 does poorly)", "iv\n(Kats does poorly)", 
-                                   "v\n(feasts does poorly)", "vi\n(Niche phase-aligned)", "vii\n(No clear pattern)", "viii\n(catch22 zone)"))
+                         mylab = c("i\n(tsfresh does well)", "ii\n(Similar performance)", "iii\n(catch22 does poorly)", "iv\n(Kats does poorly)", 
+                                   "v\n(feasts does poorly)", "vi\n(Niche phase-aligned)", "vii\n(No clear pattern)", "viii\n(catch22 does well)"))
 
 ann <- ggplot(data = label_data) +
   geom_text(aes(x = x, y = y, label = mylab), fontface = "bold", color = "black") +
