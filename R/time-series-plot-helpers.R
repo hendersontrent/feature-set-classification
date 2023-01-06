@@ -57,10 +57,11 @@ plot_samples <- function(data, n = 2, seed = 123){
 
 #' Draw all time series faceted by class with a mean line
 #' @param data the dataframe containing time series data
+#' @param colour_by_split Boolean whether to colour each line by its Train/Test allocation. Defaults to \code{TRUE}
 #' @author Trent Henderson
 #'
 
-plot_all_ts <- function(data){
+plot_all_ts <- function(data, colour_by_split = TRUE){
   
   # Calculate mean
   
@@ -77,8 +78,17 @@ plot_all_ts <- function(data){
            target = as.factor(target))
   
   p <- p %>%
-    ggplot(aes(x = timepoint, y = values)) +
-    geom_line(aes(group = id, colour = set_split), size = 0.6, alpha = 0.8) +
+    ggplot(aes(x = timepoint, y = values))
+  
+  if(colour_by_split){
+    p <- p +
+      geom_line(aes(group = id, colour = set_split), size = 0.6, alpha = 0.8)
+  } else{
+    p <- p +
+      geom_line(aes(group = id), colour = "grey50", size = 0.6, alpha = 0.8)
+  }
+  
+  p <- p +
     geom_line(data = mu, aes(x = timepoint, y = mu), size = 1, colour = mypal[1]) +
     labs(title = paste0("Time series plots for each class for ", unique(data$problem)),
          subtitle = "Mean is represented by thick red line.",
@@ -89,7 +99,7 @@ plot_all_ts <- function(data){
     theme(legend.position = "bottom",
           strip.background = element_blank(),
           strip.text = element_text(face = "bold")) +
-    facet_wrap(~target, ncol = 1, nrow = length(unique(p$target)))
+    facet_wrap(~target, ncol = 1, nrow = length(unique(mu$target)))
   
   return(p)
 }
