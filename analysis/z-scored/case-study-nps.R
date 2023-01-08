@@ -173,3 +173,22 @@ c22_good_tops <- c22_good_probs %>%
   purrr::map_dfr(~ iterate_top_features(theprob = .x))
 
 save(c22_good_tops, file = "data/case-studies/c22_good_tops.Rda")
+
+# Larger "Plane" list
+
+load("data/feature-calcs/z-scored/Plane.Rda")
+
+c22_plane_top <- compute_top_features2(outs_z, 
+                                       id_var = "id", 
+                                       group_var = "group",
+                                       num_features = 200, 
+                                       method = "z-score",
+                                       test_method = "svmLinear",
+                                       use_balanced_accuracy = TRUE,
+                                       use_k_fold = TRUE,
+                                       num_folds = 10,
+                                       use_empirical_null =  TRUE,
+                                       null_testing_method = "ModelFreeShuffles",
+                                       p_value_method = "gaussian",
+                                       num_permutations = 1000,
+                                       seed = 123)
