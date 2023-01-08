@@ -33,6 +33,7 @@ if(!dir.exists('output/non-z-scored')) dir.create('output/non-z-scored')
 if(!dir.exists('data')) dir.create('data')
 if(!dir.exists('data/feature-calcs')) dir.create('data/feature-calcs')
 if(!dir.exists('data/feature-calcs/z-scored')) dir.create('data/feature-calcs/z-scored')
+if(!dir.exists('data/case-studies')) dir.create('data/case-studies')
 if(!dir.exists('R')) dir.create('R')
 if(!dir.exists('scribble')) dir.create('scribble')
 

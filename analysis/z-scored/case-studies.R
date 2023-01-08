@@ -80,7 +80,7 @@ EthanolLevel_top <- compute_top_features2(EthanolLevel_feats,
                                           num_permutations = 1000,
                                           seed = 123)
 
-save(EthanolLevel_top, file = "data/EthanolLevel_top.Rda")
+save(EthanolLevel_top, file = "data/case-studies/EthanolLevel_top.Rda")
 
 # Draw plots like in the catch22 paper
 
@@ -111,7 +111,7 @@ CricketY_top <- compute_top_features2(CricketY_feats,
                                       num_permutations = 1000,
                                       seed = 123)
 
-save(CricketY_top, file = "data/CricketY_top.Rda")
+save(CricketY_top, file = "data/case-studies/CricketY_top.Rda")
 
 # Draw plots like in the catch22 paper
 
@@ -142,7 +142,7 @@ ChlorineConcentration_top <- compute_top_features2(ChlorineConcentration_feats,
                                                    num_permutations = 1000,
                                                    seed = 123)
 
-save(ChlorineConcentration_top, file = "data/ChlorineConcentration_top.Rda")
+save(ChlorineConcentration_top, file = "data/case-studies/ChlorineConcentration_top.Rda")
 
 # Draw plots like in the catch22 paper
 
@@ -173,7 +173,7 @@ ArrowHead_top <- compute_top_features2(ArrowHead_feats,
                                        num_permutations = 1000,
                                        seed = 123)
 
-save(ArrowHead_top, file = "data/ArrowHead_top.Rda")
+save(ArrowHead_top, file = "data/case-studies/ArrowHead_top.Rda")
 
 # Draw plots like in the catch22 paper
 
