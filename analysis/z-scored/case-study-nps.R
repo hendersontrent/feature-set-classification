@@ -18,7 +18,7 @@ load("data/TimeSeriesData.Rda")
 
 load("data/outputs_z.Rda")
 
-outputs_z <- outputs_z %>%
+outputs_z_agg <- outputs_z %>%
   mutate(method = case_when(
     method == "tsfel" ~ "TSFEL",
     method == "kats"  ~ "Kats",
