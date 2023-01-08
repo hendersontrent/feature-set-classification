@@ -14,6 +14,19 @@
 
 load("data/TimeSeriesData.Rda")
 
+# Load classification results
+
+load("data/outputs_z.Rda")
+
+outputs_z <- outputs_z %>%
+  mutate(method = case_when(
+    method == "tsfel" ~ "TSFEL",
+    method == "kats"  ~ "Kats",
+    TRUE              ~ method)) %>%
+  group_by(problem, method) %>%
+  summarise(avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  ungroup()
+
 # Define helper functions
 
 #' Function to iterate and return top feature results
