@@ -36,7 +36,6 @@ if(!dir.exists('data/feature-calcs')) dir.create('data/feature-calcs')
 if(!dir.exists('data/feature-calcs/z-scored')) dir.create('data/feature-calcs/z-scored')
 if(!dir.exists('data/case-studies')) dir.create('data/case-studies')
 if(!dir.exists('R')) dir.create('R')
-if(!dir.exists('scribble')) dir.create('scribble')
 
 # Re-usable "not in" operator
 
