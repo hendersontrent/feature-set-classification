@@ -23,9 +23,11 @@ init_theft("~/opt/anaconda3/bin/python")
 #------------- Feature extraction --------------
 
 #' Function to map over datasets to avoid massive dataframe processing times / crashes
-#' @param data the dataset containing all raw time series
-#' @param theproblem string specifying the problem to calculate features for
-#' @returns an object of class dataframe
+#' 
+#' @importFrom purrr map_dfr
+#' @param data \code{data.frame} containing raw time series
+#' @param theproblem \code{string} specifying the problem to calculate features for
+#' @returns \code{data.frame} of feature results
 #' @author Trent Henderson
 #' 
 
@@ -33,27 +35,35 @@ extract_features_by_problem_z <- function(data, theproblem){
   
   message(paste0("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem))))
   
-  # Filter to problem of interest and apply z-score to values
+  # Filter to problem of interest
   
   tmp <- data %>%
     filter(problem == theproblem) %>%
     group_by(id) %>%
     mutate(values = (values - mean(values, na.rm = TRUE)) / sd(values, na.rm = TRUE)) %>%
     ungroup()
-    
-    # Calculate features
-    
-    outs_z <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
-                                 values_var = "values", group_var = "target", 
-                                 feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL", "Kats"), 
-                                 tsfresh_cleanup = FALSE, seed = 123)
   
-  save(outs_z, file = paste0("data/feature-calcs/z-scored/", theproblem, ".Rda"))
+  # Calculate features
+  
+  outs <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
+                             values_var = "values", group_var = "target", 
+                             feature_set = c("catch22", "feasts", "tsfeatures", "Kats", "tsfresh", "TSFEL"), 
+                             catch24 = TRUE, seed = 123)[[1]]
+  
+  # Catch cases where appended NAs cause errors (i.e., different time series have different lengths)
+  # We do this by mapping over IDs to a modified feature calculation function that drops NAs by ID
+  
+  if(length(unique(tmp$id)) != length(unique(outs$id))){
+    outs <- unique(tmp$id) %>%
+      purrr::map_dfr(~ calculate_features2(tmp, id_var = "id", time_var = "timepoint", 
+                                           values_var = "values", group_var = "target", 
+                                           catch24 = TRUE, seed = 123, the_id = .x))
+  }
+  
+  save(outs, file = paste0("data/feature-calcs/z-scored/", theproblem, ".Rda"))
 }
 
 # Run the function
 
-extract_features_by_problem_z_safe <- purrr::possibly(extract_features_by_problem_z, otherwise = NULL)
-
-unique(TimeSeriesData$problem) %>%
-  purrr::map(~ extract_features_by_problem_z_safe(data = TimeSeriesData, theproblem = .x))
+unique(TimeSeriesData$problem)[!unique(TimeSeriesData$problem) %in% c("AllGestureWiimoteX", "AllGestureWiimoteY", "AllGestureWiimoteZ", "PLAID")] %>%
+  purrr::map(~ extract_features_by_problem_z(data = TimeSeriesData, theproblem = .x))
