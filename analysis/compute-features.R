@@ -7,9 +7,9 @@
 # to have been run first
 #-----------------------------------------
 
-#------------------------------------
-# Author: Trent Henderson, 5 May 2022
-#------------------------------------
+#---------------------------------------
+# Author: Trent Henderson, 13 April 2023
+#---------------------------------------
 
 # Load data
 
@@ -51,7 +51,8 @@ extract_features_by_problem <- function(data, theproblem){
     outs <- unique(tmp$id) %>%
       purrr::map_dfr(~ calculate_features2(tmp, id_var = "id", time_var = "timepoint", 
                                            values_var = "values", group_var = "target", 
-                                           catch24 = TRUE, seed = 123, the_id = .x))
+                                           feature_set = c("catch22", "feasts", "tsfeatures", "Kats", "tsfresh", "TSFEL"), 
+                                           catch24 = TRUE, seed = 123, the_id = .x))[[1]]
   }
   
   save(outs, file = paste0("data/feature-calcs/", theproblem, ".Rda"))
@@ -59,5 +60,5 @@ extract_features_by_problem <- function(data, theproblem){
 
 # Run the function
 
-unique(TimeSeriesData$problem) %>%
+unique(TimeSeriesData$problem)[!unique(TimeSeriesData$problem) %in% c("AllGestureWiimoteX", "AllGestureWiimoteY", "AllGestureWiimoteZ", "PLAID")] %>%
   purrr::map(~ extract_features_by_problem(data = TimeSeriesData, theproblem = .x))

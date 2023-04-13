@@ -18,11 +18,6 @@ source("analysis/prepare-time-series-data.R")
 
 source("analysis/summarise-problems.R")
 
-#---------------- Problem scaling identification -----
-
-source("analysis/check-z-score.R")
-source("analysis/mean-and-sd-check.R")
-
 #---------------- Feature calculation ----------------
 
 source("analysis/compute-features.R")

@@ -3,16 +3,24 @@
 #' @param data \code{data.frame} containing time-series features
 #' @param problem_name \code{string} denoting the problem to analyse
 #' @param n_resamples \code{integer} denoting the number of resamples to calculate. Defaults to \code{30}
+#' @param feature_set \code{character} denoting the feature set to calculate specifically for. Defaults to \code{NULL} for no filtering
 #' @return \code{data.frame} of classification performance
 #' @author Trent Henderson
 #' 
 
-evaluate_performance <- function(data, problem_name, n_resamples = 30){
+evaluate_performance <- function(data, problem_name, n_resamples = 30, feature_set = NULL){
   
   message(paste0("Doing: ", problem_name, "\n"))
   
   tmp <- data %>%
-    filter(problem == problem_name) %>%
+    filter(problem == problem_name)
+  
+  if(!is.null(feature_set)){
+    tmp <- tmp %>%
+      filter(method == feature_set)
+  }
+  
+  tmp <- tmp %>%
     mutate(group = as.factor(as.character(group))) %>%
     dplyr::select(c(id, group, set_split, names, values)) %>%
     pivot_wider(id_cols = c(id, group, set_split), names_from = "names", values_from = "values") %>%
@@ -78,6 +86,11 @@ evaluate_performance <- function(data, problem_name, n_resamples = 30){
   outs <- 1:n_resamples %>%
     purrr::map_dfr(~ fit_models(res_data, .x)) %>%
     mutate(problem = problem_name)
+  
+  if(!is.null(feature_set)){
+    outs <- outs %>%
+      mutate(method == feature_set)
+  }
   
   return(outs)
 }

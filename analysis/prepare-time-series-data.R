@@ -1,9 +1,8 @@
 #------------------------------------------
 # This script prepares the time series data
 #
-# NOTE: This script requires setup.R and
-# R/tidy_arff_files.R to have been run 
-# first
+# NOTE: This script requires setup.R to have 
+# been run first
 #-----------------------------------------
 
 #-------------------------------------
