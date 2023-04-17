@@ -39,15 +39,15 @@ extract_features_by_problem <- function(data, theproblem){
   
   # Calculate features
   
-  outs <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
+  outs <- try(calculate_features(tmp, id_var = "id", time_var = "timepoint", 
                              values_var = "values", group_var = "target", 
                              feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL"), 
-                             catch24 = TRUE, seed = 123)[[1]]
+                             catch24 = TRUE, seed = 123)[[1]])
   
   # Catch cases where appended NAs cause errors (i.e., different time series have different lengths)
   # We do this by mapping over IDs to a modified feature calculation function that drops NAs by ID
   
-  if(length(unique(tmp$id)) != length(unique(outs$id))){
+  if("try-error" %in% class(outs) || (length(unique(tmp$id)) != length(unique(outs$id)))){
     outs <- unique(tmp$id) %>%
       purrr::map_dfr(~ calculate_features2(tmp, id_var = "id", time_var = "timepoint", 
                                            values_var = "values", group_var = "target", 
