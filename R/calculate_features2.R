@@ -38,7 +38,7 @@ calc_feasts_2 <- function(data){
   
   if("group" %in% colnames(data)){
     tsData <- tsibble::as_tsibble(data, key = c(.data$id, .data$group), index = .data$timepoint) %>%
-      tidyr::drop_na() %>%
+      tidyr::drop_na()
     
     outData <- tsData %>%
       fabletools::features(.data$values, fabletools::feature_set(pkgs = "feasts"))  %>%
@@ -46,7 +46,7 @@ calc_feasts_2 <- function(data){
       dplyr::mutate(method = "feasts")
   } else{
     tsData <- tsibble::as_tsibble(data, key = c(.data$id), index = .data$timepoint) %>%
-      tidyr::drop_na() %>%
+      tidyr::drop_na()
     
     outData <- tsData %>%
       fabletools::features(.data$values, fabletools::feature_set(pkgs = "feasts"))  %>%
@@ -414,7 +414,12 @@ calculate_features2 <- function(data, id_var = "id", time_var = "timepoint", val
   if("tsfeatures" %in% feature_set){
     
     message("Running computations for tsfeatures..")
-    tmp_tsfeatures <- calc_tsfeatures_2(data = data_re)
+    
+    if(max(data_re$timepoint) < 50){
+      message("Time series is too short for tsfeatures. Removing from calculations.")
+    } else{
+      tmp_tsfeatures <- calc_tsfeatures_2(data = data_re)
+    }
   }
   
   if("tsfresh" %in% feature_set){
