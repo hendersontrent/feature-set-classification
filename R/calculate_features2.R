@@ -370,7 +370,7 @@ calculate_features2 <- function(data, id_var = "id", time_var = "timepoint", val
   
   quality_check <- data_re %>%
     dplyr::group_by(.data$id) %>%
-    dplyr::summarise(good_or_not = check_vector_quality(.data$values)) %>%
+    dplyr::summarise(good_or_not = check_vector_quality2(.data$values)) %>%
     dplyr::ungroup()
   
   good_ids <- quality_check %>%

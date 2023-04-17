@@ -52,7 +52,7 @@ extract_features_by_problem <- function(data, theproblem){
       purrr::map_dfr(~ calculate_features2(tmp, id_var = "id", time_var = "timepoint", 
                                            values_var = "values", group_var = "target", 
                                            feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL"), 
-                                           catch24 = TRUE, seed = 123, the_id = .x))[[1]]
+                                           catch24 = TRUE, seed = 123, the_id = .x)[[1]])
   }
   
   save(outs, file = paste0("data/feature-calcs/", theproblem, ".Rda"))
