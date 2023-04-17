@@ -18,7 +18,7 @@ load("data/TimeSeriesData.Rda")
 
 # Fix Python environment to where the Python libraries are installed on my machine
 
-init_theft("~/opt/anaconda3/bin/python")
+reticulate::use_virtualenv("/Users/trenthenderson/Documents/Git/feature-set-classification/venv")
 
 #------------- Feature extraction --------------
 
@@ -47,7 +47,7 @@ extract_features_by_problem_z <- function(data, theproblem){
   
   outs <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
                              values_var = "values", group_var = "target", 
-                             feature_set = c("catch22", "feasts", "tsfeatures", "Kats", "tsfresh", "TSFEL"), 
+                             feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL"), 
                              catch24 = TRUE, seed = 123)[[1]]
   
   # Catch cases where appended NAs cause errors (i.e., different time series have different lengths)
@@ -56,9 +56,9 @@ extract_features_by_problem_z <- function(data, theproblem){
   if(length(unique(tmp$id)) != length(unique(outs$id))){
     outs <- unique(tmp$id) %>%
       purrr::map_dfr(~ calculate_features2(tmp, id_var = "id", time_var = "timepoint", 
-                                          values_var = "values", group_var = "target", 
-                                          feature_set = c("catch22", "feasts", "tsfeatures", "Kats", "tsfresh", "TSFEL"), 
-                                          catch24 = TRUE, seed = 123, the_id = .x))[[1]]
+                                           values_var = "values", group_var = "target", 
+                                           feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL"), 
+                                           catch24 = TRUE, seed = 123, the_id = .x)[[1]])
   }
   
   save(outs, file = paste0("data/feature-calcs/z-scored/", theproblem, ".Rda"))
