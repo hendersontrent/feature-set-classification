@@ -4,7 +4,7 @@
 # Pairwise correlation plot
 #--------------------------
 
-draw_top_feature_plot <- function(data, cor_method, clust_method, num_features){
+draw_top_feature_plot2 <- function(data, cor_method, clust_method, num_features){
   
   # Wrangle dataframe
   
@@ -52,10 +52,10 @@ draw_top_feature_plot <- function(data, cor_method, clust_method, num_features){
 # Violin plots
 #-------------
 
-plot_feature_discrimination <- function(data, id_var = "id", group_var = "group",
-                                        normalise = FALSE,
-                                        method = c("z-score", "Sigmoid", "RobustSigmoid", "MinMax"),
-                                        rank_data){
+plot_feature_discrimination2 <- function(data, id_var = "id", group_var = "group",
+                                         normalise = FALSE,
+                                         method = c("z-score", "Sigmoid", "RobustSigmoid", "MinMax"),
+                                         rank_data){
   
   #------------- Normalise data -------------------
   
@@ -522,21 +522,21 @@ compute_top_features2 <- function(data, id_var = "id", group_var = "group",
   # Feature x feature plot
   #-----------------------
   
-  FeatureFeatureCorrelationPlot <- try(draw_top_feature_plot(data = dataFiltered,
-                                                             cor_method = cor_method,
-                                                             clust_method = clust_method,
-                                                             num_features = num_features))
+  FeatureFeatureCorrelationPlot <- try(draw_top_feature_plot2(data = dataFiltered,
+                                                              cor_method = cor_method,
+                                                              clust_method = clust_method,
+                                                              num_features = num_features))
   
   #---------------
   # Violin plot
   #---------------
   
-  ViolinPlots <- plot_feature_discrimination(dataFiltered, 
-                                             id_var = "id", 
-                                             group_var = "group",
-                                             normalise = normalise_violin_plots,
-                                             method = method,
-                                             rank_data = ResultsTable)
+  ViolinPlots <- plot_feature_discrimination2(dataFiltered, 
+                                              id_var = "id", 
+                                              group_var = "group",
+                                              normalise = normalise_violin_plots,
+                                              method = method,
+                                              rank_data = ResultsTable)
   
   #---------------  Returns ---------------------
   
