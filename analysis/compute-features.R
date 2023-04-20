@@ -15,10 +15,6 @@
 
 load("data/TimeSeriesData.Rda")
 
-# Fix Python environment to where the Python libraries are installed on my machine
-
-reticulate::use_virtualenv("/Users/trenthenderson/Documents/Git/feature-set-classification/venv")
-
 #------------- Feature extraction --------------
 
 #' Function to map over datasets to avoid massive dataframe processing times / crashes

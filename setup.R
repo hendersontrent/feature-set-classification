@@ -60,6 +60,10 @@ options(dplyr.summarise.inform = FALSE)
 mypal <- c("#FF0029", "#377EB8", "#66A61E", "#984EA3", "#00D2D5", 
            "#FF7F00", "#AF8D00", "#7F80CD", "#B3E900")
 
+# Fix Python environment to where the Python libraries are installed on my machine
+
+reticulate::use_virtualenv("/Users/trenthenderson/Documents/Git/feature-set-classification/venv")
+
 # Define list of problems that previous work used
 
 keepers <- c("ACSF1", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "BME",
