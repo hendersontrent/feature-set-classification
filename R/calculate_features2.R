@@ -389,8 +389,6 @@ calculate_features2 <- function(data, id_var = "id", time_var = "timepoint", val
   
   if("tsfresh" %in% feature_set){
     
-    message("'tsfresh' requires a Python installation and the 'tsfresh' Python package to also be installed. You can specify which Python to use by running one of the following in your R console/script prior to calling calculate_features(): theft::init_theft(python_path, venv_path) where python_path is a string specifying the location of Python and venv_path is a string specifying the location of the venv where the Python libraries are installed.")
-    
     if(tsfresh_cleanup){
       cleanuper <- "Yes"
     } else{
@@ -403,14 +401,12 @@ calculate_features2 <- function(data, id_var = "id", time_var = "timepoint", val
   
   if("TSFEL" %in% feature_set){
     
-    message("'TSFEL' requires a Python installation and the 'TSFEL' Python package to also be installed. You can specify which Python to use by running one of the following in your R console/script prior to calling calculate_features(): theft::init_theft(python_path, venv_path) where python_path is a string specifying the location of Python and venv_path is a string specifying the location of the venv where the Python libraries are installed.")
     message("\nRunning computations for TSFEL...")
     tmp_tsfel <- calc_tsfel_2(data = data_re)
   }
   
   if("Kats" %in% feature_set){
     
-    message("'Kats' requires a Python installation and the 'Kats' Python package to also be installed. You can specify which Python to use by running one of the following in your R console/script prior to calling calculate_features(): theft::init_theft(python_path, venv_path) where python_path is a string specifying the location of Python and venv_path is a string specifying the location of the venv where the Python libraries are installed.")
     message("\nRunning computations for Kats...")
     tmp_kats <- calc_kats_2(data = data_re)
   }
