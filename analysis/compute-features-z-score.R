@@ -66,5 +66,5 @@ extract_features_by_problem_z <- function(data, theproblem){
 
 # Run the function
 
-unique(TimeSeriesData$problem)[!unique(TimeSeriesData$problem) %in% c("AllGestureWiimoteX", "AllGestureWiimoteY", "AllGestureWiimoteZ", "PLAID")] %>%
+keepers %>%
   purrr::map(~ extract_features_by_problem_z(data = TimeSeriesData, theproblem = .x))
