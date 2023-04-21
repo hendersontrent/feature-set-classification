@@ -16,10 +16,6 @@
 
 load("data/TimeSeriesData.Rda")
 
-# Fix Python environment to where the Python libraries are installed on my machine
-
-reticulate::use_virtualenv("/Users/trenthenderson/Documents/Git/feature-set-classification/venv")
-
 #------------- Feature extraction --------------
 
 #' Function to map over datasets to avoid massive dataframe processing times / crashes
@@ -66,5 +62,5 @@ extract_features_by_problem_z <- function(data, theproblem){
 
 # Run the function
 
-unique(TimeSeriesData$problem)[!unique(TimeSeriesData$problem) %in% c("AllGestureWiimoteX", "AllGestureWiimoteY", "AllGestureWiimoteZ", "PLAID")] %>%
+keepers %>%
   purrr::map(~ extract_features_by_problem_z(data = TimeSeriesData, theproblem = .x))
