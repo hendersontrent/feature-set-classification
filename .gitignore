@@ -50,4 +50,4 @@ data/*.arff
 data/*.txt
 data/*.Rda
 
-venv/*
+feature-sets/*
