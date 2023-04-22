@@ -3,10 +3,9 @@
 # for each set and time-series problem
 #
 # NOTE: This script requires setup.R and
-# analysis/prepare-time-series-data.R and
-# analysis/mean-and-sd-check.R to have been 
-# run first
-#-----------------------------------------
+# analysis/prepare-time-series-data.R 
+# to have been run first
+#------------------------------------------
 
 #---------------------------------------
 # Author: Trent Henderson, 13 April 2023
@@ -29,7 +28,7 @@ load("data/TimeSeriesData.Rda")
 
 extract_features_by_problem_z <- function(data, theproblem){
   
-  message(paste0("Doing problem ", match(theproblem, unique(data$problem)), "/", length(unique(data$problem))))
+  message(paste0("Doing problem ", match(theproblem, keepers), "/", length(keepers)))
   
   # Filter to problem of interest
   
