@@ -12,21 +12,11 @@
 # Author: Trent Henderson, 13 April 2023
 #---------------------------------------
 
-# Load in data and summarise to just problem, ID, and train-test set indicator as I didn't bind initially
-
-load("data/TimeSeriesData.Rda")
-
-train_test_ids <- TimeSeriesData %>%
-  dplyr::select(c(problem, id, set_split)) %>%
-  distinct()
-
-rm(TimeSeriesData) # Clean up environment as dataframe is large
-
 #---------------- Classification accuracy -----------------
 
 # Non-z-scored
 
-features <- bind_all_features(train_test_ids, z_scored = FALSE)
+load("data/feature-calcs/bound/features.Rda")
 
 outputs <- unique(features$problem) %>%
   purrr::map_dfr(~ fit_all_classifiers(features, problem_name = .x, n_resamples = 30, by_set = TRUE))
@@ -41,7 +31,7 @@ rm(features, outputs, outputs_aggregate)
 
 # z-scored
 
-features <- bind_all_features(train_test_ids, z_scored = TRUE)
+load("data/feature-calcs/bound/features_z.Rda")
 
 outputs_z <- unique(features$problem) %>%
   purrr::map_dfr(~ fit_all_classifiers(features, problem_name = .x, n_resamples = 30, by_set = TRUE))

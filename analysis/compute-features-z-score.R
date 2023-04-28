@@ -68,5 +68,25 @@ extract_features_by_problem_z <- function(data, theproblem){
 
 # Run the function
 
-keepers %>%
+final_keepers %>%
   purrr::map(~ extract_features_by_problem_z(data = TimeSeriesData, theproblem = .x))
+
+#--------------- Get final list of problems that calculated successfully -----------------
+
+features_z <- list.files("data/feature-calcs/z-scored", full.names = TRUE, pattern = "\\.Rda") %>%
+  purrr::map_dfr(~ get_feature_data(.x))
+
+# Load in data and summarise to just problem, ID, and train-test set indicator as I didn't bind initially
+
+load("data/TimeSeriesData.Rda")
+
+train_test_ids <- TimeSeriesData %>%
+  dplyr::select(c(problem, id, set_split)) %>%
+  distinct()
+
+rm(TimeSeriesData) # Clean up environment as dataframe is large
+
+features_z <- features_z %>%
+  left_join(train_test_ids, by = c("id" = "id", "problem" = "problem"))
+
+save(features_z, file = "data/feature-calcs/bound/features_z.Rda")
