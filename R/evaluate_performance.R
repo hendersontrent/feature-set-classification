@@ -87,10 +87,6 @@ evaluate_performance <- function(data, problem_name, n_resamples = 30, feature_s
     purrr::map_dfr(~ fit_models(res_data, .x)) %>%
     mutate(problem = problem_name)
   
-  if(!is.null(feature_set)){
-    outs <- outs %>%
-      mutate(method == feature_set)
-  }
-  
+  outs$method <- ifelse(!is.null(feature_set), feature_set, "All features")
   return(outs)
 }
