@@ -35,12 +35,12 @@ rm(features, outputs, outputs_aggregate)
 load("data/feature-calcs/bound/features_z.Rda")
 
 outputs_z <- good_keepers %>%
-  purrr::map_dfr(~ fit_all_classifiers(features, problem_name = .x, n_resamples = 30, by_set = TRUE))
+  purrr::map_dfr(~ fit_all_classifiers(features_z, problem_name = .x, n_resamples = 30, by_set = TRUE))
 
 save(outputs_z, file = "data/outputs_z.Rda")
 
 outputs_z_aggregate <- good_keepers %>%
-  purrr::map_dfr(~ fit_all_classifiers(features, problem_name = .x, n_resamples = 30, by_set = FALSE))
+  purrr::map_dfr(~ fit_all_classifiers(features_z, problem_name = .x, n_resamples = 30, by_set = FALSE))
 
 save(outputs_z_aggregate, file = "data/outputs_z_aggregate.Rda")
 rm(features, outputs_z, outputs_z_aggregate, good_keepers)
