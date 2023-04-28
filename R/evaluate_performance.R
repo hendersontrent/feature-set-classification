@@ -18,6 +18,11 @@ evaluate_performance <- function(data, problem_name, n_resamples = 30, feature_s
   if(!is.null(feature_set)){
     tmp <- tmp %>%
       filter(method == feature_set)
+  } else{
+    tmp <- tmp %>%
+      dplyr::mutate(feature_name = paste0(method, "_", names)) %>%
+      dplyr::select(-c(names)) %>%
+      dplyr::rename(names = feature_name)
   }
   
   tmp <- tmp %>%
