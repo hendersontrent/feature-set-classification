@@ -89,7 +89,7 @@ evaluate_performance <- function(data, problem_name, n_resamples = 30, feature_s
   
   if(!is.null(feature_set)){
     outs <- outs %>%
-      mutate(method == feature_set)
+      mutate(method = feature_set)
   }
   
   return(outs)
