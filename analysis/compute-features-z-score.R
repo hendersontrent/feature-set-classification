@@ -14,6 +14,7 @@
 # Load data
 
 load("data/TimeSeriesData.Rda")
+load("data/good_keepers.Rda")
 
 #------------- Feature extraction --------------
 
@@ -28,7 +29,7 @@ load("data/TimeSeriesData.Rda")
 
 extract_features_by_problem_z <- function(data, theproblem){
   
-  message(paste0("Doing problem ", match(theproblem, keepers), "/", length(keepers)))
+  message(paste0("Doing problem ", match(theproblem, good_keepers), "/", length(good_keepers)))
   
   # Filter to problem of interest
   
@@ -68,7 +69,7 @@ extract_features_by_problem_z <- function(data, theproblem){
 
 # Run the function
 
-final_keepers %>%
+good_keepers %>%
   purrr::map(~ extract_features_by_problem_z(data = TimeSeriesData, theproblem = .x))
 
 #--------------- Get final list of problems that calculated successfully -----------------
