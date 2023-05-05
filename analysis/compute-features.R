@@ -73,8 +73,6 @@ features <- list.files("data/feature-calcs", full.names = TRUE, pattern = "\\.Rd
 
 # Load in data and summarise to just problem, ID, and train-test set indicator as I didn't bind initially
 
-load("data/TimeSeriesData.Rda")
-
 train_test_ids <- TimeSeriesData %>%
   dplyr::select(c(problem, id, set_split)) %>%
   distinct()

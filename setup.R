@@ -22,6 +22,7 @@ library(Cairo)
 library(e1071)
 library(scatterpie)
 library(patchwork)
+library(correctR)
 
 # Create important folders if none exist
 

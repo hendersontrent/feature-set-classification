@@ -2,7 +2,7 @@
 # This script can be used to run the entire
 # project in order from start to finish to
 # fully replicate the analysis
-#-----------------------------------------
+#------------------------------------------
 
 #-------------------------------------
 # Author: Trent Henderson, 20 May 2022

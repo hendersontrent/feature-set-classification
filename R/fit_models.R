@@ -25,17 +25,26 @@ fit_models <- function(data, seed){
   train <- rescale_zscore(train, rescalers)
   test <- rescale_zscore(test, rescalers)
   
-  # Fit classifier, generate predictions, and calculate metrics
+  #--------------------------------------
+  # Fit classifier, generate predictions 
+  # and calculate metrics
+  #--------------------------------------
+  
+  # Regular accuracy and no inverse probability weighting
   
   mod <- e1071::svm(group ~ ., data = train, kernel = "linear", cost = 1, scale = FALSE, probability = TRUE)
   cm <- t(as.matrix(caret::confusionMatrix(predict(mod, newdata = test), test$group)))
   acc <- sum(diag(cm)) / sum(cm)
-  bal_acc <- sum(diag(cm)) / (sum(diag(cm)) + (sum(cm) - sum(diag(cm))))
   
-  results <- data.frame(model_type = "Main",
-                        resample = seed,
-                        accuracy = acc,
-                        balanced_accuracy = bal_acc)
+  # Balanced accuracy with inverse probability weighting
   
+  class_weights <- 1 / table(train$group)
+  mod2 <- e1071::svm(group ~ ., data = train, kernel = "linear", cost = 1, scale = FALSE, probability = TRUE, class.weights = class_weights)
+  cm2 <- t(as.matrix(caret::confusionMatrix(predict(mod2, newdata = test), test$group)))
+  bal_acc <- sum(diag(cm2) / rowSums(cm2)) / length(diag(cm2) / rowSums(cm2))
+  
+  # Make final dataframe
+  
+  results <- data.frame(resample = seed, accuracy = acc, balanced_accuracy = bal_acc)
   return(results)
 }

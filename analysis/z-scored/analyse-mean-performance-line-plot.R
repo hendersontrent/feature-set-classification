@@ -11,12 +11,6 @@
 
 load("data/outputs_z.Rda")
 
-outputs_z <- outputs_z %>%
-  mutate(method = case_when(
-    method == "tsfel" ~ "TSFEL",
-    method == "kats"  ~ "Kats",
-    TRUE              ~ method))
-
 #---------------------- Calculations ----------------------
 
 calcs <- outputs_z %>%

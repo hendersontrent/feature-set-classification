@@ -74,7 +74,7 @@ calculate_p_values2 <- function(data, combn_data, rownum, problem_data){
     outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   } else{
-    t_test <- corr_t_test(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
+    t_test <- resampled_ttest(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
     outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1)
     outs <- cbind(outs, t_test)
     return(outs)
