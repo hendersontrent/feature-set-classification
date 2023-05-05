@@ -18,12 +18,6 @@
 load("data/outputs_z.Rda")
 load("data/outputs_aggregate_z.Rda")
 
-outputs_z <- outputs_z %>%
-  mutate(method = case_when(
-    method == "tsfel" ~ "TSFEL",
-    method == "kats"  ~ "Kats",
-    TRUE              ~ method))
-
 # Calculate winners
 
 main_models <- outputs_z %>%
