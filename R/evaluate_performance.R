@@ -11,9 +11,7 @@
 evaluate_performance <- function(data, problem_name, n_resamples = 30, feature_set = NULL){
   
   message(paste0("Doing: ", problem_name, "\n"))
-  
-  tmp <- data %>%
-    filter(problem == problem_name)
+  tmp <- data
   
   if(!is.null(feature_set)){
     tmp <- tmp %>%

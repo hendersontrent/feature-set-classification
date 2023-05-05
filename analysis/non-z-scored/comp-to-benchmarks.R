@@ -193,9 +193,9 @@ find_winners <- function(outputs_data, benchmark_data){
     mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
     mutate(flag = case_when(
       is.na(p.value.adj)                                  ~ "Zero variance for one/more sets",
-      p.value.adj > .05                                   ~ "Non-significant difference",
-      p.value.adj < .05 & set1_accuracy > set2_accuracy   ~ set1,
-      p.value.adj < .05 & set1_accuracy < set2_accuracy   ~ set2))
+      p.value > .05                                   ~ "Non-significant difference",
+      p.value < .05 & set1_accuracy > set2_accuracy   ~ set1,
+      p.value < .05 & set1_accuracy < set2_accuracy   ~ set2))
 
   return(comps2)
 }
