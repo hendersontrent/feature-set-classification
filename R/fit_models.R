@@ -38,14 +38,13 @@ fit_models <- function(data, seed){
   
   # Balanced accuracy with inverse probability weighting
   
-  mod2 <- e1071::svm(group ~ ., data = train, kernel = "linear", cost = 1, scale = FALSE, probability = TRUE, class.weights = "inverse")
+  class_weights <- 1 / table(train$group)
+  mod2 <- e1071::svm(group ~ ., data = train, kernel = "linear", cost = 1, scale = FALSE, probability = TRUE, class.weights = class_weights)
   cm2 <- t(as.matrix(caret::confusionMatrix(predict(mod2, newdata = test), test$group)))
   bal_acc <- sum(diag(cm2) / rowSums(cm2)) / length(diag(cm2) / rowSums(cm2))
   
-  results <- data.frame(model_type = "Main",
-                        resample = seed,
-                        accuracy = acc,
-                        balanced_accuracy = bal_acc)
+  # Make final dataframe
   
+  results <- data.frame(resample = seed, accuracy = acc, balanced_accuracy = bal_acc)
   return(results)
 }
