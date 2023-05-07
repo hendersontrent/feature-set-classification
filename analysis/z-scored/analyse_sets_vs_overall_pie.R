@@ -16,7 +16,7 @@
 # Load classification results
 
 load("data/outputs_z.Rda")
-load("data/outputs_aggregate_z.Rda")
+load("data/outputs_z_aggregate.Rda")
 
 # Calculate winners
 
@@ -35,7 +35,7 @@ main_models <- outputs_z %>%
   dplyr::select(-c(ranker)) %>%
   rename(balanced_accuracy = balanced_accuracy_mean)
 
-main_models_aggregate <- outputs_aggregate_z %>%
+main_models_aggregate <- outputs_z_aggregate %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100,
          method = "All features") %>%
@@ -62,7 +62,7 @@ all_mains <- main_models %>%
 reduced <- outputs_z %>%
   dplyr::select(c(problem, method, balanced_accuracy))
 
-reduced2 <- outputs_aggregate_z %>%
+reduced2 <- outputs_z_aggregate %>%
   mutate(method = "All features") %>%
   dplyr::select(c(problem, method, balanced_accuracy))
 
@@ -89,7 +89,7 @@ single_accs <- outputs_z %>%
   summarise(balanced_accuracy_mean = mean(balanced_accuracy, na.rm = TRUE)) %>%
   ungroup()
 
-all_accs <- outputs_aggregate_z %>%
+all_accs <- outputs_z_aggregate %>%
   mutate(accuracy = accuracy * 100,
          balanced_accuracy = balanced_accuracy * 100) %>%
   group_by(problem) %>%
@@ -103,10 +103,10 @@ comps <- comps %>%
   inner_join(single_accs, by = c("problem" = "problem", "method" = "method")) %>%
   inner_join(all_accs, by = c("problem" = "problem")) %>%
   mutate(flag = case_when(
-         is.na(p.value.adj)                                                 ~ "Zero variance for one/more sets",
-         p.value.adj > .05                                                  ~ "Non-significant difference",
-         p.value.adj < .05 & balanced_accuracy_mean > balanced_accuracy_all ~ method,
-         TRUE                                                               ~ "All features"))
+         is.na(p.value)                                                 ~ "Zero variance for one/more sets",
+         p.value > .05                                                  ~ "Non-significant difference",
+         p.value < .05 & balanced_accuracy_mean > balanced_accuracy_all ~ method,
+         TRUE                                                           ~ "All features"))
 
 #---------------------- Set up final dataframe -------------------
 
@@ -171,7 +171,8 @@ cases <- all_mains2 %>%
 separates <- all_mains2 %>%
   rowwise %>%
   mutate(uniques = n_distinct(c_across(catch22:tsfresh))) %>%
-  ungroup() 
+  ungroup() %>%
+  mutate(my_label = ifelse(top_performer %in% c("Non-significant difference", "Zero variance for one/more sets"), NA, problem))
 
 # Rows where we just want a geom_point
 
@@ -214,6 +215,9 @@ p <- point_df %>%
   geom_linerange(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
   geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 2.5,
                    cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
+  geom_text_repel(aes(label = my_label), legend = FALSE, segment.linetype = "dashed") +
+  geom_text_repel(data = pie_df, aes(x = balanced_accuracy, y = balanced_accuracy_all, label = my_label), legend = FALSE, 
+                  segment.linetype = "dashed") +
   annotate("text", x = 75, y = 10, label = "Best single feature set better", size = 4) +
   annotate("text", x = 25, y = 90, label = "All features better", size = 4) +
   labs(x = "Balanced classification accuracy of the best individual set (%)",
@@ -233,4 +237,4 @@ p <- point_df %>%
         legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/z-scored/all_versus_sets_pie.pdf", p, units = "in", height = 9, width = 9)
+ggsave("output/z-scored/all_versus_sets_pie.pdf", p, units = "in", height = 10, width = 10)

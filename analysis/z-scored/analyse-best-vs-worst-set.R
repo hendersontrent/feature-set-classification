@@ -7,7 +7,7 @@
 # analysis/compute-features_z-score.R and
 # analysis/fit-classifiers_z-score.R to have 
 # been run first
-#-----------------------------------------
+#------------------------------------------
 
 #--------------------------------------
 # Author: Trent Henderson, 21 July 2022
@@ -110,6 +110,7 @@ p <- ns %>%
   geom_linerange(data = sig, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_linerange(data = sig, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
   geom_point(data = sig, aes(colour = top_performer), size = 3) +
+  geom_text_repel(data = sig, aes(label = problem), legend = FALSE, segment.linetype = "dashed") +
   annotate("text", x = 75, y = 10, label = "Worst feature set", size = 4) +
   annotate("text", x = 25, y = 90, label = "Best feature set", size = 4) +
   labs(x = "Balanced classification accuracy worst set (%)",
@@ -127,4 +128,4 @@ p <- ns %>%
         legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/z-scored/best_versus_worst_set.pdf", p, units = "in", height = 9, width = 9)
+ggsave("output/z-scored/best_versus_worst_set.pdf", p, units = "in", height = 12, width = 12)
