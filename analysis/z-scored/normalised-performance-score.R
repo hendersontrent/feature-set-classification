@@ -88,13 +88,13 @@ z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
 p <- z_scores_mat %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
-  geom_hline(yintercept = 66.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 45.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 34.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 31.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 24.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 18.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 3.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 98.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 89.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 64.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 43.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 7.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 4.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_hline(yintercept = 2.5, lty = "solid", colour = "black", size = 0.7) +
   labs(x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score") +
@@ -114,10 +114,9 @@ p <- z_scores_mat %>%
 
 # Side annotations
 
-label_data <- data.frame(x = rep(0.5, times = 8),
-                         y = c(86, 55.5, 39.5, 31.5, 25.5, 19, 7.5, -2),
-                         mylab = c("i\n(tsfresh does well)", "ii\n(Similar performance)", "iii\n(catch22 does poorly)", "iv\n(Kats does poorly)", 
-                                   "v\n(feasts does poorly)", "vi\n(Niche phase-aligned)", "vii\n(No clear pattern)", "viii\n(catch22 does well)"))
+label_data <- data.frame(x = rep(0.5, times = 6),
+                         y = c(-3, 2, 25, 52, 78, 97),
+                         mylab = c("i) TSFEL does well", "ii) Kats does poorly", "iii) No clear pattern", "iv) tsfresh does well", "v) No clear pattern", "vi) tsfresh does well"))
 
 ann <- ggplot(data = label_data) +
   geom_text(aes(x = x, y = y, label = mylab), fontface = "bold", color = "black") +

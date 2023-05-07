@@ -7,7 +7,7 @@
 # analysis/compute-features_z-score.R and
 # analysis/fit-classifiers_z-score.R to have 
 # been run first
-#-----------------------------------------
+#------------------------------------------
 
 #--------------------------------------
 # Author: Trent Henderson, 25 July 2022
@@ -16,12 +16,6 @@
 # Load classification results
 
 load("data/outputs_z.Rda")
-
-outputs_z <- outputs_z %>%
-  mutate(method = case_when(
-    method == "tsfel" ~ "TSFEL",
-    method == "kats"  ~ "Kats",
-    TRUE              ~ method))
 
 # Find best feature set by problem
 
@@ -118,6 +112,7 @@ p <- ns %>%
   geom_linerange(data = sig, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_linerange(data = sig, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
   geom_point(data = sig, aes(colour = top_performer), size = 3) +
+  geom_text_repel(data = sig, aes(label = problem), legend = FALSE, segment.linetype = "dashed") +
   annotate("text", x = 75, y = 10, label = "Second best feature set", size = 4) +
   annotate("text", x = 25, y = 90, label = "Best feature set", size = 4) +
   labs(x = "Balanced classification accuracy second best set (%)",
@@ -135,4 +130,4 @@ p <- ns %>%
         legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/z-scored/best_versus_second_best_set.pdf", p, units = "in", height = 9, width = 9)
+ggsave("output/z-scored/best_versus_second_best_set.pdf", p, units = "in", height = 10, width = 10)
