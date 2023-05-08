@@ -116,7 +116,7 @@ p <- z_scores_mat %>%
 
 label_data <- data.frame(x = rep(0.5, times = 6),
                          y = c(-3, 2, 25, 52, 78, 97),
-                         mylab = c("i) TSFEL does well", "ii) Kats does poorly", "iii) No clear pattern", "iv) tsfresh does well", "v) No clear pattern", "vi) tsfresh does well"))
+                         mylab = c("vi) TSFEL does well", "v) Kats does poorly", "iv) No clear pattern", "iii) tsfresh does well", "ii) No clear pattern", "i) tsfresh does well"))
 
 ann <- ggplot(data = label_data) +
   geom_text(aes(x = x, y = y, label = mylab), fontface = "bold", color = "black") +
