@@ -58,7 +58,7 @@ find_winner <- function(data, theproblem, set1name, problem_data){
   
   set1_name <- colnames(tmp2)[2]
   set2_name <- colnames(tmp2)[3]
-  t_test <- corr_t_test(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
+  t_test <- resampled_ttest(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
   
   tmp2 <- data %>%
     filter(problem == theproblem) %>%
@@ -113,17 +113,15 @@ calculate_wins <- function(data, combn_data, rownum){
     
     # Calculate winner for each problem
     
-    find_winner_safe <- purrr::possibly(find_winner, otherwise = NULL)
-    
     outs <- unique(tmp$problem) %>%
-      purrr::map_df(~ find_winner_safe(data = tmp, theproblem = .x, set1name = thesets$set1, problem_data = problem_summaries)) %>%
+      purrr::map_df(~ find_winner(data = tmp, theproblem = .x, set1name = thesets$set1, problem_data = problem_summaries)) %>%
       rename(set1 = 2,
              set2 = 3) %>%
       mutate(p.value.adj = p.adjust(p.value, method = "holm"),
              winner = case_when(
-               p.value.adj < .05 & set1 > set2 ~ thesets$set1,
-               p.value.adj < .05 & set2 > set1 ~ thesets$set2,
-               TRUE                            ~ "tie")) %>%
+               p.value < .05 & set1 > set2 ~ thesets$set1,
+               p.value < .05 & set2 > set1 ~ thesets$set2,
+               TRUE                        ~ "tie")) %>%
       group_by(winner) %>%
       summarise(counter = n()) %>%
       ungroup() %>%
@@ -187,9 +185,9 @@ p <- both %>%
        y = "Feature set (W-L)",
        fill = "Number of statistical wins") +
   scale_fill_gradient(low = "white", high = "#FF0029", na.value = "grey50",
-                      limits = c(0, 10),
-                      breaks = c(0, 2, 4, 6, 8, 10),
-                      labels = c(0, 2, 4, 6, 8, 10)) +
+                      limits = c(0, 50),
+                      breaks = seq(from = 0, to = 50, by = 10),
+                      labels = seq(from = 0, to = 50, by = 10)) +
   theme_bw() +
   theme(legend.position = "bottom",
         panel.grid = element_blank(),
