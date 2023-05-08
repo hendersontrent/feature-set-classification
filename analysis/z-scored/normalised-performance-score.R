@@ -116,7 +116,7 @@ p <- z_scores_mat %>%
 
 label_data <- data.frame(x = rep(0.5, times = 6),
                          y = c(-3, 2, 25, 52, 78, 97),
-                         mylab = c("vi) TSFEL does well", "v) Kats does poorly", "iv) No clear pattern", "iii) tsfresh does well", "ii) No clear pattern", "i) tsfresh does well"))
+                         mylab = c("vi) Strong TSFEL performance", "v) Poor Kats performance", "iv) Other", "iii) Strong tsfresh performance", "ii) Other", "i) Strong tsfresh performance"))
 
 ann <- ggplot(data = label_data) +
   geom_text(aes(x = x, y = y, label = mylab), fontface = "bold", color = "black") +
@@ -131,4 +131,4 @@ p2 <- p + ann  +
   plot_layout(widths = c(5, 1))
 
 print(p2)
-ggsave("output/z-scored/normalised-performance-score.pdf", p2, units = "in", height = 14, width = 14)
+ggsave("output/z-scored/normalised-performance-score.pdf", p2, units = "in", height = 16, width = 16)
