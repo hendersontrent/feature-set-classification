@@ -30,6 +30,9 @@ best <- outputs_z %>%
   ungroup() %>%
   filter(ranker == 1) %>%
   dplyr::select(-c(ranker)) %>%
+  mutate(flag = ifelse(problem == "Plane" & method == "TSFEL", TRUE, FALSE)) %>% # tsfeatures and TSFEL had the same values, remove duplicate
+  filter(!flag) %>%
+  dplyr::select(-c(flag)) %>%
   rename(best_method = method)
 
 # Find worst feature set by problem
@@ -42,9 +45,10 @@ worst <- outputs_z %>%
   ungroup() %>%
   group_by(problem) %>%
   mutate(ranker = dense_rank(-balanced_accuracy_mean)) %>%
+  mutate(the_max = max(ranker)) %>%
+  filter(ranker == the_max) %>% # As there is a tie
   ungroup() %>%
-  filter(ranker == 6) %>%
-  dplyr::select(-c(ranker)) %>%
+  dplyr::select(-c(ranker, the_max)) %>%
   rename(worst_method = method,
          worst_balanced_accuracy_mean = balanced_accuracy_mean,
          worst_balanced_accuracy_sd = balanced_accuracy_sd)

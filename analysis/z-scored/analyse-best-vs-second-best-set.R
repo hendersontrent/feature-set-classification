@@ -30,6 +30,9 @@ best <- outputs_z %>%
   ungroup() %>%
   filter(ranker == 1) %>%
   dplyr::select(-c(ranker)) %>%
+  mutate(flag = ifelse(problem == "Plane" & method == "TSFEL", TRUE, FALSE)) %>% # tsfeatures and TSFEL had the same values, remove duplicate
+  filter(!flag) %>%
+  dplyr::select(-c(flag)) %>%
   rename(best_method = method)
 
 # Find worst feature set by problem
@@ -43,6 +46,9 @@ best_2 <- outputs_z %>%
   group_by(problem) %>%
   mutate(ranker = dense_rank(-balanced_accuracy_mean)) %>%
   ungroup() %>%
+  mutate(flag = ifelse(problem == "Plane" & method == "tsfresh", TRUE, FALSE)) %>% # tsfeatures and TSFEL had the same values, remove duplicate
+  filter(!flag) %>%
+  dplyr::select(-c(flag)) %>%
   filter(ranker == 2) %>%
   dplyr::select(-c(ranker)) %>%
   rename(worst_method = method,
@@ -55,8 +61,7 @@ both <- best %>%
          upper_x = worst_balanced_accuracy_mean + 1 * worst_balanced_accuracy_sd,
          lower_y = best_balanced_accuracy_mean - 1 * best_balanced_accuracy_sd,
          upper_y = best_balanced_accuracy_mean + 1 * best_balanced_accuracy_sd) %>%
-  group_by(problem) %>%
-  slice(which.min(worst_balanced_accuracy_sd)) # There is 1 tie for BeetleFly so take smallest SD one for now
+  group_by(problem)
 
 #---------------------- Calculate p-values -----------------------
 
