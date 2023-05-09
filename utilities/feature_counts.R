@@ -37,4 +37,5 @@ counts <- features %>%
 # Find number of problems with train samples < counts
 
 small_problems <- problem_summaries %>%
+  filter(problem %in% counts$problem) %>%
   filter(Train < min(counts$counter))

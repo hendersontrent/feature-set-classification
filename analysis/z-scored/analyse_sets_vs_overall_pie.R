@@ -1,13 +1,13 @@
-#------------------------------------------
+#-------------------------------------------
 # This script sets out to produce a creative
 # graphic to visualise individual sets
 # against all features
 #
 # NOTE: This script requires setup.R and
 # analysis/compute-features_z-score.R and
-# analysis/fit-classifiers_z-score.R to have been 
-# run first
-#-----------------------------------------
+# analysis/fit-classifiers_z-score.R 
+# to have been run first
+#-------------------------------------------
 
 #--------------------------------------
 # Author: Trent Henderson, 29 July 2022
@@ -33,6 +33,9 @@ main_models <- outputs_z %>%
   ungroup() %>%
   filter(ranker == 1) %>%
   dplyr::select(-c(ranker)) %>%
+  mutate(flag = ifelse(problem == "Plane" & method_set == "TSFEL", TRUE, FALSE)) %>% # tsfeatures and TSFEL had the same values, remove duplicate
+  filter(!flag) %>%
+  dplyr::select(-c(flag)) %>%
   rename(balanced_accuracy = balanced_accuracy_mean)
 
 main_models_aggregate <- outputs_z_aggregate %>%
@@ -215,9 +218,9 @@ p <- point_df %>%
   geom_linerange(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
   geom_scatterpie(aes(x = balanced_accuracy, y = balanced_accuracy_all), data = pie_df, pie_scale = 2.5,
                    cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
-  geom_text_repel(aes(label = my_label), legend = FALSE, segment.linetype = "dashed") +
+  geom_text_repel(aes(label = my_label), legend = FALSE, segment.linetype = "dashed", box.padding = 1.25) +
   geom_text_repel(data = pie_df, aes(x = balanced_accuracy, y = balanced_accuracy_all, label = my_label), legend = FALSE, 
-                  segment.linetype = "dashed") +
+                  segment.linetype = "dashed", box.padding = 1.25) +
   annotate("text", x = 75, y = 10, label = "Best single feature set better", size = 4) +
   annotate("text", x = 25, y = 90, label = "All features better", size = 4) +
   labs(x = "Balanced classification accuracy of the best individual set (%)",
@@ -238,3 +241,4 @@ p <- point_df %>%
 
 print(p)
 ggsave("output/z-scored/all_versus_sets_pie.pdf", p, units = "in", height = 10, width = 10)
+
