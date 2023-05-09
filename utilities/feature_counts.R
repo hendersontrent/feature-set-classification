@@ -17,7 +17,8 @@ features <- vector(mode = "list", length = length(files))
 
 for(i in files){
   load(i)
-  outs$problem <- 
+  problem <- gsub("data/feature-calcs/z-scored/", "\\1", i)
+  outs$problem <- gsub(".Rda", "\\1", problem)
   features[[match(i, files)]] <- outs
 }
 
