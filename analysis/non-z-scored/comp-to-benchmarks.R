@@ -86,9 +86,11 @@ main_models <- bind_rows(outputs, outputs_aggregate) %>%
   filter(ranker == 1) %>%
   dplyr::select(-c(ranker)) %>%
   filter(problem %in% ftm_non_sig) %>%
-  mutate(flag = ifelse(problem == "Trace" & method == "All features", FALSE, TRUE)) %>% # Reward the single set feasts instead of All features here
+  mutate(flag = ifelse(problem == "Trace" & method == "All features", FALSE, TRUE),
+         flag2 = ifelse(problem == "ToeSegmentation2" & method == "All features", FALSE, TRUE)) %>% # Reward the single set instead of All features here
   filter(flag) %>%
-  dplyr::select(-c(flag))
+  filter(flag2) %>%
+  dplyr::select(-c(flag, flag2))
 
 outputs_filt <- outputs %>%
   dplyr::select(c(problem, method, accuracy))
@@ -192,7 +194,7 @@ find_winners <- function(outputs_data, benchmark_data){
     filter(!is.na(set1_accuracy) & !is.na(set2_accuracy)) %>%
     mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
     mutate(flag = case_when(
-      is.na(p.value.adj)                                  ~ "Zero variance for one/more sets",
+      is.na(p.value.adj)                              ~ "Zero variance for one/more sets",
       p.value > .05                                   ~ "Non-significant difference",
       p.value < .05 & set1_accuracy > set2_accuracy   ~ set1,
       p.value < .05 & set1_accuracy < set2_accuracy   ~ set2))
