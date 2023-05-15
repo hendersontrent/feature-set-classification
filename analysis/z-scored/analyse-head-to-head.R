@@ -36,8 +36,8 @@ find_winner <- function(data, theproblem, set1name, problem_data){
   
   tmp2 <- data %>%
     filter(problem == theproblem) %>%
-    dplyr::select(c(resample, method, balanced_accuracy)) %>%
-    pivot_wider(id_cols = "resample", names_from = "method", values_from = "balanced_accuracy")
+    dplyr::select(c(resample, method, accuracy)) %>%
+    pivot_wider(id_cols = "resample", names_from = "method", values_from = "accuracy")
   
   if(colnames(tmp2)[2] != set1name){
     tmp2 <- tmp2 %>%
@@ -63,7 +63,7 @@ find_winner <- function(data, theproblem, set1name, problem_data){
   tmp2 <- data %>%
     filter(problem == theproblem) %>%
     group_by(problem, method) %>%
-    summarise(mean_acc = mean(balanced_accuracy, na.rm = TRUE)) %>%
+    summarise(mean_acc = mean(accuracy, na.rm = TRUE)) %>%
     ungroup() %>%
     pivot_wider(id_cols = "problem", names_from = "method", values_from = "mean_acc")
   

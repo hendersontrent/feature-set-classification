@@ -26,8 +26,8 @@ load("data/outputs_z.Rda")
 
 benchmarks <- outputs_z %>%
   group_by(problem) %>%
-  summarise(overall_avg = mean(balanced_accuracy, na.rm = TRUE),
-            stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(overall_avg = mean(accuracy, na.rm = TRUE),
+            stddev = sd(accuracy, na.rm = TRUE)) %>%
   ungroup()
 
 #------------------------
@@ -38,7 +38,7 @@ benchmarks <- outputs_z %>%
 
 z_scores <- outputs_z %>%
   group_by(problem, method) %>%
-  summarise(x = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(x = mean(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   inner_join(benchmarks, by = c("problem" = "problem")) %>%
   group_by(problem, method) %>%
@@ -61,7 +61,7 @@ z_scores <- z_scores %>%
 benchmarks_sets <- outputs_z %>%
   filter(problem %in% tsfresh_probs) %>%
   group_by(method) %>%
-  summarise(global_avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(global_avg = mean(accuracy, na.rm = TRUE)) %>%
   ungroup()
 
 #---------------------- Cluster by problem -----------------
@@ -88,13 +88,13 @@ z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
 p <- z_scores_mat %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
-  geom_hline(yintercept = 98.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 89.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 64.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 43.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 7.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 4.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 2.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 98.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 89.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 64.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 43.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 7.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 4.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 2.5, lty = "solid", colour = "black", size = 0.7) +
   labs(x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score") +

@@ -44,18 +44,18 @@ calculate_p_values <- function(data, summary_data, theproblem, all_features = FA
   
   sd_check <- tmp_data %>%
     group_by(method) %>%
-    summarise(stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
+    summarise(stddev = sd(accuracy, na.rm = TRUE)) %>%
     ungroup()
   
   # Set up vectors
   
   x <- tmp_data %>%
     filter(method == tmp_summ_data$best_method) %>%
-    pull(balanced_accuracy)
+    pull(accuracy)
   
   y <- tmp_data %>%
     filter(method == tmp_summ_data$worst_method) %>%
-    pull(balanced_accuracy)
+    pull(accuracy)
   
   # Filter to get parameters for correlated t-test
   

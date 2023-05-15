@@ -278,8 +278,8 @@ p <- ns %>%
   geom_linerange(data = sig, aes(ymin = lower_y, ymax = upper_y, colour = flag)) +
   geom_linerange(data = sig, aes(xmin = lower_x, xmax = upper_x, colour = flag)) +
   geom_point(data = sig, aes(colour = flag), size = 3) +
-  annotate("text", x = 80, y = 10, label = "Best time-series feature set better", size = 4) +
-  annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better", size = 4) +
+  annotate("text", x = 80, y = 10, label = "Best time-series feature set better", size = 4, fontface = 2) +
+  annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better", size = 4, fontface = 2) +
   labs(x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
        colour = NULL) +
