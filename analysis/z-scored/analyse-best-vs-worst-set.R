@@ -47,8 +47,10 @@ worst <- outputs_z %>%
   mutate(ranker = dense_rank(-accuracy_mean)) %>%
   mutate(the_max = max(ranker)) %>%
   filter(ranker == the_max) %>% # As there is a tie
+  mutate(the_min = min(accuracy_sd)) %>%
+  filter(accuracy_sd == the_min) %>% # As there are ties
   ungroup() %>%
-  dplyr::select(-c(ranker, the_max)) %>%
+  dplyr::select(-c(ranker, the_max, the_min)) %>%
   rename(worst_method = method,
          worst_accuracy_mean = accuracy_mean,
          worst_accuracy_sd = accuracy_sd)
