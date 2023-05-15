@@ -46,11 +46,15 @@ best_2 <- outputs_z %>%
   group_by(problem) %>%
   mutate(ranker = dense_rank(-accuracy_mean)) %>%
   ungroup() %>%
-  mutate(flag = ifelse(problem == "Plane" & method == "tsfresh", TRUE, FALSE)) %>% # tsfeatures and TSFEL had the same values, remove duplicate
-  filter(!flag) %>%
-  dplyr::select(-c(flag)) %>%
   filter(ranker == 2) %>%
   dplyr::select(-c(ranker)) %>%
+  group_by(problem) %>%
+  mutate(the_min = min(accuracy_sd)) %>%
+  filter(accuracy_sd == the_min) %>% # As there are ties
+  ungroup() %>%
+  mutate(flag = ifelse(problem == "Plane" & method == "tsfresh", FALSE, TRUE)) %>%
+  filter(flag) %>%
+  dplyr::select(-c(flag)) %>%
   rename(worst_method = method,
          worst_accuracy_mean = accuracy_mean,
          worst_accuracy_sd = accuracy_sd)
