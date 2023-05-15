@@ -45,17 +45,6 @@ z_scores <- outputs_z %>%
   mutate(z = (x - overall_avg) / stddev) %>%
   ungroup()
 
-# Filter to just problems present in tsfresh as it had some errors
-
-tsfresh_probs <- z_scores %>%
-  filter(method == "tsfresh") %>%
-  dplyr::select(c(problem)) %>%
-  distinct() %>%
-  pull()
-
-z_scores <- z_scores %>%
-  filter(problem %in% tsfresh_probs)
-
 # Mean accuracy by set
 
 benchmarks_sets <- outputs_z %>%
