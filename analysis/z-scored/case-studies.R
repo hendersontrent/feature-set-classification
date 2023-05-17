@@ -49,5 +49,6 @@ for(i in case_studies){
   case_study_tops[[match(i, case_studies)]] <- top_features
 }
 
+names(case_study_tops) <- case_studies
 rm(case_studies, top_features, i)
 save(case_study_tops, file = "data/case-studies/case_study_tops.Rda")
