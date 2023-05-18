@@ -4,7 +4,7 @@
 #' @param tt_labels \code{data.frame} containing train-test split information
 #' @param n_resamples \code{integer} denoting the number of resamples to calculate. Defaults to \code{30}
 #' @param by_set \code{Boolean} whether to calculate results for each individual feature set. Defaults to \code{TRUE}
-#' @param z_scored \code{Booleane} whether the feature data is z-scored or not. Defaults to \code{FALSE}
+#' @param z_scored \code{Boolean} whether the feature data is z-scored or not. Defaults to \code{FALSE}
 #' @return \code{data.frame} of classification results
 #' @author Trent Henderson
 #' 
@@ -21,7 +21,8 @@ fit_all_classifiers <- function(problem_name, tt_labels, n_resamples = 30, by_se
     filter(problem == problem_name)
   
   outs <- outs %>%
-    left_join(tt_labels, by = c("id" = "id"))
+    left_join(tt_labels, by = c("id" = "id")) %>%
+    filter(names %ni% c("DN_Mean", "DN_Spread_Std")) # Remove mean and variance from catch22
   
   if(by_set){
     outputs <- unique(outs$method) %>%
