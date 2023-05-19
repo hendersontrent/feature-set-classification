@@ -48,7 +48,6 @@ z_scores <- outputs_z %>%
 # Mean accuracy by set
 
 benchmarks_sets <- outputs_z %>%
-  filter(problem %in% tsfresh_probs) %>%
   group_by(method) %>%
   summarise(global_avg = mean(accuracy, na.rm = TRUE)) %>%
   ungroup()
