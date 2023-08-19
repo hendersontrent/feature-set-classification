@@ -1,6 +1,6 @@
 #------------------------------------------
 # This script sets out to compute 
-# classification accuracy for catch24 for
+# classification accuracy for each set for
 # each problem
 #
 # NOTE: This script requires setup.R and
@@ -14,7 +14,7 @@
 
 load("data/good_keepers.Rda")
 
-# get train-test split labels
+# Get train-test split labels
 
 load("data/TimeSeriesData.Rda")
 
