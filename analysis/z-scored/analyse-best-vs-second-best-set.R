@@ -7,7 +7,7 @@
 # analysis/compute-features_z-score.R and
 # analysis/fit-classifiers_z-score.R to have 
 # been run first
-#-----------------------------------------
+#------------------------------------------
 
 #--------------------------------------
 # Author: Trent Henderson, 25 July 2022
@@ -17,52 +17,55 @@
 
 load("data/outputs_z.Rda")
 
-outputs_z <- outputs_z %>%
-  mutate(method = case_when(
-    method == "tsfel" ~ "TSFEL",
-    method == "kats"  ~ "Kats",
-    TRUE              ~ method))
-
 # Find best feature set by problem
 
 best <- outputs_z %>%
-  mutate(balanced_accuracy = balanced_accuracy * 100) %>%
+  mutate(accuracy = accuracy * 100) %>%
   group_by(problem, method) %>%
-  summarise(best_balanced_accuracy_mean = mean(balanced_accuracy, na.rm = TRUE),
-            best_balanced_accuracy_sd = sd(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(best_accuracy_mean = mean(accuracy, na.rm = TRUE),
+            best_accuracy_sd = sd(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   group_by(problem) %>%
-  mutate(ranker = dense_rank(-best_balanced_accuracy_mean)) %>%
+  mutate(ranker = dense_rank(-best_accuracy_mean)) %>%
   ungroup() %>%
   filter(ranker == 1) %>%
   dplyr::select(-c(ranker)) %>%
+  mutate(flag = ifelse(problem == "Plane" & method == "TSFEL", TRUE, FALSE)) %>% # tsfeatures and TSFEL had the same values, remove duplicate
+  filter(!flag) %>%
+  dplyr::select(-c(flag)) %>%
   rename(best_method = method)
 
 # Find worst feature set by problem
 
 best_2 <- outputs_z %>%
-  mutate(balanced_accuracy = balanced_accuracy * 100) %>%
+  mutate(accuracy = accuracy * 100) %>%
   group_by(problem, method) %>%
-  summarise(balanced_accuracy_mean = mean(balanced_accuracy, na.rm = TRUE),
-            balanced_accuracy_sd = sd(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(accuracy_mean = mean(accuracy, na.rm = TRUE),
+            accuracy_sd = sd(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   group_by(problem) %>%
-  mutate(ranker = dense_rank(-balanced_accuracy_mean)) %>%
+  mutate(ranker = dense_rank(-accuracy_mean)) %>%
   ungroup() %>%
   filter(ranker == 2) %>%
   dplyr::select(-c(ranker)) %>%
+  group_by(problem) %>%
+  mutate(the_min = min(accuracy_sd)) %>%
+  filter(accuracy_sd == the_min) %>% # As there are ties
+  ungroup() %>%
+  mutate(flag = ifelse(problem == "Plane" & method == "tsfresh", FALSE, TRUE)) %>%
+  filter(flag) %>%
+  dplyr::select(-c(flag)) %>%
   rename(worst_method = method,
-         worst_balanced_accuracy_mean = balanced_accuracy_mean,
-         worst_balanced_accuracy_sd = balanced_accuracy_sd)
+         worst_accuracy_mean = accuracy_mean,
+         worst_accuracy_sd = accuracy_sd)
 
 both <- best %>%
   inner_join(best_2, by = c("problem" = "problem")) %>%
-  mutate(lower_x = worst_balanced_accuracy_mean - 1 * worst_balanced_accuracy_sd,
-         upper_x = worst_balanced_accuracy_mean + 1 * worst_balanced_accuracy_sd,
-         lower_y = best_balanced_accuracy_mean - 1 * best_balanced_accuracy_sd,
-         upper_y = best_balanced_accuracy_mean + 1 * best_balanced_accuracy_sd) %>%
-  group_by(problem) %>%
-  slice(which.min(worst_balanced_accuracy_sd)) # There is 1 tie for BeetleFly so take smallest SD one for now
+  mutate(lower_x = worst_accuracy_mean - 1 * worst_accuracy_sd,
+         upper_x = worst_accuracy_mean + 1 * worst_accuracy_sd,
+         lower_y = best_accuracy_mean - 1 * best_accuracy_sd,
+         upper_y = best_accuracy_mean + 1 * best_accuracy_sd) %>%
+  group_by(problem)
 
 #---------------------- Calculate p-values -----------------------
 
@@ -74,8 +77,8 @@ both <- both %>%
   mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
   mutate(significant = ifelse(p.value.adj < 0.05, "Significant difference", "Non-significant difference"),
          top_performer = ifelse(significant == "Significant difference", best_method, "Non-significant difference")) %>%
-  mutate(significant = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", significant),
-         top_performer = ifelse(best_balanced_accuracy_sd == 0 | worst_balanced_accuracy_sd == 0, "Zero variance for one/more sets", top_performer))
+  mutate(significant = ifelse(best_accuracy_sd == 0 | worst_accuracy_sd == 0, "Zero variance for one/more sets", significant),
+         top_performer = ifelse(best_accuracy_sd == 0 | worst_accuracy_sd == 0, "Zero variance for one/more sets", top_performer))
 
 rm(outputs_z, best, best_2)
 
@@ -109,7 +112,7 @@ stopifnot(nrow(ns) + nrow(sig) == nrow(both))
 # Draw scatterplot
 
 p <- ns %>%
-  ggplot(aes(x = worst_balanced_accuracy_mean, y = best_balanced_accuracy_mean)) +
+  ggplot(aes(x = worst_accuracy_mean, y = best_accuracy_mean)) +
   geom_polygon(data = upper_tri, aes(x = x, y = y), fill = "steelblue2", alpha = 0.1) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50", lty = "dashed") +
   geom_errorbar(aes(ymin = lower_y, ymax = upper_y, colour = top_performer)) +
@@ -118,10 +121,11 @@ p <- ns %>%
   geom_linerange(data = sig, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_linerange(data = sig, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
   geom_point(data = sig, aes(colour = top_performer), size = 3) +
-  annotate("text", x = 75, y = 10, label = "Second best feature set", size = 4) +
-  annotate("text", x = 25, y = 90, label = "Best feature set", size = 4) +
-  labs(x = "Balanced classification accuracy second best set (%)",
-       y = "Balanced classification accuracy best set (%)",
+  geom_text_repel(data = sig, aes(label = problem), legend = FALSE, segment.linetype = "dashed") +
+  annotate("text", x = 75, y = 10, label = "Second best feature set", size = 4, fontface = 2) +
+  annotate("text", x = 25, y = 90, label = "Best feature set", size = 4, fontface = 2) +
+  labs(x = "Classification accuracy second best set (%)",
+       y = "Classification accuracy best set (%)",
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
@@ -135,4 +139,4 @@ p <- ns %>%
         legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/z-scored/best_versus_second_best_set.pdf", p, units = "in", height = 9, width = 9)
+ggsave("output/z-scored/best_versus_second_best_set.pdf", p, units = "in", height = 10, width = 10)

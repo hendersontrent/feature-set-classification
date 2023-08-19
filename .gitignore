@@ -49,3 +49,5 @@ data/*.csv
 data/*.arff
 data/*.txt
 data/*.Rda
+
+feature-sets/*

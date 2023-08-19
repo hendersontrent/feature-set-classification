@@ -11,18 +11,12 @@
 
 load("data/outputs_z.Rda")
 
-outputs_z <- outputs_z %>%
-  mutate(method = case_when(
-    method == "tsfel" ~ "TSFEL",
-    method == "kats"  ~ "Kats",
-    TRUE              ~ method))
-
 #---------------------- Calculations ----------------------
 
 calcs <- outputs_z %>%
   group_by(problem, method) %>%
-  summarise(avg = mean(balanced_accuracy, na.rm = TRUE),
-            stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(avg = mean(accuracy, na.rm = TRUE),
+            stddev = sd(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(lower = avg - 2 * stddev,
          upper = avg + 2 * stddev)
@@ -31,7 +25,7 @@ calcs <- outputs_z %>%
 
 orders <- outputs_z %>%
   group_by(problem) %>%
-  summarise(avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(avg = mean(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(orders = dense_rank(avg)) %>%
   dplyr::select(c(problem, orders))
@@ -53,7 +47,7 @@ p <- calcs %>%
   ggplot(aes(x = reorder(problem, -orders), y = avg, group = method, colour = method)) +
   geom_line() +
   labs(x = "Problem",
-       y = "Mean balanced accuracy (%)",
+       y = "Mean classification accuracy (%)",
        colour = NULL) +
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
   scale_colour_manual(values = mypal) +

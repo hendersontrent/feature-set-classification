@@ -16,12 +16,6 @@
 
 load("data/outputs_z.Rda")
 
-outputs_z <- outputs_z %>%
-  mutate(method = case_when(
-    method == "tsfel" ~ "TSFEL",
-    method == "kats"  ~ "Kats",
-    TRUE              ~ method))
-
 #---------------------- Calculate scores--------------------
 
 #------------------
@@ -32,8 +26,8 @@ outputs_z <- outputs_z %>%
 
 benchmarks <- outputs_z %>%
   group_by(problem) %>%
-  summarise(overall_avg = mean(balanced_accuracy, na.rm = TRUE),
-            stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(overall_avg = mean(accuracy, na.rm = TRUE),
+            stddev = sd(accuracy, na.rm = TRUE)) %>%
   ungroup()
 
 #------------------------
@@ -44,30 +38,18 @@ benchmarks <- outputs_z %>%
 
 z_scores <- outputs_z %>%
   group_by(problem, method) %>%
-  summarise(x = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(x = mean(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   inner_join(benchmarks, by = c("problem" = "problem")) %>%
   group_by(problem, method) %>%
   mutate(z = (x - overall_avg) / stddev) %>%
   ungroup()
 
-# Filter to just problems present in tsfresh as it had some errors
-
-tsfresh_probs <- z_scores %>%
-  filter(method == "tsfresh") %>%
-  dplyr::select(c(problem)) %>%
-  distinct() %>%
-  pull()
-
-z_scores <- z_scores %>%
-  filter(problem %in% tsfresh_probs)
-
 # Mean accuracy by set
 
 benchmarks_sets <- outputs_z %>%
-  filter(problem %in% tsfresh_probs) %>%
   group_by(method) %>%
-  summarise(global_avg = mean(balanced_accuracy, na.rm = TRUE)) %>%
+  summarise(global_avg = mean(accuracy, na.rm = TRUE)) %>%
   ungroup()
 
 #---------------------- Cluster by problem -----------------
@@ -94,13 +76,13 @@ z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
 p <- z_scores_mat %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
-  geom_hline(yintercept = 66.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 45.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 34.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 31.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 24.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 18.5, lty = "solid", colour = "black", size = 0.7) +
-  geom_hline(yintercept = 3.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 98.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 89.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 64.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 43.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 7.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 4.5, lty = "solid", colour = "black", size = 0.7) +
+  # geom_hline(yintercept = 2.5, lty = "solid", colour = "black", size = 0.7) +
   labs(x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score") +
@@ -120,10 +102,9 @@ p <- z_scores_mat %>%
 
 # Side annotations
 
-label_data <- data.frame(x = rep(0.5, times = 8),
-                         y = c(86, 55.5, 39.5, 31.5, 25.5, 19, 7.5, -2),
-                         mylab = c("i\n(tsfresh does well)", "ii\n(Similar performance)", "iii\n(catch22 does poorly)", "iv\n(Kats does poorly)", 
-                                   "v\n(feasts does poorly)", "vi\n(Niche phase-aligned)", "vii\n(No clear pattern)", "viii\n(catch22 does well)"))
+label_data <- data.frame(x = rep(0.5, times = 6),
+                         y = c(-3, 2, 25, 52, 78, 97),
+                         mylab = c("vi) Strong TSFEL performance", "v) Poor Kats performance", "iv) Other", "iii) Strong tsfresh performance", "ii) Other", "i) Strong tsfresh performance"))
 
 ann <- ggplot(data = label_data) +
   geom_text(aes(x = x, y = y, label = mylab), fontface = "bold", color = "black") +
@@ -138,4 +119,4 @@ p2 <- p + ann  +
   plot_layout(widths = c(5, 1))
 
 print(p2)
-ggsave("output/z-scored/normalised-performance-score.pdf", p2, units = "in", height = 14, width = 14)
+ggsave("output/z-scored/normalised-performance-score.pdf", p2, units = "in", height = 16, width = 16)

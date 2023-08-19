@@ -12,7 +12,9 @@
 # Author: Trent Henderson, 13 April 2023
 #---------------------------------------
 
-# Load in data and summarise to just problem, ID, and train-test set indicator as I didn't bind initially
+load("data/good_keepers.Rda")
+
+# get train-test split labels
 
 load("data/TimeSeriesData.Rda")
 
@@ -26,30 +28,26 @@ rm(TimeSeriesData) # Clean up environment as dataframe is large
 
 # Non-z-scored
 
-features <- bind_all_features(train_test_ids, z_scored = FALSE)
-
-outputs <- unique(features$problem) %>%
-  purrr::map_dfr(~ fit_all_classifiers(features, problem_name = .x, n_resamples = 30, by_set = TRUE))
+outputs <- good_keepers %>%
+  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 30, by_set = TRUE, z_scored = FALSE))
 
 save(outputs, file = "data/outputs.Rda")
 
-outputs_aggregate <- unique(features$problem) %>%
-  purrr::map_dfr(~ fit_all_classifiers(features, problem_name = .x, n_resamples = 30, by_set = FALSE))
+outputs_aggregate <- good_keepers %>%
+  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 30, by_set = FALSE, z_scored = FALSE))
 
 save(outputs_aggregate, file = "data/outputs_aggregate.Rda")
 rm(features, outputs, outputs_aggregate)
 
 # z-scored
 
-features <- bind_all_features(train_test_ids, z_scored = TRUE)
-
-outputs_z <- unique(features$problem) %>%
-  purrr::map_dfr(~ fit_all_classifiers(features, problem_name = .x, n_resamples = 30, by_set = TRUE))
+outputs_z <- good_keepers %>%
+  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 30, by_set = TRUE, z_scored = TRUE))
 
 save(outputs_z, file = "data/outputs_z.Rda")
 
-outputs_z_aggregate <- unique(features$problem) %>%
-  purrr::map_dfr(~ fit_all_classifiers(features, problem_name = .x, n_resamples = 30, by_set = FALSE))
+outputs_z_aggregate <- good_keepers %>%
+  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 30, by_set = FALSE, z_scored = TRUE))
 
 save(outputs_z_aggregate, file = "data/outputs_z_aggregate.Rda")
-rm(features, outputs_z, outputs_z_aggregate)
+rm(features, outputs_z, outputs_z_aggregate, good_keepers)

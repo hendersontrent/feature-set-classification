@@ -22,6 +22,7 @@ library(Cairo)
 library(e1071)
 library(scatterpie)
 library(patchwork)
+library(correctR)
 
 # Create important folders if none exist
 
@@ -34,8 +35,10 @@ if(!dir.exists('output/non-z-scored')) dir.create('output/non-z-scored')
 if(!dir.exists('data')) dir.create('data')
 if(!dir.exists('data/feature-calcs')) dir.create('data/feature-calcs')
 if(!dir.exists('data/feature-calcs/z-scored')) dir.create('data/feature-calcs/z-scored')
+if(!dir.exists('data/feature-calcs/bound')) dir.create('data/feature-calcs/bound')
 if(!dir.exists('data/case-studies')) dir.create('data/case-studies')
 if(!dir.exists('R')) dir.create('R')
+if(!dir.exists('utilities')) dir.create('utilities')
 
 # Re-usable "not in" operator
 
@@ -59,3 +62,30 @@ options(dplyr.summarise.inform = FALSE)
 
 mypal <- c("#FF0029", "#377EB8", "#66A61E", "#984EA3", "#00D2D5", 
            "#FF7F00", "#AF8D00", "#7F80CD", "#B3E900")
+
+# Fix Python environment to where the Python libraries are installed on my machine
+
+reticulate::use_virtualenv("/Users/trenthenderson/Documents/Git/feature-set-classification/feature-sets")
+
+# Define list of problems that previous work used
+
+keepers <- c("ACSF1", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "BME",
+             "Car", "CBF", "Chinatown", "ChlorineConcentration", "CinCECGTorso", "Coffee",
+             "Computers", "CricketX", "CricketY", "CricketZ", "Crop", "DiatomSizeReduction",
+             "DistalPhalanxOutlineAgeGroup", "DistalPhalanxOutlineCorrect", "DistalPhalanxTW",
+             "Earthquakes", "ECG200", "ECG5000", "ECGFiveDays", "ElectricDevices", "EOGHorizontalSignal",
+             "EOGVerticalSignal", "EthanolLevel", "FaceAll", "FaceFour", "FacesUCR", "FiftyWords", "Fish",
+             "FordA", "FordB", "FreezerRegularTrain", "FreezerSmallTrain", "GunPoint", "GunPointAgeSpan", 
+             "GunPointMaleVersusFemale", "GunPointOldVersusYoung", "Ham", "Haptics", "Herring", "HouseTwenty",
+             "InlineSkate", "InsectEPGRegularTrain", "InsectEPGSmallTrain", "InsectWingbeatSound", 
+             "ItalyPowerDemand", "LargeKitchenAppliances", "Lightning2", "Lightning7", "Mallat", "Meat",
+             "MedicalImages", "MiddlePhalanxOutlineAgeGroup", "MiddlePhalanxOutlineCorrect", "MiddlePhalanxTW",
+             "MixedShapesRegularTrain", "MixedShapesSmallTrain", "MoteStrain", "OliveOil", "OSULeaf", "PhalangesOutlinesCorrect",
+             "Phoneme", "PigAirwayPressure", "PigArtPressure", "PigCVP", "Plane", "PowerCons", "ProximalPhalanxOutlineAgeGroup",
+             "ProximalPhalanxOutlineCorrect", "ProximalPhalanxTW", "RefrigerationDevices", "Rock", "ScreenType",
+             "SemgHandGenderCh2", "SemgHandMovementCh2", "SemgHandSubjectCh2", "ShapeletSim", "ShapesAll",
+             "SmallKitchenAppliances", "SmoothSubspace", "SonyAIBORobotSurface1", "SonyAIBORobotSurface2",
+             "StarLightCurves", "Strawberry", "SwedishLeaf", "Symbols", "SyntheticControl", "ToeSegmentation1",
+             "ToeSegmentation2", "Trace", "TwoLeadECG", "TwoPatterns", "UMD", "UWaveGestureLibraryAll",
+             "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ", "Wafer", "Wine", "WordSynonyms",
+             "Worms", "WormsTwoClass", "Yoga")

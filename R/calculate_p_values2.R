@@ -50,18 +50,18 @@ calculate_p_values2 <- function(data, combn_data, rownum, problem_data){
   
   sd_check <- tmp_data %>%
     group_by(method) %>%
-    summarise(stddev = sd(balanced_accuracy, na.rm = TRUE)) %>%
+    summarise(stddev = sd(accuracy, na.rm = TRUE)) %>%
     ungroup()
   
   # Set up vectors
   
   x <- tmp_data %>%
     filter(method == combn_filt$set1) %>%
-    pull(balanced_accuracy)
+    pull(accuracy)
   
   y <- tmp_data %>%
     filter(method == combn_filt$set2) %>%
-    pull(balanced_accuracy)
+    pull(accuracy)
   
   # Filter to get parameters for correlated t-test
   
@@ -74,7 +74,7 @@ calculate_p_values2 <- function(data, combn_data, rownum, problem_data){
     outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   } else{
-    t_test <- corr_t_test(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
+    t_test <- resampled_ttest(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
     outs <- data.frame(problem = combn_filt$problem, method = combn_filt$set1)
     outs <- cbind(outs, t_test)
     return(outs)

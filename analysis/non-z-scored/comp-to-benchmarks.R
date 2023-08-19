@@ -15,17 +15,13 @@
 
 # Get problems where mean and variance did not outperform chance
 
-load("data/benchmark_keepers.Rda")
-
-benchmark_keepers <- benchmark_keepers %>%
-  filter(category == "Non-significant") %>%
-  pull(problem)
+load("ftm_non_sig.Rda")
 
 # Grab benchmark results
 
 benchmarks <- pull_benchmark_results() %>%
   dplyr::select(c(problem, method, accuracy)) %>%
-  filter(problem %in% benchmark_keepers)
+  filter(problem %in% ftm_non_sig)
 
 # Find best per problem
 
@@ -80,51 +76,31 @@ rm(benchmarks_avg, no_ties, benchmarks_no_ties, ties_not_100, benchmarks_ties)
 load("data/outputs.Rda")
 load("data/outputs_aggregate.Rda")
 
-outputs <- outputs %>%
-  mutate(method = case_when(
-    method == "tsfel" ~ "TSFEL",
-    method == "kats"  ~ "Kats",
-    TRUE              ~ method))
-
-main_models <- outputs %>%
+main_models <- bind_rows(outputs, outputs_aggregate) %>%
   group_by(problem, method) %>%
-  summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
+  summarise(mean_accuracy = mean(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
   group_by(problem) %>%
-  mutate(ranker = dense_rank(-accuracy)) %>%
+  mutate(ranker = dense_rank(-mean_accuracy)) %>%
   ungroup() %>%
   filter(ranker == 1) %>%
-  dplyr::select(-c(ranker))
-
-main_models_aggregate <- outputs_aggregate %>%
-  mutate(method = "All features") %>%
-  group_by(problem, method) %>%
-  summarise(accuracy = mean(accuracy, na.rm = TRUE)) %>%
-  ungroup()
-
-main_models <- bind_rows(main_models, main_models_aggregate) %>%
-  group_by(problem) %>%
-  slice_max(order_by = accuracy, n = 1) %>%
-  ungroup() %>%
-  dplyr::select(c(problem, method)) %>%
-  mutate(keeper = TRUE)
+  dplyr::select(-c(ranker)) %>%
+  filter(problem %in% ftm_non_sig) %>%
+  mutate(flag = ifelse(problem == "Trace" & method == "All features", FALSE, TRUE),
+         flag2 = ifelse(problem == "ToeSegmentation2" & method == "All features", FALSE, TRUE)) %>% # Reward the single set instead of All features here
+  filter(flag) %>%
+  filter(flag2) %>%
+  dplyr::select(-c(flag, flag2))
 
 outputs_filt <- outputs %>%
   dplyr::select(c(problem, method, accuracy))
 
 outputs_filt_aggregate <- outputs_aggregate %>%
-  mutate(method = "All features") %>%
   dplyr::select(c(problem, method, accuracy))
 
 outputs_filt <- bind_rows(outputs_filt, outputs_filt_aggregate) %>%
   inner_join(main_models, by = c("problem" = "problem", "method" = "method")) %>%
-  dplyr::select(-c(keeper)) %>%
-  mutate(catcher = ifelse(problem == "Trace" & method == "All features", TRUE, FALSE)) %>% # There is a tie, so reward {feasts} instead of 'All features'
-  filter(!catcher) %>%
-  dplyr::select(-c(catcher)) %>%
-  filter(problem %in% benchmark_keepers)
-
-rm(outputs, outputs_aggregate, main_models, main_models_aggregate, outputs_filt_aggregate, benchmark_keepers)
+  dplyr::select(-c(mean_accuracy))
 
 # Filter benchmarks to just problems in calculated sets
 
@@ -218,10 +194,10 @@ find_winners <- function(outputs_data, benchmark_data){
     filter(!is.na(set1_accuracy) & !is.na(set2_accuracy)) %>%
     mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
     mutate(flag = case_when(
-      is.na(p.value.adj)                                  ~ "Zero variance for one/more sets",
-      p.value.adj > .05                                   ~ "Non-significant difference",
-      p.value.adj < .05 & set1_accuracy > set2_accuracy   ~ set1,
-      p.value.adj < .05 & set1_accuracy < set2_accuracy   ~ set2))
+      is.na(p.value.adj)                              ~ "Zero variance for one/more sets",
+      p.value > .05                                   ~ "Non-significant difference",
+      p.value < .05 & set1_accuracy > set2_accuracy   ~ set1,
+      p.value < .05 & set1_accuracy < set2_accuracy   ~ set2))
 
   return(comps2)
 }
@@ -302,8 +278,8 @@ p <- ns %>%
   geom_linerange(data = sig, aes(ymin = lower_y, ymax = upper_y, colour = flag)) +
   geom_linerange(data = sig, aes(xmin = lower_x, xmax = upper_x, colour = flag)) +
   geom_point(data = sig, aes(colour = flag), size = 3) +
-  annotate("text", x = 80, y = 10, label = "Best time-series feature set better", size = 4) +
-  annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better", size = 4) +
+  annotate("text", x = 80, y = 10, label = "Best time-series feature set better", size = 4, fontface = 2) +
+  annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better", size = 4, fontface = 2) +
   labs(x = "Classification accuracy time-series features (%)",
        y = "Classification accuracy benchmark algorithm (%)",
        colour = NULL) +
