@@ -9,7 +9,7 @@
 bind_all_features <- function(train_test, z_scored = FALSE){
   
   bound_features <- list()
-  base_path <- ifelse(z_scored, "data/feature-calcs", "data/feature-calcs/z-scored")
+  base_path <- ifelse(z_scored, "data/feature-calcs/z-scored", "data/feature-calcs")
   
   for(i in list.files(base_path, full.names = TRUE, pattern = "\\.Rda")){
     load(i)
