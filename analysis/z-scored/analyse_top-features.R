@@ -14,10 +14,9 @@ individual_feats <- vector(mode = "list", length = length(data_files))
 
 for(d in data_files){
   load(d)
-  individual_feats[[d]] <- outputs
+  individual_feats[[match(d, data_files)]] <- outputs
 }
 
-individual_feats <- do.call("rbind", individual_feats)
 rm(data_files)
 
 #--------------- Calculate top features --------------
