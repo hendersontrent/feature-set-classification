@@ -64,18 +64,15 @@ fit_feature_classifiers <- function(problem_name, tt_labels, n_resamples = 10, z
                                   n_resamples = n_resamples, 
                                   use_null = TRUE)
   
-  outputs <- outputs[[2]] %>%
-    mutate(problem = problem_name)
+  outputs[[2]]$problem <- problem_name
   
-  return(outputs)
+  save(outputs, file = paste0("data/individual-feature-classifiers/", problem_name, ".Rda"))
 }
 
 # Run function for all problems on z-scored data
 
-outputs_ind_feature <- good_keepers %>%
-  purrr::map_dfr(~ fit_feature_classifiers(problem_name = .x, 
-                                           tt_labels = train_test_ids,
-                                           n_resamples = 10, 
-                                           z_scored = TRUE))
-
-save(outputs_ind_feature, file = "data/outputs_ind_feature.Rda")
+outputs_ind_feature <- good_keepers[64:length(good_keepers)] %>%
+  purrr::map(~ fit_feature_classifiers(problem_name = .x, 
+                                       tt_labels = train_test_ids,
+                                       n_resamples = 10, 
+                                       z_scored = TRUE))

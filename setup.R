@@ -37,6 +37,7 @@ if(!dir.exists('data/feature-calcs')) dir.create('data/feature-calcs')
 if(!dir.exists('data/feature-calcs/z-scored')) dir.create('data/feature-calcs/z-scored')
 if(!dir.exists('data/feature-calcs/bound')) dir.create('data/feature-calcs/bound')
 if(!dir.exists('data/case-studies')) dir.create('data/case-studies')
+if(!dir.exists('data/individual-feature-classifiers')) dir.create('data/individual-feature-classifiers')
 if(!dir.exists('R')) dir.create('R')
 if(!dir.exists('utilities')) dir.create('utilities')
 
