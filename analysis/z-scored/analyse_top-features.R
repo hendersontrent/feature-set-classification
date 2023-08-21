@@ -14,7 +14,7 @@ individual_feats <- vector(mode = "list", length = length(data_files))
 
 for(d in data_files){
   load(d)
-  storage[[d]] <- outputs
+  individual_feats[[d]] <- outputs
 }
 
 individual_feats <- do.call("rbind", individual_feats)
