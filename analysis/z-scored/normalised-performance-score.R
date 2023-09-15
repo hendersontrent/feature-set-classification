@@ -137,9 +137,13 @@ p <- clusters %>%
                           ordered = TRUE)) %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
-  geom_rect(aes(xmin = 6.5, xmax = 7.5, ymin = 95.5, ymax = 102.5), fill = NA, colour = "black", size = 1) +
-  geom_rect(aes(xmin = 7.5, xmax = 8.5, ymin = 92.5, ymax = 99.5), fill = NA, colour = "black", size = 1) +
-  geom_rect(aes(xmin = 0.5, xmax = 6.5, ymin = 0.5, ymax = 92.5), fill = NA, colour = "black", size = 1) +
+  geom_rect(aes(xmin = 6.5, xmax = 7.5, ymin = 95.5, ymax = 102.5), fill = NA, colour = "black", size = 1) + # FFT > mean
+  geom_rect(aes(xmin = 7.5, xmax = 8.5, ymin = 92.5, ymax = 99.5), fill = NA, colour = "black", size = 1) + # Quantiles > mean
+  geom_rect(aes(xmin = 0.5, xmax = 6.5, ymin = 0.5, ymax = 92.5), fill = NA, colour = "black", size = 1) + # Big feature set box
+  geom_rect(aes(xmin = 2.5, xmax = 3.5, ymin = 34.5, ymax = 35.5), fill = NA, colour = "black", size = 1) + # TSFEL standout PigCVP
+  geom_rect(aes(xmin = 4.5, xmax = 5.5, ymin = 47.5, ymax = 48.5), fill = NA, colour = "black", size = 1) + # Kats standout Yoga
+  geom_rect(aes(xmin = 0.5, xmax = 1.5, ymin = 82.5, ymax = 83.5), fill = NA, colour = "black", size = 1) + # tsfresh standout MixedShapesRegularTrain
+  geom_rect(aes(xmin = 1.5, xmax = 2.5, ymin = 70.5, ymax = 71.5), fill = NA, colour = "black", size = 1) + # tsfeatures standout Phoneme
   labs(x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score") +
