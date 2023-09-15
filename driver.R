@@ -22,6 +22,7 @@ source("analysis/summarise-problems.R")
 
 source("analysis/compute-features.R")
 source("analysis/compute-features-z-score.R")
+source("analysis/compute-quantiles-fft.R")
 
 #---------------- Classifier model fits --------------
 
