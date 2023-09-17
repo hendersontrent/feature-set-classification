@@ -34,7 +34,15 @@ rm(case_studies, top_features, i)
 case_study_tops[[1]]$SummaryStatistics <- calculate_interval(case_study_tops[[1]], metric = "accuracy", by_set = FALSE)
 case_study_tops[[2]]$SummaryStatistics <- calculate_interval(case_study_tops[[2]], metric = "accuracy", by_set = FALSE)
 case_study_tops[[3]]$SummaryStatistics <- calculate_interval(case_study_tops[[3]], metric = "accuracy", by_set = FALSE)
+case_study_tops[[4]]$SummaryStatistics <- calculate_interval(case_study_tops[[4]], metric = "accuracy", by_set = FALSE)
 
 # Save
 
 save(case_study_tops, file = "data/case-studies/case_study_tops.Rda")
+
+#--------------- Investigate each case study --------------
+
+head(case_study_tops[[1]]$SummaryStatistics %>% arrange(-.mean), n = 10)
+head(case_study_tops[[2]]$SummaryStatistics %>% arrange(-.mean), n = 10)
+head(case_study_tops[[3]]$SummaryStatistics %>% arrange(-.mean), n = 10)
+head(case_study_tops[[4]]$SummaryStatistics %>% arrange(-.mean), n = 10)
