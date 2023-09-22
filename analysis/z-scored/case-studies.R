@@ -42,7 +42,76 @@ save(case_study_tops, file = "data/case-studies/case_study_tops.Rda")
 
 #--------------- Investigate each case study --------------
 
+# Top feature summaries
+
 head(case_study_tops[[1]]$SummaryStatistics %>% arrange(-.mean), n = 10)
 head(case_study_tops[[2]]$SummaryStatistics %>% arrange(-.mean), n = 10)
 head(case_study_tops[[3]]$SummaryStatistics %>% arrange(-.mean), n = 10)
 head(case_study_tops[[4]]$SummaryStatistics %>% arrange(-.mean), n = 10)
+
+# Sample sizes
+
+source("analysis/summarise-problems.R")
+
+problem_summaries <- problem_summaries %>%
+  filter(problem %in% case_studies)
+
+# Time-series length
+
+load("data/TimeSeriesData.Rda")
+
+lengths <- TimeSeriesData %>%
+  group_by(problem) %>%
+  summarise(samples = max(timepoint)) %>%
+  ungroup() %>%
+  filter(problem %in% case_studies)
+
+problem_summaries <- problem_summaries %>%
+  inner_join(lengths)
+
+rm(lengths)
+
+#-------------------------------------------------------------------------------
+#---------------------------- FFT AND QUANTILES CASES --------------------------
+#-------------------------------------------------------------------------------
+
+#-----------------------------
+# FFT -- ChlorineConcentration
+# outperformed mean of feature 
+# sets (check spectra)
+#-----------------------------
+
+# Filter data
+
+ChlorineConcentration <- TimeSeriesData %>%
+  filter(problem == "ChlorineConcentration")
+
+# Draw plots
+
+spectrum(ChlorineConcentration %>% filter(id == "1_ChlorineConcentration") %>% pull(values))
+spectrum(ChlorineConcentration %>% filter(id == "5_ChlorineConcentration") %>% pull(values))
+spectrum(ChlorineConcentration %>% filter(id == "2_ChlorineConcentration") %>% pull(values))
+
+#--------------------------
+# Quantiles -- EthanolLevel
+# outperformed mean of
+# feature sets (check 
+# distributions)
+#--------------------------
+
+# Filter data
+
+EthanolLevel <- TimeSeriesData %>%
+  filter(problem == "EthanolLevel")
+
+rm(TimeSeriesData)
+
+# Draw plots
+
+EthanolLevel %>%
+  ggplot(aes(x = values)) +
+  geom_histogram(aes(y = after_stat(density)), alpha = 0.8) +
+  labs(x = "Value",
+       y = "Density") +
+  theme_bw() +
+  facet_wrap(~target)
