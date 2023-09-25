@@ -81,14 +81,14 @@ rm(outputs_z, best, worst)
 
 # Create palette for whoever is top performer
 
-mypal <- c("Non-significant difference" = "grey80",
-           "Zero variance for one/more sets" = "grey50",
-           "catch22" = mypal[1],
-           "feasts" = mypal[2],
-           "Kats" = mypal[3],
-           "tsfeatures" = mypal[4],
-           "TSFEL" = mypal[5],
-           "tsfresh" = mypal[6])
+mypal2 <- c("Non-significant difference" = "grey80",
+            "Zero variance for one/more sets" = "grey50",
+            "catch22" = mypal[1],
+            "feasts" = mypal[2],
+            "Kats" = mypal[3],
+            "tsfeatures" = mypal[4],
+            "TSFEL" = mypal[5],
+            "tsfresh" = mypal[6])
 
 # Define coordinates for upper triangle to shade
 
@@ -124,7 +124,7 @@ p <- ns %>%
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_colour_manual(values = mypal) +
+  scale_colour_manual(values = mypal2) +
   theme_bw() +
   theme(legend.position = "bottom",
         panel.grid.minor = element_blank(),

@@ -28,6 +28,18 @@ fit_all_classifiers <- function(problem_name, tt_labels, n_resamples = 30, by_se
     outputs <- unique(outs$method) %>%
       purrr::map_dfr(~ evaluate_performance(outs, problem_name = problem_name, n_resamples = n_resamples, feature_set = .x))
   } else{
+    
+    # Filter duplicates
+    
+    outs <- outs %>% rename(feature_set = method)
+    outs <- structure(list(outs), class = "feature_calculations")
+    outs <- filter_duplicates(outs, seed = 123)
+    outs <- as.data.frame(outs[[1]])
+    outs <- outs %>% rename(method = feature_set)
+    rownames(outs) <- NULL
+    
+    # Fit models
+    
     outputs <- evaluate_performance(outs, problem_name = problem_name, n_resamples = n_resamples, feature_set = NULL)
   }
   return(outputs)
