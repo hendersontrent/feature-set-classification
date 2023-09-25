@@ -1,8 +1,0 @@
-This file defines the correct order of installation for reproducibility and to avoid Kats installation errors. Below are the terminal commands. Note that Kats source code (https://github.com/facebookresearch/Kats) should exist as a folder called Kats within the feature-set-classification project folder first. Further, the setup.py and requirements.txt files for these have also been edited to ensure dependency compatability with tsfresh and TSFEL.
-
-python3.9 -m venv feature-sets
-source feature-sets/bin/activate
-pip install tsfresh
-pip install tsfel
-pip install pandas==1.5.3
-pip install -e /Users/trenthenderson/Documents/Git/feature-set-classification/Kats
