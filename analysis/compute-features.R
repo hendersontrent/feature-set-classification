@@ -15,8 +15,9 @@
 
 load("data/TimeSeriesData.Rda")
 
-# Fix Python environment to where the Python libraries are installed on my machine
+# Set up Python environment (NOTE: those seeking to reproduce will have to adjust accordingly)
 
+install_python_pkgs("PUT YOUR PATH TO PYTHON 3.8/3.9 ON YOUR MACHINE HERE", "C:/Users/User/Desktop/feature-set-classification")
 reticulate::use_virtualenv("C:/Users/User/Desktop/feature-set-classification")
 
 #------------- Feature extraction --------------
