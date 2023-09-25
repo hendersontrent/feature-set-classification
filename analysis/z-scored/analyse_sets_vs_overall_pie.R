@@ -16,7 +16,9 @@
 # Load classification results
 
 load("data/outputs_z.Rda")
+load("data/outputs_z_bp.Rda")
 load("data/outputs_z_aggregate.Rda")
+outputs_z <- bind_rows(outputs_z, outputs_z_bp)
 
 # Calculate winners
 
@@ -74,7 +76,7 @@ reduced <- bind_rows(reduced, reduced2)
 combns <- crossing(unique(outputs_z$method), c("All features")) %>%
   rename(set1 = 1, set2 = 2)
 
-problem <- rep(unique(reduced$problem), times = 1, each = 6)
+problem <- rep(unique(reduced$problem), times = 1, each = 8)
 combns <- combns[rep(1:nrow(combns), length(unique(reduced$problem)),), ]
 combns <- cbind(combns, problem)
 
@@ -189,7 +191,7 @@ pie_df <- separates %>%
 
 # Create palette for whoever is top performer
 
-mypal <- c("All features" = "black",
+mypal2 <- c("All features" = "black",
            "Non-significant difference" = "grey80",
            "Zero variance for one/more sets" = "grey50",
            "catch22" = mypal[1],
@@ -197,7 +199,9 @@ mypal <- c("All features" = "black",
            "Kats" = mypal[3],
            "tsfeatures" = mypal[4],
            "TSFEL" = mypal[5],
-           "tsfresh" = mypal[6])
+           "tsfresh" = mypal[6],
+           "fft" = mypal[7],
+           "quantiles" = mypal[8])
 
 # Define coordinates for upper triangle to shade
 
@@ -227,8 +231,8 @@ p <- point_df %>%
        group = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_fill_manual(values = mypal, drop = FALSE) +
-  scale_colour_manual(values = mypal, guide = "none") +
+  scale_fill_manual(values = mypal2, drop = FALSE) +
+  scale_colour_manual(values = mypal2, guide = "none") +
   theme_bw() +
   theme(legend.position = "bottom",
         panel.grid.minor = element_blank(),

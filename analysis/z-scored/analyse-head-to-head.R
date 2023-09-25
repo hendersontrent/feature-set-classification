@@ -16,6 +16,8 @@
 # Load classification results
 
 load("data/outputs_z.Rda")
+load("data/outputs_z_bp.Rda")
+outputs_z <- bind_rows(outputs_z, outputs_z_bp)
 
 #-------------- Calculate wins for each pairwise combination ------------------
 

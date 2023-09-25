@@ -23,6 +23,7 @@ library(e1071)
 library(scatterpie)
 library(patchwork)
 library(correctR)
+library(basicproperties)
 
 # Create important folders if none exist
 
@@ -36,7 +37,9 @@ if(!dir.exists('data')) dir.create('data')
 if(!dir.exists('data/feature-calcs')) dir.create('data/feature-calcs')
 if(!dir.exists('data/feature-calcs/z-scored')) dir.create('data/feature-calcs/z-scored')
 if(!dir.exists('data/feature-calcs/bound')) dir.create('data/feature-calcs/bound')
+if(!dir.exists('data/feature-calcs/basic-properties')) dir.create('data/feature-calcs/basic-properties')
 if(!dir.exists('data/case-studies')) dir.create('data/case-studies')
+if(!dir.exists('data/individual-feature-classifiers')) dir.create('data/individual-feature-classifiers')
 if(!dir.exists('R')) dir.create('R')
 if(!dir.exists('utilities')) dir.create('utilities')
 

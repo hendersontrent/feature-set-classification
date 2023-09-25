@@ -15,6 +15,7 @@
 # Load classification results
 
 load("data/outputs_z.Rda")
+load("data/outputs_z_bp.Rda")
 
 #---------------------- Calculate scores--------------------
 
@@ -22,13 +23,17 @@ load("data/outputs_z.Rda")
 # Overall benchmark
 #------------------
 
-# Calculate into own dataframe in case we want it later
+# Calculate using only feature sets
 
 benchmarks <- outputs_z %>%
   group_by(problem) %>%
   summarise(overall_avg = mean(accuracy, na.rm = TRUE),
             stddev = sd(accuracy, na.rm = TRUE)) %>%
   ungroup()
+
+# Bind both datasets together
+
+outputs_z <- bind_rows(outputs_z, outputs_z_bp)
 
 #------------------------
 # Individual feature sets
@@ -54,44 +59,100 @@ benchmarks_sets <- outputs_z %>%
 
 #---------------------- Cluster by problem -----------------
 
-# Hierarchical cluster on rows (problems)
+#' Hierarchical cluster on rows (problems)
+#' 
+#' @param data \code{data.frame} containing NPS results
+#' @param problem_vector \code{character} vector denoting problems to filter to
+#' @return \code{data.frame} of clustered data
+#' @author Trent Henderson
+#' 
 
-z_scores_mat <- z_scores %>%
-  dplyr::select(c(problem, method, z)) %>%
-  pivot_wider(id_cols = "problem", names_from = "method", values_from = "z") %>%
-  tibble::column_to_rownames(var = "problem")
+cluster_problems <- function(data, problem_vector){
+  
+  z_scores_mat <- z_scores %>%
+    filter(problem %in% problem_vector) %>%
+    dplyr::select(c(problem, method, z)) %>%
+    pivot_wider(id_cols = "problem", names_from = "method", values_from = "z") %>%
+    tibble::column_to_rownames(var = "problem")
+  
+  row.order <- stats::hclust(stats::dist(z_scores_mat, method = "euclidean"), method = "average")$order
+  z_scores_mat <- z_scores_mat[row.order, ]
+  
+  z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
+    rename(problem = Var1,
+           method = Var2) %>%
+    inner_join(benchmarks_sets, by = c("method" = "method"))
+  
+  return(z_scores_mat)
+}
 
-row.order <- stats::hclust(stats::dist(z_scores_mat, method = "euclidean"), method = "average")$order
-z_scores_mat <- z_scores_mat[row.order, ]
+#-------------------------------------
+# Cluster 1: Problems where FFT > mean
+#-------------------------------------
 
-z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) %>%
-  rename(problem = Var1,
-         method = Var2) %>%
-  left_join(benchmarks_sets, by = c("method" = "method"))
+cluster_1 <- z_scores %>%
+  filter(method == "fft") %>%
+  filter(z > 1) %>%
+  filter(problem != "EthanolLevel") %>% # Quantiles does better so put it in Cluster 2
+  pull(problem)
+
+cluster_1 <- cluster_problems(z_scores, cluster_1)
+
+#-------------------------------------------
+# Cluster 2: Problems where quantiles > mean
+#-------------------------------------------
+
+cluster_2 <- z_scores %>%
+  filter(method == "quantiles") %>%
+  filter(z > 1) %>%
+  pull(problem)
+
+cluster_2 <- cluster_problems(z_scores, cluster_2)
+
+#----------------------------------------------------------
+# Cluster 3: All other problems (core focus of the graphic)
+#----------------------------------------------------------
+
+cluster_3 <- z_scores %>%
+  filter(problem %ni% append(cluster_1$problem, cluster_2$problem)) %>%
+  pull(problem)
+
+cluster_3 <- cluster_problems(z_scores, cluster_3)
+
+#--------------
+# Bind together
+#--------------
+
+clusters <- bind_rows(cluster_3, cluster_2, cluster_1)
 
 #---------------------- Draw graphic -----------------------
 
 # Main plot
 
-p <- z_scores_mat %>%
+p <- clusters %>%
+  mutate(value = ifelse(value < -3.5, -3.5, value)) %>% # For visual clarity
+  mutate(problem = factor(problem, levels = append(append(as.character(rev(unique(cluster_3$problem))),
+                                                   as.character(rev(unique(cluster_2$problem)))),
+                                                   as.character(rev(unique(cluster_1$problem)))), 
+                          ordered = TRUE)) %>%
   ggplot(aes(x = reorder(method, -global_avg), y = problem, fill = value)) +
   geom_tile() +
-  # geom_hline(yintercept = 98.5, lty = "solid", colour = "black", size = 0.7) +
-  # geom_hline(yintercept = 89.5, lty = "solid", colour = "black", size = 0.7) +
-  # geom_hline(yintercept = 64.5, lty = "solid", colour = "black", size = 0.7) +
-  # geom_hline(yintercept = 43.5, lty = "solid", colour = "black", size = 0.7) +
-  # geom_hline(yintercept = 7.5, lty = "solid", colour = "black", size = 0.7) +
-  # geom_hline(yintercept = 4.5, lty = "solid", colour = "black", size = 0.7) +
-  # geom_hline(yintercept = 2.5, lty = "solid", colour = "black", size = 0.7) +
+  geom_rect(aes(xmin = 6.5, xmax = 7.5, ymin = 95.5, ymax = 102.5), fill = NA, colour = "black", size = 1) + # FFT > mean
+  geom_rect(aes(xmin = 7.5, xmax = 8.5, ymin = 92.5, ymax = 99.5), fill = NA, colour = "black", size = 1) + # Quantiles > mean
+  geom_rect(aes(xmin = 0.5, xmax = 6.5, ymin = 0.5, ymax = 92.5), fill = NA, colour = "black", size = 1) + # Big feature set box
+  geom_rect(aes(xmin = 2.5, xmax = 3.5, ymin = 34.5, ymax = 35.5), fill = NA, colour = "black", size = 1) + # TSFEL standout PigCVP
+  geom_rect(aes(xmin = 4.5, xmax = 5.5, ymin = 47.5, ymax = 48.5), fill = NA, colour = "black", size = 1) + # Kats standout Yoga
+  geom_rect(aes(xmin = 0.5, xmax = 1.5, ymin = 82.5, ymax = 83.5), fill = NA, colour = "black", size = 1) + # tsfresh standout MixedShapesRegularTrain
+  geom_rect(aes(xmin = 1.5, xmax = 2.5, ymin = 70.5, ymax = 71.5), fill = NA, colour = "black", size = 1) + # tsfeatures standout Phoneme
   labs(x = "Feature set",
        y = "Problem",
        fill = "Normalised performance score") +
   scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
-                       breaks = c(-2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
-                       labels = c(-2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
-                       limits = c(-2.5, 2.5)) +
+                       breaks = c(-3.5, -3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
+                       labels = c("< -3.5", "-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2", "2.5"),
+                       limits = c(-3.5, 2.5)) +
   theme_bw() +
-  coord_cartesian(xlim = c(1, 6), clip = "off") +
+  coord_cartesian(xlim = c(1, 8), clip = "off") +
   theme(legend.position = "bottom",
         legend.key.width = unit(1.5, "cm"),
         panel.grid = element_blank(),
@@ -102,9 +163,9 @@ p <- z_scores_mat %>%
 
 # Side annotations
 
-label_data <- data.frame(x = rep(0.5, times = 6),
-                         y = c(-3, 2, 25, 52, 78, 97),
-                         mylab = c("vi) Strong TSFEL performance", "v) Poor Kats performance", "iv) Other", "iii) Strong tsfresh performance", "ii) Other", "i) Strong tsfresh performance"))
+label_data <- data.frame(x = rep(0.5, times = 3),
+                         y = c(104, 100, 50),
+                         mylab = c("FFT > mean", "Quantiles > mean", "Meaningful feature\nset differences"))
 
 ann <- ggplot(data = label_data) +
   geom_text(aes(x = x, y = y, label = mylab), fontface = "bold", color = "black") +
