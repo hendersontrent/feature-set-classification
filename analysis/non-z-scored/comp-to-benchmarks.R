@@ -20,8 +20,19 @@ load("ftm_non_sig.Rda")
 # Grab benchmark results
 
 benchmarks <- pull_benchmark_results() %>%
-  dplyr::select(c(problem, method, accuracy)) %>%
   filter(problem %in% ftm_non_sig)
+
+# Filter to just the algorithms which had 30 resamples
+
+good_methods <- benchmarks %>% 
+  group_by(method) %>% 
+  summarise(counter = n()) %>%
+  ungroup() %>%
+  filter(counter == length(unique(benchmarks$problem)) * 30) %>%
+  pull(method)
+
+benchmarks <- benchmarks %>%
+  filter(method %in% good_methods)
 
 # Find best per problem
 
@@ -85,12 +96,7 @@ main_models <- bind_rows(outputs, outputs_aggregate) %>%
   ungroup() %>%
   filter(ranker == 1) %>%
   dplyr::select(-c(ranker)) %>%
-  filter(problem %in% ftm_non_sig) %>%
-  mutate(flag = ifelse(problem == "Trace" & method == "All features", FALSE, TRUE),
-         flag2 = ifelse(problem == "ToeSegmentation2" & method == "All features", FALSE, TRUE)) %>% # Reward the single set instead of All features here
-  filter(flag) %>%
-  filter(flag2) %>%
-  dplyr::select(-c(flag, flag2))
+  filter(problem %in% ftm_non_sig)
 
 outputs_filt <- outputs %>%
   dplyr::select(c(problem, method, accuracy))
@@ -254,17 +260,20 @@ stopifnot(nrow(ns) + nrow(sig) == nrow(winners))
 
 # Define colour palette
 
-mypal <- c("Non-significant difference" = "grey80",
-           "Zero variance for one/more sets" = "grey50",
-           "cBOSS" = mypal[1],
-           "HIVE-COTEv1_0" = mypal[2],
-           "InceptionTime" = mypal[3],
-           "ResNet" = mypal[4],
-           "ROCKET" = mypal[5],
-           "S-BOSS" = mypal[6],
-           "STC" = mypal[7],
-           "TS-CHIEF" = mypal[8],
-           "WEASEL" = mypal[9])
+mypal2 <- c("Non-significant difference" = "grey80",
+            "Zero variance for one/more sets" = "grey50",
+            "HC2/Multi-R" = mypal[1],
+            "Hydra-MR" = mypal[2],
+            "InceptionT" = mypal[3],
+            "MrSQM" = mypal[4],
+            "Multi-R" = mypal[5],
+            "ResNet" = mypal[6],
+            "ROCKET" = mypal[7],
+            "TS-CHIEF" = mypal[8],
+            "HC2" = mypal[9],
+            "Hydra" = mypal[10],
+            "TDE" = mypal[11],
+            "RDST" = mypal[12])
 
 # Draw scatterplot
 
@@ -285,7 +294,7 @@ p <- ns %>%
        colour = NULL) +
   scale_x_continuous(labels = function(x)paste0(x, "%")) + 
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_colour_manual(values = mypal) +
+  scale_colour_manual(values = mypal2) +
   theme_bw() +
   theme(legend.position = "bottom",
         legend.title = element_blank(),
@@ -295,4 +304,4 @@ p <- ns %>%
         legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/non-z-scored/features-vs-bench.pdf", p, units = "in", height = 9, width = 9)
+ggsave("output/non-z-scored/features-vs-bench.pdf", p, units = "in", height = 10, width = 10)

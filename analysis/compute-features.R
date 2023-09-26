@@ -15,13 +15,11 @@
 
 load("data/TimeSeriesData.Rda")
 
-<<<<<<< HEAD
-# Fix Python environment to where the Python libraries are installed on my machine
+# Set up Python environment (NOTE: those seeking to reproduce will have to adjust accordingly)
 
+install_python_pkgs("PUT YOUR PATH TO PYTHON 3.8/3.9 ON YOUR MACHINE HERE", "C:/Users/User/Desktop/feature-set-classification")
 reticulate::use_virtualenv("C:/Users/User/Desktop/feature-set-classification")
 
-=======
->>>>>>> 555d33d2b4ea41f1c906da2d8805db18eafdfb25
 #------------- Feature extraction --------------
 
 #' Function to map over datasets to avoid massive dataframe processing times / crashes
@@ -42,29 +40,14 @@ extract_features_by_problem <- function(data, theproblem){
   
   # Calculate features
   
-<<<<<<< HEAD
-  outs <- calculate_features(tmp, id_var = "id", time_var = "timepoint", 
-                             values_var = "values", group_var = "target", 
-                             feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL"), 
-                             catch24 = TRUE, seed = 123)[[1]]
-=======
   outs <- try(calculate_features(tmp, id_var = "id", time_var = "timepoint", 
                                  values_var = "values", group_var = "target", 
                                  feature_set = c("catch22", "feasts", "tsfeatures", "Kats", "tsfresh", "TSFEL"), 
                                  catch24 = TRUE, seed = 123)[[1]])
->>>>>>> 555d33d2b4ea41f1c906da2d8805db18eafdfb25
   
   # Catch cases where appended NAs cause errors (i.e., different time series have different lengths or a tsfeatures errors due to time-series length)
-  
-<<<<<<< HEAD
-  if(length(unique(tmp$id)) != length(unique(outs$id))){
-    outs <- unique(tmp$id) %>%
-      purrr::map_dfr(~ calculate_features2(tmp, id_var = "id", time_var = "timepoint", 
-                                           values_var = "values", group_var = "target", 
-                                           feature_set = c("catch22", "feasts", "tsfeatures", "tsfresh", "TSFEL"), 
-                                           catch24 = TRUE, seed = 123, the_id = .x))[[1]]
-=======
-  if("try-error" %in% class(outs) || (length(unique(tmp$id)) != length(unique(outs$id)))){
+    
+    if("try-error" %in% class(outs) || (length(unique(tmp$id)) != length(unique(outs$id)))){
     
     outs <- try(calculate_features(tmp, id_var = "id", time_var = "timepoint", 
                                    values_var = "values", group_var = "target", 
@@ -78,7 +61,6 @@ extract_features_by_problem <- function(data, theproblem){
                                              feature_set = c("catch22", "feasts", "tsfeatures", "Kats", "tsfresh", "TSFEL"), 
                                              catch24 = TRUE, seed = 123, the_id = .x)[[1]])
     }
->>>>>>> 555d33d2b4ea41f1c906da2d8805db18eafdfb25
   }
   
   save(outs, file = paste0("data/feature-calcs/", theproblem, ".Rda"))

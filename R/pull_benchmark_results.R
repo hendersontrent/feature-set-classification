@@ -15,38 +15,64 @@
 
 pull_benchmark_results <- function(){
   
-  # Download results files
+  # Download results files and wrangle into correct format
   
-  url <- "https://www.timeseriesclassification.com/results/tsml/tsmlUnivariateResults.zip"
-  temp <- tempfile()
-  download.file(url, temp, mode = "wb")
+  classifiers <- c("https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/1NN-DTW_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/Arsenal_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/BOSS_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/CIF_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/CNN_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/Catch22_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/DrCIF_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/EE_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/FreshPRINCE_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/HC1_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/HC2_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/Hydra-MR_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/Hydra_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/InceptionT_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/Mini-R_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/MrSQM_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/Multi-R_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/PF_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/RDST_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/RISE_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/RIST_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/ROCKET_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/RSF_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/RSTSF_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/ResNet_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/STC_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/STSF_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/ShapeDTW_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/Signatures_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/TDE_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/TS-CHIEF_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/TSF_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/TSFresh_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/WEASEL-D_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/WEASEL_ACC.csv",
+                   "https://raw.githubusercontent.com/time-series-machine-learning/tsml-eval/main/results/classification/Univariate/cBOSS_ACC.csv")
   
-  paths <- c("ResultsByClassifier/BOSS_TESTFOLDS.csv", "ResultsByClassifier/cBOSS_TESTFOLDS.csv",
-             "ResultsByClassifier/HIVE-COTEv1_0_TESTFOLDS.csv", "ResultsByClassifier/InceptionTime_TESTFOLDS.csv",
-             "ResultsByClassifier/ProximityForest_TESTFOLDS.csv", "ResultsByClassifier/ResNet_TESTFOLDS.csv",
-             "ResultsByClassifier/RISE_TESTFOLDS.csv", "ResultsByClassifier/ROCKET_TESTFOLDS.csv",
-             "ResultsByClassifier/S-BOSS_TESTFOLDS.csv", "ResultsByClassifier/STC_TESTFOLDS.csv",
-             "ResultsByClassifier/TS-CHIEF_TESTFOLDS.csv", "ResultsByClassifier/TSF_TESTFOLDS.csv",
-             "ResultsByClassifier/WEASEL_TESTFOLDS.csv")
+  storage <- vector(mode = "list", length = length(classifiers))
   
-  # Extract .csv files and tidy up
-  
-  accs <- list()
-  
-  for(i in paths){
+  for(i in classifiers){
+    temp <- read_csv(i)
+    classifier <- gsub(".*/", "\\1", i)
+    classifier <- gsub(".csv", "\\1", classifier)
+    classifier <- gsub("_ACC", "\\1", classifier)
     
-    themethod <- gsub("ResultsByClassifier/", "\\1", i)
-    themethod <- gsub("_TESTFOLDS.csv", "\\1", themethod)
+    temp <- temp %>%
+      rename(problem = 1) %>%
+      pivot_longer(cols = 2:ncol(temp), names_to = "resample", values_to = "accuracy") %>%
+      mutate(resample = as.numeric(resample),
+             resample = resample + 1) %>%
+      mutate(method = classifier)
     
-    tmp <- readr::read_csv(unz(temp, filename = i)) %>%
-      rename(problem = "folds:") %>%
-      pivot_longer(cols = "0":"29", names_to = "resample", values_to = "accuracy") %>%
-      mutate(method = themethod)
-    
-    accs[[i]] <- tmp
+    storage[[i]] <- temp
   }
   
-  accs <- do.call("rbind", accs)
-  rownames(accs) <- NULL
-  return(accs)
+  storage <- do.call("rbind", storage)
+  rownames(storage) <- NULL
+  return(storage)
 }

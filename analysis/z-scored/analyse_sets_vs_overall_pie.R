@@ -199,7 +199,7 @@ mypal2 <- c("All features" = "black",
            "Kats" = mypal[3],
            "tsfeatures" = mypal[4],
            "TSFEL" = mypal[5],
-           "tsfresh" = mypal[6],
+           "tsfresh" = mypal[10],
            "fft" = mypal[7],
            "quantiles" = mypal[8])
 
