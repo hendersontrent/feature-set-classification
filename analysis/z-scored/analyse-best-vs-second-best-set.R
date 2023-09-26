@@ -93,7 +93,7 @@ mypal2 <- c("Non-significant difference" = "grey80",
             "Kats" = mypal[3],
             "tsfeatures" = mypal[4],
             "TSFEL" = mypal[5],
-            "tsfresh" = mypal[6])
+            "tsfresh" = mypal[10])
 
 # Define coordinates for upper triangle to shade
 

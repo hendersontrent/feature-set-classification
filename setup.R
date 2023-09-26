@@ -63,8 +63,11 @@ options(dplyr.summarise.inform = FALSE)
 
 # Define reusable colour palette
 
-mypal <- c("#FF0029", "#377EB8", "#66A61E", "#984EA3", "#00D2D5", 
-           "#FF7F00", "#AF8D00", "#7F80CD", "#B3E900")
+mypal <- c("#32964d", "#b07ccf", "#d77655", "#298cc0", "#793883", "#b1bf81", 
+           "#cd49dc", "#57e24c", "#304866", "#fb2d4c", "#a7dcf9", "#881c23")
+
+# mypal <- c("#FF0029", "#377EB8", "#66A61E", "#984EA3", "#00D2D5", 
+#            "#FF7F00", "#AF8D00", "#7F80CD", "#B3E900")
 
 # Fix Python environment to where the Python libraries are installed on my machine
 
