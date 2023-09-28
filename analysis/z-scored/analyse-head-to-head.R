@@ -187,16 +187,17 @@ p <- both %>%
        y = "Feature set (W-L)",
        fill = "Number of statistical wins") +
   scale_fill_gradient(low = "white", high = "#FF0029", na.value = "grey50",
-                      limits = c(0, 50),
-                      breaks = seq(from = 0, to = 50, by = 10),
-                      labels = seq(from = 0, to = 50, by = 10)) +
+                      limits = c(0, 70),
+                      breaks = seq(from = 0, to = 70, by = 10),
+                      labels = seq(from = 0, to = 70, by = 10)) +
   theme_bw() +
   theme(legend.position = "bottom",
         panel.grid = element_blank(),
         axis.text = element_text(size = 11),
         axis.title = element_text(size = 12),
         legend.title = element_text(size = 12),
-        legend.text = element_text(size = 11))
+        legend.text = element_text(size = 11),
+        legend.key.size = unit(1.5, "cm"))
 
 print(p)
 ggsave("output/z-scored/head-to-head-matrix.pdf", p, units = "in", height = 9, width = 9)
