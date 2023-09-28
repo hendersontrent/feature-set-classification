@@ -70,7 +70,7 @@ p_values <- unique(both$problem) %>%
 both <- both %>%
   inner_join(p_values, by = c("problem" = "problem")) %>%
   mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
-  mutate(significant = ifelse(p.value.adj < 0.05, "Significant difference", "Non-significant difference"),
+  mutate(significant = ifelse(p.value < 0.05, "Significant difference", "Non-significant difference"),
          top_performer = ifelse(significant == "Significant difference", best_method, "Non-significant difference")) %>%
   mutate(significant = ifelse(best_accuracy_sd == 0 | worst_accuracy_sd == 0, "Zero variance for one/more sets", significant),
          top_performer = ifelse(best_accuracy_sd == 0 | worst_accuracy_sd == 0, "Zero variance for one/more sets", top_performer))
@@ -88,7 +88,7 @@ mypal2 <- c("Non-significant difference" = "grey80",
             "Kats" = mypal[3],
             "tsfeatures" = mypal[4],
             "TSFEL" = mypal[5],
-            "tsfresh" = mypal[10])
+            "tsfresh" = mypal[6])
 
 # Define coordinates for upper triangle to shade
 
