@@ -27,6 +27,9 @@ fit_all_classifiers <- function(problem_name, tt_labels, n_resamples = 30, by_se
   if(by_set){
     outputs <- unique(outs$method) %>%
       purrr::map_dfr(~ evaluate_performance(outs, problem_name = problem_name, n_resamples = n_resamples, feature_set = .x))
+    
+    save(outputs, file = paste0("data/", ifelse(z_scored, "z-score-classifiers/by_set/", "classifiers/by_set/"), problem_name, ".Rda"))
+    
   } else{
     
     # Filter duplicates
@@ -41,6 +44,6 @@ fit_all_classifiers <- function(problem_name, tt_labels, n_resamples = 30, by_se
     # Fit models
     
     outputs <- evaluate_performance(outs, problem_name = problem_name, n_resamples = n_resamples, feature_set = NULL)
+    save(outputs, file = paste0("data/", ifelse(z_scored, "z-score-classifiers/aggregate/", "classifiers/aggregate/"), problem_name, ".Rda"))
   }
-  return(outputs)
 }

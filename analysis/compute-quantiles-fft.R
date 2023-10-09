@@ -92,6 +92,6 @@ fit_bp_classifiers <- function(data, problem_name, n_resamples = 30){
 # Run function
 
 outputs_z_bp <- good_keepers %>%
-  purrr::map_dfr(~ fit_bp_classifiers(data = fft_quantiles, problem_name = .x, n_resamples = 30))
+  purrr::map_dfr(~ fit_bp_classifiers(data = fft_quantiles, problem_name = .x, n_resamples = 100))
 
 save(outputs_z_bp, file = "data/outputs_z_bp.Rda")

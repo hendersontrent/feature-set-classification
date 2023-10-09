@@ -28,26 +28,16 @@ rm(TimeSeriesData) # Clean up environment as dataframe is large
 
 # Non-z-scored
 
-outputs <- good_keepers %>%
-  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 30, by_set = TRUE, z_scored = FALSE))
+good_keepers %>%
+  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 100, by_set = TRUE, z_scored = FALSE))
 
-save(outputs, file = "data/outputs.Rda")
-
-outputs_aggregate <- good_keepers %>%
-  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 30, by_set = FALSE, z_scored = FALSE))
-
-save(outputs_aggregate, file = "data/outputs_aggregate.Rda")
-rm(features, outputs, outputs_aggregate)
+good_keepers %>%
+  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 100, by_set = FALSE, z_scored = FALSE))
 
 # z-scored
 
-outputs_z <- good_keepers %>%
-  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 30, by_set = TRUE, z_scored = TRUE))
+good_keepers %>%
+  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 100, by_set = TRUE, z_scored = TRUE))
 
-save(outputs_z, file = "data/outputs_z.Rda")
-
-outputs_z_aggregate <- good_keepers %>%
-  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 30, by_set = FALSE, z_scored = TRUE))
-
-save(outputs_z_aggregate, file = "data/outputs_z_aggregate.Rda")
-rm(features, outputs_z, outputs_z_aggregate, good_keepers)
+good_keepers %>%
+  purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 100, by_set = FALSE, z_scored = TRUE))
