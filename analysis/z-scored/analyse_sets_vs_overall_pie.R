@@ -17,7 +17,7 @@
 
 load("data/outputs_z.Rda")
 load("data/outputs_z_bp.Rda")
-load("data/outputs_z_aggregate.Rda")
+load("data/outputs_aggregate_z.Rda")
 outputs_z <- bind_rows(outputs_z, outputs_z_bp)
 
 # Calculate winners
@@ -39,7 +39,7 @@ main_models <- outputs_z %>%
   dplyr::select(-c(flag)) %>%
   rename(accuracy = accuracy_mean)
 
-main_models_aggregate <- outputs_z_aggregate %>%
+main_models_aggregate <- outputs_aggregate_z %>%
   mutate(accuracy = accuracy * 100,
          method = "All features") %>%
   group_by(problem, method) %>%
@@ -65,7 +65,7 @@ all_mains <- main_models %>%
 reduced <- outputs_z %>%
   dplyr::select(c(problem, method, accuracy))
 
-reduced2 <- outputs_z_aggregate %>%
+reduced2 <- outputs_aggregate_z %>%
   mutate(method = "All features") %>%
   dplyr::select(c(problem, method, accuracy))
 
@@ -92,7 +92,7 @@ single_accs <- outputs_z %>%
   summarise(accuracy_mean = mean(accuracy, na.rm = TRUE)) %>%
   ungroup()
 
-all_accs <- outputs_z_aggregate %>%
+all_accs <- outputs_aggregate_z %>%
   mutate(accuracy = accuracy * 100,
          accuracy = accuracy * 100) %>%
   group_by(problem) %>%
@@ -156,16 +156,6 @@ all_mains2 <- all_mains %>%
           TRUE                                   ~ top_performer))
 
 all_mains2[is.na(all_mains2)] <- 0 # Gets pie graph to work
-
-# Select case studies based on distance from line of identity
-
-'%ni%' <- Negate('%in%')
-
-cases <- all_mains2 %>%
-  filter(top_performer %ni% c("Non-significant difference", "Zero variance for one/more sets")) %>%
-  mutate(abs_distance = abs(ifelse(top_performer == "All features", accuracy_all - accuracy, accuracy - accuracy_all))) %>%
-  slice_max(abs_distance, n = 3) %>%
-  dplyr::select(c(problem, top_performer, abs_distance))
 
 #---------------------- Separate dataframes for plot control -------------------
 
