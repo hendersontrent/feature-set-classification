@@ -41,3 +41,68 @@ good_keepers %>%
 
 good_keepers %>%
   purrr::map_dfr(~ fit_all_classifiers(problem_name = .x, tt_labels = train_test_ids, n_resamples = 100, by_set = FALSE, z_scored = TRUE))
+
+#---------------- Bind together -----------------
+
+#-------------
+# Non-z-scored
+#-------------
+
+# By set
+
+data_files <- list.files("data/classifiers/by_set", full.names = TRUE, pattern = "\\.Rda")
+outputs_tmp <- vector(mode = "list", length = length(data_files))
+
+for(d in data_files){
+  load(d)
+  outputs_tmp[[match(d, data_files)]] <- outputs
+}
+
+outputs <- do.call("rbind", outputs_tmp)
+save(outputs, file = "data/outputs.Rda")
+rm(outputs)
+
+# Aggregate
+
+data_files <- list.files("data/classifiers/aggregate", full.names = TRUE, pattern = "\\.Rda")
+outputs_aggregate <- vector(mode = "list", length = length(data_files))
+
+for(d in data_files){
+  load(d)
+  outputs_aggregate[[match(d, data_files)]] <- outputs
+}
+
+outputs_aggregate <- do.call("rbind", outputs_aggregate)
+save(outputs_aggregate, file = "data/outputs_aggregate.Rda")
+rm(outputs)
+
+#---------
+# z-scored
+#---------
+
+# By set
+
+data_files <- list.files("data/z-score-classifiers/by_set", full.names = TRUE, pattern = "\\.Rda")
+outputs_z <- vector(mode = "list", length = length(data_files))
+
+for(d in data_files){
+  load(d)
+  outputs_z[[match(d, data_files)]] <- outputs
+}
+
+outputs_z <- do.call("rbind", outputs_z)
+save(outputs_z, file = "data/outputs.Rda")
+rm(outputs)
+
+# Aggregate
+
+data_files <- list.files("data/z-score-classifiers/aggregate", full.names = TRUE, pattern = "\\.Rda")
+outputs_aggregate_z <- vector(mode = "list", length = length(data_files))
+
+for(d in data_files){
+  load(d)
+  outputs_aggregate_z[[match(d, data_files)]] <- outputs
+}
+
+outputs_aggregate_z <- do.call("rbind", outputs_aggregate_z)
+save(outputs_aggregate_z, file = "data/outputs_aggregate_z.Rda")
