@@ -91,7 +91,7 @@ for(d in data_files){
 }
 
 outputs_z <- do.call("rbind", outputs_z)
-save(outputs_z, file = "data/outputs.Rda")
+save(outputs_z, file = "data/outputs_z.Rda")
 rm(outputs)
 
 # Aggregate
