@@ -165,33 +165,36 @@ separates <- all_mains2 %>%
   rowwise %>%
   mutate(uniques = n_distinct(c_across(catch22:tsfresh))) %>%
   ungroup() %>%
-  mutate(my_label = ifelse(top_performer %in% c("Non-significant difference", "Zero variance for one/more sets"), NA, problem))
+  mutate(my_label = ifelse(top_performer %in% c("Non-significant difference", "Zero variance for one/more sets"), NA, problem)) %>%
+  mutate()
 
 # Rows where we just want a geom_point
 
 point_df <- separates %>%
-  filter(uniques <= 2)
+  filter(top_performer %in% c("Non-significant difference", "Zero variance for one/more sets"))
 
 # Rows where we want a geom_scatterpie
 
 pie_df <- separates %>%
-  filter(uniques > 2)
+  filter(top_performer %ni% c("Non-significant difference", "Zero variance for one/more sets"))
+
+stopifnot(nrow(point_df) + nrow(pie_df) == nrow(separates)) # Small unit test
 
 #---------------------- Produce graphic --------------------------
 
 # Create palette for whoever is top performer
 
 mypal2 <- c("All features" = "black",
-           "Non-significant difference" = "grey80",
-           "Zero variance for one/more sets" = "grey50",
-           "catch22" = mypal[1],
-           "feasts" = mypal[2],
-           "Kats" = mypal[3],
-           "tsfeatures" = mypal[4],
-           "TSFEL" = mypal[5],
-           "tsfresh" = mypal[6],
-           "fft" = mypal[7],
-           "quantiles" = mypal[8])
+            "Non-significant difference" = "grey80",
+            "Zero variance for one/more sets" = "grey50",
+            "catch22" = mypal[1],
+            "feasts" = mypal[2],
+            "Kats" = mypal[3],
+            "tsfeatures" = mypal[4],
+            "TSFEL" = mypal[5],
+            "tsfresh" = mypal[6],
+            "fft" = mypal[7],
+            "quantiles" = mypal[8])
 
 # Define coordinates for upper triangle to shade
 
@@ -208,8 +211,8 @@ p <- point_df %>%
   geom_point(aes(colour = top_performer), size = 2) +
   geom_linerange(data = pie_df, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_linerange(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
-  geom_scatterpie(aes(x = accuracy, y = accuracy_all), data = pie_df, pie_scale = 2.5,
-                   cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
+  geom_scatterpie(aes(x = accuracy, y = accuracy_all), data = pie_df, pie_scale = 2,
+                  cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
   geom_text_repel(aes(label = my_label), legend = FALSE, segment.linetype = "dashed", box.padding = 1.25) +
   geom_text_repel(data = pie_df, aes(x = accuracy, y = accuracy_all, label = my_label), legend = FALSE, 
                   segment.linetype = "dashed", box.padding = 1.25) +
