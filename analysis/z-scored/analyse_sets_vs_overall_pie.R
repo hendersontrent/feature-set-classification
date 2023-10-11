@@ -17,7 +17,7 @@
 
 load("data/outputs_z.Rda")
 load("data/outputs_z_bp.Rda")
-load("data/outputs_z_aggregate.Rda")
+load("data/outputs_aggregate_z.Rda")
 outputs_z <- bind_rows(outputs_z, outputs_z_bp)
 
 # Calculate winners
@@ -39,7 +39,7 @@ main_models <- outputs_z %>%
   dplyr::select(-c(flag)) %>%
   rename(accuracy = accuracy_mean)
 
-main_models_aggregate <- outputs_z_aggregate %>%
+main_models_aggregate <- outputs_aggregate_z %>%
   mutate(accuracy = accuracy * 100,
          method = "All features") %>%
   group_by(problem, method) %>%
@@ -65,7 +65,7 @@ all_mains <- main_models %>%
 reduced <- outputs_z %>%
   dplyr::select(c(problem, method, accuracy))
 
-reduced2 <- outputs_z_aggregate %>%
+reduced2 <- outputs_aggregate_z %>%
   mutate(method = "All features") %>%
   dplyr::select(c(problem, method, accuracy))
 
@@ -92,7 +92,7 @@ single_accs <- outputs_z %>%
   summarise(accuracy_mean = mean(accuracy, na.rm = TRUE)) %>%
   ungroup()
 
-all_accs <- outputs_z_aggregate %>%
+all_accs <- outputs_aggregate_z %>%
   mutate(accuracy = accuracy * 100,
          accuracy = accuracy * 100) %>%
   group_by(problem) %>%
@@ -157,16 +157,6 @@ all_mains2 <- all_mains %>%
 
 all_mains2[is.na(all_mains2)] <- 0 # Gets pie graph to work
 
-# Select case studies based on distance from line of identity
-
-'%ni%' <- Negate('%in%')
-
-cases <- all_mains2 %>%
-  filter(top_performer %ni% c("Non-significant difference", "Zero variance for one/more sets")) %>%
-  mutate(abs_distance = abs(ifelse(top_performer == "All features", accuracy_all - accuracy, accuracy - accuracy_all))) %>%
-  slice_max(abs_distance, n = 3) %>%
-  dplyr::select(c(problem, top_performer, abs_distance))
-
 #---------------------- Separate dataframes for plot control -------------------
 
 # Find number of unique values to enable filtering
@@ -175,33 +165,36 @@ separates <- all_mains2 %>%
   rowwise %>%
   mutate(uniques = n_distinct(c_across(catch22:tsfresh))) %>%
   ungroup() %>%
-  mutate(my_label = ifelse(top_performer %in% c("Non-significant difference", "Zero variance for one/more sets"), NA, problem))
+  mutate(my_label = ifelse(top_performer %in% c("Non-significant difference", "Zero variance for one/more sets"), NA, problem)) %>%
+  mutate()
 
 # Rows where we just want a geom_point
 
 point_df <- separates %>%
-  filter(uniques <= 2)
+  filter(top_performer %in% c("Non-significant difference", "Zero variance for one/more sets"))
 
 # Rows where we want a geom_scatterpie
 
 pie_df <- separates %>%
-  filter(uniques > 2)
+  filter(top_performer %ni% c("Non-significant difference", "Zero variance for one/more sets"))
+
+stopifnot(nrow(point_df) + nrow(pie_df) == nrow(separates)) # Small unit test
 
 #---------------------- Produce graphic --------------------------
 
 # Create palette for whoever is top performer
 
 mypal2 <- c("All features" = "black",
-           "Non-significant difference" = "grey80",
-           "Zero variance for one/more sets" = "grey50",
-           "catch22" = mypal[1],
-           "feasts" = mypal[2],
-           "Kats" = mypal[3],
-           "tsfeatures" = mypal[4],
-           "TSFEL" = mypal[5],
-           "tsfresh" = mypal[6],
-           "fft" = mypal[7],
-           "quantiles" = mypal[8])
+            "Non-significant difference" = "grey80",
+            "Zero variance for one/more sets" = "grey50",
+            "catch22" = mypal[1],
+            "feasts" = mypal[2],
+            "Kats" = mypal[3],
+            "tsfeatures" = mypal[4],
+            "TSFEL" = mypal[5],
+            "tsfresh" = mypal[6],
+            "fft" = mypal[7],
+            "quantiles" = mypal[8])
 
 # Define coordinates for upper triangle to shade
 
@@ -218,8 +211,8 @@ p <- point_df %>%
   geom_point(aes(colour = top_performer), size = 2) +
   geom_linerange(data = pie_df, aes(ymin = lower_y, ymax = upper_y, colour = top_performer), size = 0.7) +
   geom_linerange(data = pie_df, aes(xmin = lower_x, xmax = upper_x, colour = top_performer), size = 0.7) +
-  geom_scatterpie(aes(x = accuracy, y = accuracy_all), data = pie_df, pie_scale = 2.5,
-                   cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
+  geom_scatterpie(aes(x = accuracy, y = accuracy_all), data = pie_df, pie_scale = 2,
+                  cols = colnames(all_mains2)[13:length(colnames(all_mains2))], alpha = 0.8) +
   geom_text_repel(aes(label = my_label), legend = FALSE, segment.linetype = "dashed", box.padding = 1.25) +
   geom_text_repel(data = pie_df, aes(x = accuracy, y = accuracy_all, label = my_label), legend = FALSE, 
                   segment.linetype = "dashed", box.padding = 1.25) +

@@ -187,9 +187,9 @@ p <- both %>%
        y = "Feature set (W-L)",
        fill = "Number of statistical wins") +
   scale_fill_gradient(low = "white", high = "#FF0029", na.value = "grey50",
-                      limits = c(0, 70),
-                      breaks = seq(from = 0, to = 70, by = 10),
-                      labels = seq(from = 0, to = 70, by = 10)) +
+                      limits = c(0, 60),
+                      breaks = seq(from = 0, to = 60, by = 10),
+                      labels = seq(from = 0, to = 60, by = 10)) +
   theme_bw() +
   theme(legend.position = "bottom",
         panel.grid = element_blank(),

@@ -40,6 +40,12 @@ if(!dir.exists('data/feature-calcs/bound')) dir.create('data/feature-calcs/bound
 if(!dir.exists('data/feature-calcs/basic-properties')) dir.create('data/feature-calcs/basic-properties')
 if(!dir.exists('data/case-studies')) dir.create('data/case-studies')
 if(!dir.exists('data/individual-feature-classifiers')) dir.create('data/individual-feature-classifiers')
+if(!dir.exists('data/classifiers')) dir.create('data/classifiers')
+if(!dir.exists('data/classifiers/by_set')) dir.create('data/classifiers/by_set')
+if(!dir.exists('data/classifiers/aggregate')) dir.create('data/classifiers/aggregate')
+if(!dir.exists('data/z-score-classifiers')) dir.create('data/z-score-classifiers')
+if(!dir.exists('data/z-score-classifiers/by_set')) dir.create('data/z-score-classifiers/by_set')
+if(!dir.exists('data/z-score-classifiers/aggregate')) dir.create('data/z-score-classifiers/aggregate')
 if(!dir.exists('R')) dir.create('R')
 if(!dir.exists('utilities')) dir.create('utilities')
 
@@ -65,13 +71,13 @@ options(dplyr.summarise.inform = FALSE)
 
 mypal <- c("#966e33",
            "#b054be",
+           "#6672c7",
            "#5bb74c",
            "#d24371",
-           "#57b286",
            "#cb5636",
            "#55aad1",
+           "#57b286",
            "#dd9a4d",
-           "#6672c7",
            "#b2b241",
            "#c980bd",
            "#627f37",
