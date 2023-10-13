@@ -134,4 +134,4 @@ p <- ns %>%
         legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/z-scored/best_versus_worst_set.pdf", p, units = "in", height = 12, width = 12)
+ggsave("output/z-scored/best_versus_worst_set.pdf", p, units = "in", height = 20, width = 20)
