@@ -60,7 +60,7 @@ find_winner <- function(data, theproblem, set1name, problem_data){
   
   set1_name <- colnames(tmp2)[2]
   set2_name <- colnames(tmp2)[3]
-  t_test <- resampled_ttest(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
+  t_test <- resampled_ttest(x = x, y = y, n = 100, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
   
   tmp2 <- data %>%
     filter(problem == theproblem) %>%

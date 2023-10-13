@@ -22,18 +22,6 @@ load("ftm_non_sig.Rda")
 benchmarks <- pull_benchmark_results() %>%
   filter(problem %in% ftm_non_sig)
 
-# Filter to just the algorithms which had 30 resamples
-
-good_methods <- benchmarks %>% 
-  group_by(method) %>% 
-  summarise(counter = n()) %>%
-  ungroup() %>%
-  filter(counter == length(unique(benchmarks$problem)) * 30) %>%
-  pull(method)
-
-benchmarks <- benchmarks %>%
-  filter(method %in% good_methods)
-
 # Find best per problem
 
 benchmarks_avg <- benchmarks %>%
@@ -85,9 +73,8 @@ rm(benchmarks_avg, no_ties, benchmarks_no_ties, ties_not_100, benchmarks_ties)
  # Load classification results for feature sets and compute winner
 
 load("data/outputs.Rda")
-load("data/outputs_aggregate.Rda")
 
-main_models <- bind_rows(outputs, outputs_aggregate) %>%
+main_models <- outputs %>%
   group_by(problem, method) %>%
   summarise(mean_accuracy = mean(accuracy, na.rm = TRUE)) %>%
   ungroup() %>%
@@ -99,14 +86,8 @@ main_models <- bind_rows(outputs, outputs_aggregate) %>%
   filter(problem %in% ftm_non_sig)
 
 outputs_filt <- outputs %>%
-  dplyr::select(c(problem, method, accuracy))
-
-outputs_filt_aggregate <- outputs_aggregate %>%
-  dplyr::select(c(problem, method, accuracy))
-
-outputs_filt <- bind_rows(outputs_filt, outputs_filt_aggregate) %>%
   inner_join(main_models, by = c("problem" = "problem", "method" = "method")) %>%
-  dplyr::select(-c(mean_accuracy))
+  dplyr::select(c(problem, method, accuracy))
 
 # Filter benchmarks to just problems in calculated sets
 
@@ -200,8 +181,8 @@ find_winners <- function(outputs_data, benchmark_data){
     filter(!is.na(set1_accuracy) & !is.na(set2_accuracy)) %>%
     mutate(p.value.adj = p.adjust(p.value, method = "holm")) %>%
     mutate(flag = case_when(
-      is.na(p.value.adj)                              ~ "Zero variance for one/more sets",
-      p.value > .05                                   ~ "Non-significant difference",
+      is.na(p.value)                                  ~ "Zero variance for one/more sets",
+      p.value >= .05                                  ~ "Non-significant difference",
       p.value < .05 & set1_accuracy > set2_accuracy   ~ set1,
       p.value < .05 & set1_accuracy < set2_accuracy   ~ set2))
 
@@ -262,18 +243,9 @@ stopifnot(nrow(ns) + nrow(sig) == nrow(winners))
 
 mypal2 <- c("Non-significant difference" = "grey80",
             "Zero variance for one/more sets" = "grey50",
-            "HC2/Multi-R" = mypal[1],
-            "Hydra-MR" = mypal[2],
-            "InceptionT" = mypal[3],
-            "MrSQM" = mypal[4],
-            "Multi-R" = mypal[5],
-            "ResNet" = mypal[6],
-            "ROCKET" = mypal[7],
-            "TS-CHIEF" = mypal[8],
-            "HC2" = mypal[9],
-            "Hydra" = mypal[10],
-            "TDE" = mypal[11],
-            "RDST" = mypal[12])
+            "HIVE-COTE" = mypal[1],
+            "ST" = mypal[2],
+            "Flat-COTE" = mypal[3])
 
 # Draw scatterplot
 
@@ -287,6 +259,7 @@ p <- ns %>%
   geom_linerange(data = sig, aes(ymin = lower_y, ymax = upper_y, colour = flag)) +
   geom_linerange(data = sig, aes(xmin = lower_x, xmax = upper_x, colour = flag)) +
   geom_point(data = sig, aes(colour = flag), size = 3) +
+  geom_text_repel(data = sig, aes(label = problem), legend = FALSE, segment.linetype = "dashed", box.padding = 1.25, max.overlaps = Inf) +
   annotate("text", x = 80, y = 10, label = "Best time-series feature set better", size = 4, fontface = 2) +
   annotate("text", x = 20, y = 90, label = "Best benchmark algorithm better", size = 4, fontface = 2) +
   labs(x = "Classification accuracy time-series features (%)",
@@ -304,4 +277,4 @@ p <- ns %>%
         legend.text = element_text(size = 11))
 
 print(p)
-ggsave("output/non-z-scored/features-vs-bench.pdf", p, units = "in", height = 10, width = 10)
+ggsave("output/non-z-scored/features-vs-bench.pdf", p, units = "in", height = 11, width = 11)

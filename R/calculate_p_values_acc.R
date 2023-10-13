@@ -64,6 +64,22 @@ calculate_p_values_acc <- function(data, combn_data, rownum, problem_data){
     filter(method == combn_filt$set2) %>%
     pull(accuracy)
   
+  # Check for NAs
+  
+  x <- na.omit(x)
+  y <- na.omit(y)
+  min_length <- min(length(x), length(y))
+  set.seed(123)
+  
+  if(min_length != 100){
+    if(length(x) > min_length){
+      x <- sample(x, size = min_length, replace = FALSE)
+    }
+    if(length(y) > min_length){
+      y <- sample(y, size = min_length, replace = FALSE)
+    }
+  }
+  
   # Filter to get parameters for correlated t-test
   
   params <- problem_data %>%
@@ -75,7 +91,7 @@ calculate_p_values_acc <- function(data, combn_data, rownum, problem_data){
     outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, method = combn_filt$set1, statistic = NA, p.value = NA)
     return(outs)
   } else{
-    t_test <- resampled_ttest(x = x, y = y, n = 30, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
+    t_test <- resampled_ttest(x = x, y = y, n = min_length, n1 = as.integer(params$Train), n2 = as.integer(params$Test))
     outs <- data.frame(problem = combn_filt$problem, set1 = combn_filt$set1, set2 = combn_filt$set2, method = combn_filt$set1)
     outs <- cbind(outs, t_test)
     return(outs)
