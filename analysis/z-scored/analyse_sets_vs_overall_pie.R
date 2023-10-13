@@ -107,7 +107,7 @@ comps <- comps %>%
   inner_join(all_accs, by = c("problem" = "problem")) %>%
   mutate(flag = case_when(
          is.na(p.value)                                                 ~ "Zero variance for one/more sets",
-         p.value > .05                                                  ~ "Non-significant difference",
+         p.value >= .05                                                  ~ "Non-significant difference",
          p.value < .05 & accuracy_mean > accuracy_all ~ method,
          TRUE                                                           ~ "All features"))
 
