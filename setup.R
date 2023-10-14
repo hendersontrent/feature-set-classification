@@ -46,6 +46,7 @@ if(!dir.exists('data/classifiers/aggregate')) dir.create('data/classifiers/aggre
 if(!dir.exists('data/z-score-classifiers')) dir.create('data/z-score-classifiers')
 if(!dir.exists('data/z-score-classifiers/by_set')) dir.create('data/z-score-classifiers/by_set')
 if(!dir.exists('data/z-score-classifiers/aggregate')) dir.create('data/z-score-classifiers/aggregate')
+if(!dir.exists('data/z-score-classifiers/rbfsvm')) dir.create('data/z-score-classifiers/rbfsvm')
 if(!dir.exists('R')) dir.create('R')
 if(!dir.exists('utilities')) dir.create('utilities')
 
