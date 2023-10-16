@@ -51,3 +51,17 @@ fit_rbf_models <- function(problem_name, tt_labels, n_resamples = 30){
 
 good_keepers %>%
   purrr::map_dfr(~ fit_rbf_models(problem_name = .x, tt_labels = train_test_ids, n_resamples = 100))
+
+#---------------- Bind together -----------------
+
+data_files <- list.files("data/z-score-classifiers/rbfsvm", full.names = TRUE, pattern = "\\.Rda")
+outputs_z_rbf <- vector(mode = "list", length = length(data_files))
+
+for(d in data_files){
+  load(d)
+  outputs_z_rbf[[match(d, data_files)]] <- outputs
+}
+
+outputs_z_rbf <- do.call("rbind", outputs_z_rbf)
+save(outputs_z_rbf, file = "data/outputs_z_rbf.Rda")
+rm(outputs)
