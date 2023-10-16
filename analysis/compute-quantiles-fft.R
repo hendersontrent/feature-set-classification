@@ -68,7 +68,11 @@ save(fft_quantiles, file = "data/feature-calcs/basic-properties/fft_quantiles.Rd
 
 #------------- Fit classifiers --------------
 
-#' Fit classifiers for all feature sets
+#-----------
+# Linear SVM
+#-----------
+
+#' Fit linear SVM classifiers for FFT and quantiles
 #' 
 #' @param data \code{data.frame} of feature information
 #' @param problem_name \code{string} denoting the problem to analyse
@@ -95,3 +99,35 @@ outputs_z_bp <- good_keepers %>%
   purrr::map_dfr(~ fit_bp_classifiers(data = fft_quantiles, problem_name = .x, n_resamples = 100))
 
 save(outputs_z_bp, file = "data/outputs_z_bp.Rda")
+
+#-----------
+# RBF SVM
+#-----------
+
+#' Fit RBF SVM classifiers for FFT and quantiles
+#' 
+#' @param data \code{data.frame} of feature information
+#' @param problem_name \code{string} denoting the problem to analyse
+#' @param n_resamples \code{integer} denoting the number of resamples to calculate. Defaults to \code{30}
+#' @return \code{data.frame} of classification results
+#' @author Trent Henderson
+#' 
+
+fit_bp_classifiers_rbf <- function(data, problem_name, n_resamples = 30){
+  
+  outs <- data %>%
+    filter(problem == problem_name)
+  
+  outputs <- unique(outs$method) %>%
+    purrr::map_dfr(~ evaluate_performance_rbf(outs, problem_name = problem_name, 
+                                              n_resamples = n_resamples, feature_set = .x))
+  
+  return(outputs)
+}
+
+# Run function
+
+outputs_z_bp_rbf <- good_keepers %>%
+  purrr::map_dfr(~ fit_bp_classifiers_rbf(data = fft_quantiles, problem_name = .x, n_resamples = 100))
+
+save(outputs_z_bp_rbf, file = "data/outputs_z_bp_rbf.Rda")
