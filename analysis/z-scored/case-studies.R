@@ -10,7 +10,7 @@
 
 # Define list of problems
 
-case_studies <- c("PigCVP", "Yoga", "MixedShapesRegularTrain", "Phoneme")
+case_studies <- c("InsectWingbeatSound", "PigCVP", "Yoga")
 
 # Calculate top features for each case study
 
@@ -34,7 +34,6 @@ rm(case_studies, top_features, i)
 case_study_tops[[1]]$SummaryStatistics <- calculate_interval(case_study_tops[[1]], metric = "accuracy", by_set = FALSE)
 case_study_tops[[2]]$SummaryStatistics <- calculate_interval(case_study_tops[[2]], metric = "accuracy", by_set = FALSE)
 case_study_tops[[3]]$SummaryStatistics <- calculate_interval(case_study_tops[[3]], metric = "accuracy", by_set = FALSE)
-case_study_tops[[4]]$SummaryStatistics <- calculate_interval(case_study_tops[[4]], metric = "accuracy", by_set = FALSE)
 
 # Save
 
@@ -47,7 +46,6 @@ save(case_study_tops, file = "data/case-studies/case_study_tops.Rda")
 head(case_study_tops[[1]]$SummaryStatistics %>% arrange(-.mean), n = 10)
 head(case_study_tops[[2]]$SummaryStatistics %>% arrange(-.mean), n = 10)
 head(case_study_tops[[3]]$SummaryStatistics %>% arrange(-.mean), n = 10)
-head(case_study_tops[[4]]$SummaryStatistics %>% arrange(-.mean), n = 10)
 
 # Sample sizes
 
