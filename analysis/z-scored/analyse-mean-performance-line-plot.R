@@ -46,6 +46,7 @@ p <- calcs %>%
   mutate(avg = avg * 100) %>%
   ggplot(aes(x = reorder(problem, -orders), y = avg, group = method, colour = method)) +
   geom_line() +
+  geom_point(size = 0.7) +
   labs(x = "Problem",
        y = "Mean classification accuracy (%)",
        colour = NULL) +
