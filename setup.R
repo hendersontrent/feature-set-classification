@@ -8,21 +8,16 @@
 # Author: Trent Henderson, 29 October 2021
 #-----------------------------------------
 
-library(tibble)
 library(dplyr)
-library(purrr)
-library(tidyr)
-library(readr)
 library(ggplot2)
 library(ggrepel)
 library(scales)
 library(foreign)
 library(theft)
+library(theftdlc)
 library(Cairo)
-library(e1071)
 library(scatterpie)
 library(patchwork)
-library(correctR)
 
 # Create important folders if none exist
 
@@ -35,7 +30,6 @@ if(!dir.exists('output/non-z-scored')) dir.create('output/non-z-scored')
 if(!dir.exists('data')) dir.create('data')
 if(!dir.exists('data/feature-calcs')) dir.create('data/feature-calcs')
 if(!dir.exists('data/feature-calcs/z-scored')) dir.create('data/feature-calcs/z-scored')
-if(!dir.exists('data/feature-calcs/bound')) dir.create('data/feature-calcs/bound')
 if(!dir.exists('data/case-studies')) dir.create('data/case-studies')
 if(!dir.exists('R')) dir.create('R')
 if(!dir.exists('utilities')) dir.create('utilities')
@@ -65,7 +59,7 @@ mypal <- c("#FF0029", "#377EB8", "#66A61E", "#984EA3", "#00D2D5",
 
 # Fix Python environment to where the Python libraries are installed on my machine
 
-reticulate::use_virtualenv("/Users/trenthenderson/Documents/Git/feature-set-classification/feature-sets")
+init_theft("theft-eco-py")
 
 # Define list of problems that previous work used
 
