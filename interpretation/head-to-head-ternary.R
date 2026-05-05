@@ -251,11 +251,10 @@ ternary <- function(model_type = c("glmnet", "svm")){
       win_pc  = mean(win_pc),
       loss_pc = mean(loss_pc)
     )
-  
+
   p_tern <- win_sum |>
     ggtern(aes(x = tie_pc, y = win_pc, z = loss_pc, colour = set1)) +
-    geom_crosshair_tern() +
-    geom_point(size = 4) +
+    geom_point(size = 5) +
     labs(x = "Tie rate (%)", 
          y = "Win rate (%)", 
          z = "Loss rate (%)",
@@ -284,4 +283,4 @@ problem_summaries <- get_n()
 
 p <- ternary(model_type = "svm")
 print(p)
-ggsave("output/ternary.pdf", p, units = "in", height = 9, width = 9)
+ggsave("output/ternary.pdf", p, units = "in", height = 8, width = 8)
