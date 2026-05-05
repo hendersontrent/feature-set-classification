@@ -45,9 +45,5 @@ vignettes/*.pdf
 # Data files
 
 data/*
-data/*.csv
-data/*.arff
-data/*.txt
-data/*.Rda
-
-feature-sets/*
+feature-calculations/features/*
+feature-calculations/baseline-features/*
