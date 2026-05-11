@@ -85,6 +85,22 @@ p <- calcs |>
 print(p)
 ggsave("output/mean-performance-line-plot.pdf", p, unit = "in", width = 16, height = 10)
 
+#---------------------- Compute variance statistics ----------------------
+
+# Variance of feature sets within problems
+
+accuracies |>
+  reframe(.mean = mean(accuracy), .by = c("problem", "feature_set")) |>
+  reframe(.var = var(.mean), .by = "problem") |>
+  reframe(.mean = mean(.var))
+
+# Variance of feature sets between problems
+
+accuracies |>
+  reframe(.mean = mean(accuracy), .by = c("feature_set", "problem")) |>
+  reframe(.var = var(.mean), .by = "feature_set") |>
+  reframe(.mean = mean(.var))
+
 #---------------------- Compute proportion within 10% of best ----------------------
 
 best <- calcs |>
