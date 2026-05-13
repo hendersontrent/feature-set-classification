@@ -101,6 +101,19 @@ accuracies |>
   reframe(.var = var(.mean), .by = "feature_set") |>
   reframe(.mean = mean(.var))
 
+#---------------------- Calculate case study differentials ----------------------
+
+case_studies_diffs <- accuracies |>
+  mutate(flag = case_when(
+    problem == "SyntheticControl" & feature_set == "Kats"  ~ TRUE,
+    problem == "TwoPatterns" & feature_set == "Kats"       ~ TRUE,
+    problem == "Beef" & feature_set == "tsfresh"           ~ TRUE,
+    problem == "EthanolLevel" & feature_set == "tsfresh"   ~ TRUE,
+    problem == "Wine" & feature_set == "catch22"           ~ TRUE,
+    TRUE                                                   ~ FALSE)) |>
+  filter(problem %in% c("SyntheticControl", "TwoPatterns", "Beef", "EthanolLevel", "Wine")) |>
+  reframe(.mean = mean(accuracy), .by = c("problem", "flag"))
+
 #---------------------- Compute proportion within 10% of best ----------------------
 
 best <- calcs |>
