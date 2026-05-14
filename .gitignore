@@ -47,3 +47,4 @@ vignettes/*.pdf
 data/*
 feature-calculations/features/*
 feature-calculations/baseline-features/*
+a-b-plot.svg
