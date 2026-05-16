@@ -29,22 +29,24 @@ library(patchwork)
 #' 
 
 cluster_problems <- function(data, problem_vector, z, b){
-  
+
   z_scores_mat <- z |>
     filter(problem %in% problem_vector) |>
     dplyr::select(c(problem, feature_set, z)) |>
     pivot_wider(id_cols = "problem", names_from = "feature_set", values_from = "z") |>
     tibble::column_to_rownames(var = "problem")
-  
-  row.order <- stats::hclust(stats::dist(z_scores_mat, method = "euclidean"), method = "average")$order
-  z_scores_mat <- z_scores_mat[row.order, ]
-  
+
+  if(nrow(z_scores_mat) >= 2){
+    row.order <- stats::hclust(stats::dist(z_scores_mat, method = "euclidean"), method = "average")$order
+    z_scores_mat <- z_scores_mat[row.order, ]
+  }
+
   z_scores_mat <- reshape2::melt(as.matrix(z_scores_mat)) |>
     rename(problem = Var1,
            feature_set = Var2) |>
     inner_join(b, by = c("feature_set" = "feature_set")) |>
     mutate(problem = as.character(problem))
-  
+
   return(z_scores_mat)
 }
 
@@ -108,53 +110,68 @@ nps <- function(model_type = c("glmnet", "svm")){
   # Generate hierarchical clustering
   #---------------------------------
   
+  top_set <- accuracies |>
+    reframe(.mean = mean(accuracy), .by = c("problem", "feature_set")) |>
+    group_by(problem) |>
+    slice_max(.mean) |>
+    ungroup() |>
+    filter(feature_set %in% c("FFT coefficients", "quantiles", "FFT + quantiles"))
+  
   baseline_z <- z_scores |>
     filter(feature_set %in% c("FFT coefficients", "quantiles", "FFT + quantiles")) |>
-    filter(z > 1) |>
+    #filter(z > 1) |>
+    filter(problem %in% unique(top_set$problem)) |>
     group_by(problem) |>
     mutate(the_rank = dense_rank(-z)) |>
     ungroup() |>
     filter(the_rank == 1) |>
     dplyr::select(-c(the_rank))
   
-  # Cluster 1: Problems where quantiles > mean
-  
-  cluster_1 <- baseline_z |> 
+  # Problem vectors for each cluster
+
+  cluster_1_probs <- baseline_z |>
     filter(feature_set == "quantiles") |>
     pull(problem)
-  
-  cluster_1 <- cluster_problems(z_scores, cluster_1, z_scores, benchmarks_sets)
-  
-  # Cluster 2: Problems where FFT + coefficients > mean
-  
-  cluster_2 <- baseline_z |>
+
+  cluster_2_probs <- baseline_z |>
     filter(feature_set == "FFT + quantiles") |>
     pull(problem)
-  
-  cluster_2 <- cluster_problems(z_scores, cluster_2, z_scores, benchmarks_sets)
-  
-  # Cluster 3: Problems where FFT + coefficients > mean
-  
-  fft_coef <- baseline_z |>
+
+  cluster_3_probs <- baseline_z |>
     filter(feature_set == "FFT coefficients") |>
     pull(problem)
-  
-  cluster_3 <- z_scores |>
-    filter(problem %in% fft_coef) |>
-    mutate(problem = as.character(problem)) |>
-    dplyr::select(c(problem, feature_set, z, .mean)) |>
-    rename(value = z)
-  
+
+  # Data frames with z-scores for each cluster
+
+  cluster_1 <- cluster_problems(z_scores, cluster_1_probs, z_scores, benchmarks_sets)
+  cluster_2 <- cluster_problems(z_scores, cluster_2_probs, z_scores, benchmarks_sets)
+  cluster_3 <- cluster_problems(z_scores, cluster_3_probs, z_scores, benchmarks_sets)
+
   # Cluster 4: Problems where baseline < mean
-  
+
   cluster_4 <- z_scores |>
     filter(problem %ni% baseline_z$problem) |>
     pull(problem)
-  
+
   cluster_4 <- cluster_problems(z_scores, cluster_4, z_scores, benchmarks_sets)
-  
+
+  # Joint hclust on all baseline > mean problems
+
+  baseline_order <- cluster_problems(z_scores, unique(baseline_z$problem), z_scores, benchmarks_sets)
+  joint_order <- rev(unique(baseline_order$problem))
+
+  cluster_3_levels <- joint_order[joint_order %in% cluster_3_probs]
+  cluster_2_levels <- joint_order[joint_order %in% cluster_2_probs]
+  cluster_1_levels <- joint_order[joint_order %in% cluster_1_probs]
+
+  # Dynamic plot boundaries
+
+  n4 <- length(unique(cluster_4$problem))
+  n_total <- n4 + length(joint_order)
+  boundary <- n4 + 1.5
+
   # Bind together
-  
+
   clusters <- bind_rows(cluster_1, cluster_2, cluster_3, cluster_4)
   
   #----------
@@ -164,14 +181,14 @@ nps <- function(model_type = c("glmnet", "svm")){
   p <- clusters |>
     mutate(value = ifelse(value < -3.5, -3.5, value)) |> # For visual clarity
     mutate(problem = factor(problem, levels = c(as.character(rev(unique(cluster_4$problem))),
-                                                as.character(rev(unique(cluster_3$problem))),
-                                                as.character(rev(unique(cluster_2$problem))),
-                                                as.character(rev(unique(cluster_1$problem)))), 
+                                                as.character(cluster_3_levels),
+                                                as.character(cluster_2_levels),
+                                                as.character(cluster_1_levels)),
                             ordered = TRUE)) |>
     ggplot(aes(x = reorder(feature_set, -.mean), y = problem, fill = value)) +
     geom_tile() +
-    geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = 115.5, ymax = 125.5), fill = NA, colour = "black", linewidth = 1) + # baseline > mean
-    geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = 0.5, ymax = 115.5), fill = NA, colour = "black", linewidth = 1) + # baseline < mean
+    geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = boundary, ymax = n_total + 0.5), fill = NA, colour = "black", linewidth = 1) + # baseline > mean
+    geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = 0.5, ymax = boundary), fill = NA, colour = "black", linewidth = 1) + # baseline < mean
     labs(x = "Feature set",
          y = "Problem",
          fill = "Normalized performance score") +
@@ -193,13 +210,13 @@ nps <- function(model_type = c("glmnet", "svm")){
   # Side annotations
   
   label_data <- data.frame(x = rep(0.1, times = 2),
-                           y = c(125, 115),
+                           y = c(n_total, n4 - 2),
                            mylab = c("A", "B"))
-  
+
   ann <- ggplot(data = label_data) +
     geom_text(aes(x = x, y = y, label = mylab), fontface = "bold", color = "black", size = 8) +
-    coord_cartesian(xlim = c(0, 1), 
-                    ylim = c(1, 125),
+    coord_cartesian(xlim = c(0, 1),
+                    ylim = c(1, n_total),
                     clip = "off") +
     theme_void()
   
