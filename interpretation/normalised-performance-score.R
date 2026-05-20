@@ -30,7 +30,7 @@ library(patchwork)
 
 cluster_problems <- function(data, problem_vector, z, b){
 
-  z_scores_mat <- z |>
+  z_scores_mat <- data |>
     filter(problem %in% problem_vector) |>
     dplyr::select(c(problem, feature_set, z)) |>
     pivot_wider(id_cols = "problem", names_from = "feature_set", values_from = "z") |>
@@ -59,7 +59,7 @@ cluster_problems <- function(data, problem_vector, z, b){
 
 nps <- function(model_type = c("glmnet", "svm")){
   
-  match.arg(model_type)
+  model_type <- match.arg(model_type)
   stopifnot(model_type %in% c("glmnet", "svm"))
   
   # Read in data
@@ -179,7 +179,7 @@ nps <- function(model_type = c("glmnet", "svm")){
   #----------
   
   p <- clusters |>
-    mutate(value = ifelse(value < -3.5, -3.5, value)) |> # For visual clarity
+    #mutate(value = ifelse(value < -3.5, -3.5, value)) |> # For visual clarity
     mutate(problem = factor(problem, levels = c(as.character(rev(unique(cluster_4$problem))),
                                                 as.character(cluster_3_levels),
                                                 as.character(cluster_2_levels),
@@ -193,9 +193,10 @@ nps <- function(model_type = c("glmnet", "svm")){
          y = "Problem",
          fill = "Normalized performance score") +
     scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
-                         breaks = c(-3.5, -3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
-                         labels = c("< -3.5", "-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2", "2.5"),
-                         limits = c(-3.5, 2.5)) +
+                         values = c(0, 1/5.5, 2/5.5, 3/5.5, 4/5.5, 4.5/5.5, 1),
+                         breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
+                         labels = c("-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2", "2.5"),
+                         limits = c(-3, 2.5)) +
     theme_bw() +
     coord_cartesian(xlim = c(1, 9), clip = "off") +
     theme(legend.position = "bottom",
@@ -230,4 +231,4 @@ nps <- function(model_type = c("glmnet", "svm")){
 
 p_svm <- nps("svm")
 print(p_svm)
-ggsave("output/normalised-performance-score.pdf", p_svm, units = "in", height = 18, width = 15)
+ggsave("output/normalised-performance-score.pdf", p_svm, units = "in", height = 19, width = 15)
