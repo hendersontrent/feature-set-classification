@@ -110,17 +110,17 @@ nps <- function(model_type = c("glmnet", "svm")){
   # Generate hierarchical clustering
   #---------------------------------
   
-  top_set <- accuracies |>
-    reframe(.mean = mean(accuracy), .by = c("problem", "feature_set")) |>
-    group_by(problem) |>
-    slice_max(.mean) |>
-    ungroup() |>
-    filter(feature_set %in% c("FFT coefficients", "quantiles", "FFT + quantiles"))
+  # top_set <- accuracies |>
+  #   reframe(.mean = mean(accuracy), .by = c("problem", "feature_set")) |>
+  #   group_by(problem) |>
+  #   slice_max(.mean) |>
+  #   ungroup() |>
+  #   filter(feature_set %in% c("FFT coefficients", "quantiles", "FFT + quantiles"))
   
   baseline_z <- z_scores |>
     filter(feature_set %in% c("FFT coefficients", "quantiles", "FFT + quantiles")) |>
     filter(z > 1) |>
-    filter(problem %in% unique(top_set$problem)) |>
+    #filter(problem %in% unique(top_set$problem)) |>
     group_by(problem) |>
     mutate(the_rank = dense_rank(-z)) |>
     ungroup() |>
