@@ -91,10 +91,11 @@ linear_rbf <- function(){
 
 results <- linear_rbf()
 
-# Compute average lift due to RBF SVM (i.e., a more complex classifier)
+# Compute average change due to RBF SVM (i.e., a more complex classifier)
 
 results |>
   reframe(.mean = mean(.diff))
 
 results |>
-  reframe(.mean = mean(.diff), .by = "feature_set")
+  reframe(.mean = mean(.diff), .by = "feature_set") |>
+  arrange(-.mean)

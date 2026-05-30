@@ -1,7 +1,6 @@
 #---------------------------------------
-# This script uses theftdlc to fit
-# multinomial logistic regression
-# classifiers for each problem
+# This script fits classifiers for each
+# feature set on each problem
 #---------------------------------------
 
 #---------------------------------------
@@ -77,7 +76,7 @@ generate_resample_indx <- function(features, train_counts, test_counts){
     total_needed <- n_train_g + n_test_g
     sampled <- sample(ids_g, size = total_needed, replace = FALSE)
     train_ids <- c(train_ids, sampled[seq_len(n_train_g)])
-    test_ids  <- c(test_ids,  sampled[(n_train_g + 1):total_needed])
+    test_ids <- c(test_ids, sampled[(n_train_g + 1):total_needed])
   }
   
   return(list(train_ids = train_ids, test_ids = test_ids))
@@ -86,20 +85,20 @@ generate_resample_indx <- function(features, train_counts, test_counts){
 #' Function that can iterate over problems and save outputs
 #' 
 #' @param problem \code{character} denoting the dataset to work on
-#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"glmnet"} or \code{"svm"}
+#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"glmnet"}, \code{"svm"}, or \code{"rbfsvm"}
 #' @param N \code{integer} denoting the number of resamples to compute. Defaults to \code{1} for the canonical train-test split
 #' @param seed \code{integer} denoting the fix for pseudorandom reproducibility
 #' @return \code{data.frame} containing classification accuracy values for each feature set
 #' @author Trent Henderson
 #' 
 
-fit_models <- function(problem, model_type = c("glmnet", "svm"), N = 1, seed = 123){
-  
+fit_models <- function(problem, model_type = c("glmnet", "svm", "rbfsvm"), N = 1, seed = 123){
+
   cat(paste0("Evaluating: ", problem, "\n"))
-  
+
   set.seed(seed)
   match.arg(model_type)
-  stopifnot(model_type %in% c("glmnet", "svm"))
+  stopifnot(model_type %in% c("glmnet", "svm", "rbfsvm"))
   
   if(paste0(problem, ".csv") %in% list.files(paste0("classification-models/results/", model_type))){ # Prevent unnecessary re-runs
     return(NA)
@@ -111,10 +110,8 @@ fit_models <- function(problem, model_type = c("glmnet", "svm"), N = 1, seed = 1
     
     rm(features, label)
     load(paste0("feature-calculations/features/", problem, ".Rda"))
-    load(paste0("timegp/features/", problem, ".Rda"))
     load(paste0("feature-calculations/train-test-labels/", problem, ".Rda"))
     
-    features <- dplyr::bind_rows(features, features_tgp)
     feature_sets <- unique(features$feature_set)
     
     label <- label |> 
@@ -201,7 +198,7 @@ fit_models <- function(problem, model_type = c("glmnet", "svm"), N = 1, seed = 1
           
           rescalers <- get_rescale_vals(x_train)
           x_train <- rescale_zscore(x_train, rescalers)
-          x_test  <- rescale_zscore(x_test, rescalers)
+          x_test <- rescale_zscore(x_test, rescalers)
           
           # Fit model and compute accuracy metrics
           
@@ -217,13 +214,28 @@ fit_models <- function(problem, model_type = c("glmnet", "svm"), N = 1, seed = 1
               acc <- sum(diag(cm)) / sum(cm)
             }
             
-          } else{
+          } else if(model_type == "rbfsvm"){
             
             train_df <- as.data.frame(x_train)
             train_df$group <- y_train
             
-            mod <- try(e1071::svm(group ~ ., data = train_df, kernel = "linear", scale = FALSE))
+            mod <- try(e1071::svm(group ~ ., data = train_df, kernel = "radial", scale = FALSE, probability = TRUE))
             
+            if(inherits(mod, "try-error")){
+              acc <- NA
+            } else{
+              y_pred <- predict(mod, newdata = x_test)
+              cm <- table(y_pred, y_test)
+              acc <- sum(diag(cm)) / sum(cm)
+            }
+            
+          } else{
+
+            train_df <- as.data.frame(x_train)
+            train_df$group <- y_train
+
+            mod <- try(e1071::svm(group ~ ., data = train_df, kernel = "linear", scale = FALSE))
+
             if(inherits(mod, "try-error")){
               acc <- NA
             } else{
@@ -260,3 +272,6 @@ fit_models <- function(problem, model_type = c("glmnet", "svm"), N = 1, seed = 1
 
 gsub(".Rda", "\\1", list.files("feature-calculations/features")) |>
   purrr::map_dfr(~fit_models(problem = .x, model_type = "svm", N = 30, seed = 123))
+
+gsub(".Rda", "\\1", list.files("feature-calculations/features")) |>
+  purrr::map_dfr(~fit_models(problem = .x, model_type = "rbfsvm", N = 30, seed = 123))
