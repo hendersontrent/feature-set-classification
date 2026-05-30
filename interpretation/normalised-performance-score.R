@@ -119,7 +119,7 @@ nps <- function(model_type = c("glmnet", "svm")){
   
   baseline_z <- z_scores |>
     filter(feature_set %in% c("FFT coefficients", "quantiles", "FFT + quantiles")) |>
-    #filter(z > 1) |>
+    filter(z > 1) |>
     filter(problem %in% unique(top_set$problem)) |>
     group_by(problem) |>
     mutate(the_rank = dense_rank(-z)) |>
@@ -168,7 +168,7 @@ nps <- function(model_type = c("glmnet", "svm")){
 
   n4 <- length(unique(cluster_4$problem))
   n_total <- n4 + length(joint_order)
-  boundary <- n4 + 1.5
+  boundary <- n4 + 0.5
 
   # Bind together
 
