@@ -185,7 +185,10 @@ nps <- function(model_type = c("glmnet", "svm")){
                                                 as.character(cluster_2_levels),
                                                 as.character(cluster_1_levels)),
                             ordered = TRUE)) |>
-    ggplot(aes(x = reorder(feature_set, -.mean), y = problem, fill = value)) +
+    mutate(feature_set = factor(feature_set, levels = c("tsfresh", "tsfeatures", "TSFEL",
+                                                        "feasts", "Kats", "catch22",
+                                                        "FFT + quantiles", "FFT coefficients", "quantiles"))) |>
+    ggplot(aes(x = feature_set, y = problem, fill = value)) +
     geom_tile() +
     geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = boundary, ymax = n_total + 0.5), fill = NA, colour = "black", linewidth = 1) + # baseline > mean
     geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = 0.5, ymax = boundary), fill = NA, colour = "black", linewidth = 1) + # baseline < mean
