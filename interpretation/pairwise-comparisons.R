@@ -251,7 +251,8 @@ p <- p +
     theme(legend.position = "bottom",
           panel.grid = element_blank(),
           axis.text = element_text(colour = "black"),
-          legend.key.size = unit(1, "cm"))
+          legend.key.size = unit(2, "cm"),
+          text = element_text(size = 16))
   
   return(p)
 }
