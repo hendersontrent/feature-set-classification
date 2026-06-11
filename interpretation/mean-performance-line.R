@@ -14,15 +14,43 @@ library(ggplot2)
 
 # Read in data
 
-files <- list.files(paste0("classification-models/results/svm"))
+files <- list.files(paste0("classification-models/results/xgboost"))
 accuracies <- vector(mode = "list", length = length(files))
 
 for(i in files){
-  accuracies[[match(i, files)]] <- read.csv(paste0("classification-models/results/svm/", i))
+  accuracies[[match(i, files)]] <- read.csv(paste0("classification-models/results/xgboost/", i))
 }
 
 accuracies <- do.call("rbind", accuracies) |>
   filter(feature_set != "timegp") # From another related project which used the same methodology
+
+# Get FFT + quantiles too
+
+# accuracies2 <- vector(mode = "list", length = length(files))
+# 
+# for(j in files){
+#   accuracies2[[match(j, files)]] <- read.csv(paste0("classification-models/results-fftquantiles/svm/", j))
+# }
+# 
+# accuracies2 <- do.call("rbind", accuracies2) |>
+#   filter(feature_set == "timegp")
+# 
+# # Bind together
+# 
+# accuracies <- bind_rows(accuracies, accuracies2)
+
+accuracies2 <- vector(mode = "list", length = length(files))
+
+for(j in files){
+  accuracies2[[match(j, files)]] <- read.csv(paste0("classification-models/results-baseline/xgboost/", j))
+}
+
+accuracies2 <- do.call("rbind", accuracies2) |>
+  filter(feature_set == "FFT + quantiles")
+
+# Bind together
+
+accuracies <- bind_rows(accuracies, accuracies2)
 
 #---------------------- Calculations ----------------------
 
@@ -62,7 +90,8 @@ mypal <- c("catch22" = pals[8],
            "Kats" = pals[6],
            "tsfeatures" = pals[5],
            "TSFEL" = pals[4],
-           "tsfresh" = pals[3])
+           "tsfresh" = pals[3],
+           "FFT + quantiles" = "black")
 
 p <- calcs |>
   mutate(.mean = .mean * 100) |>

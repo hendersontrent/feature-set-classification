@@ -168,12 +168,12 @@ calculate_wins <- function(data, combn_data, rownum){
 
 #' Calculate pairwise comparisons and draw summary graphic
 #' 
-#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"glmnet"} or \code{"svm"}
+#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"glmnet"}, \code{"svm"}, or \code{"xgboost"}
 #' @return \code{ggplot} containing the summary graphic
 #' @author Trent Henderson
 #' 
 
-h2h <- function(model_type = c("glmnet", "svm")){
+h2h <- function(model_type = c("glmnet", "svm", "xgboost")){
   
   model_type <- match.arg(model_type)
 
@@ -267,4 +267,7 @@ problem_summaries <- get_n()
 
 p_svm <- h2h(model_type = "svm")
 print(p_svm)
+p_xg <- h2h(model_type = "xgboost")
+print(p_xg)
 ggsave("output/head-to-head-matrix.pdf", p_svm, units = "in", height = 9, width = 9)
+ggsave("output/head-to-head-matrix-xgboost.pdf", p_xg, units = "in", height = 9, width = 9)

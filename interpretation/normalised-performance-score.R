@@ -52,15 +52,15 @@ cluster_problems <- function(data, problem_vector, z, b){
 
 #' Compute and visualise the normalised performance score
 #' 
-#' @param model_type \code{character} denoting the type of model that fit and whose results should be loaded. Can be one of \code{"glmnet"} or \code{"svm"}
+#' @param model_type \code{character} denoting the type of model that fit and whose results should be loaded. Can be one of \code{"glmnet"}, \code{"svm"}, or \code{"xgboost"}
 #' @return \code{ggplot} containing the NPS plot
 #' @author Trent Henderson
 #' 
 
-nps <- function(model_type = c("glmnet", "svm")){
+nps <- function(model_type = c("glmnet", "svm", "xgboost")){
   
   model_type <- match.arg(model_type)
-  stopifnot(model_type %in% c("glmnet", "svm"))
+  stopifnot(model_type %in% c("glmnet", "svm", "xgboost"))
   
   # Read in data
   
@@ -75,7 +75,8 @@ nps <- function(model_type = c("glmnet", "svm")){
   }
   
   accuracies <- do.call("rbind", accuracies) |>
-    filter(feature_set != "timegp") # From another related project which used the same methodology
+    filter(feature_set != "timegp") |> # From another related project which used the same methodology
+    filter(problem != "Fungi")
   
   #---------------------
   # Compute global stats
@@ -214,7 +215,7 @@ nps <- function(model_type = c("glmnet", "svm")){
   # Side annotations
   
   label_data <- data.frame(x = rep(0.1, times = 2),
-                           y = c(n_total, n4 - 2),
+                           y = c(127, n4 - 2),
                            mylab = c("A", "B"))
 
   ann <- ggplot(data = label_data) +
@@ -234,4 +235,7 @@ nps <- function(model_type = c("glmnet", "svm")){
 
 p_svm <- nps("svm")
 print(p_svm)
+p_xg <- nps("xgboost")
+print(p_xg)
 ggsave("output/normalised-performance-score.pdf", p_svm, units = "in", height = 19, width = 15)
+ggsave("output/normalised-performance-score-xgboost.pdf", p_xg, units = "in", height = 19, width = 15)

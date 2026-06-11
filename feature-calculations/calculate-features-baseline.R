@@ -75,9 +75,13 @@ calculate_uea_ucr_baseline <- function(problem){
       dplyr::select(-c(train_test)) |>
       as_tsibble(key = c("id", "target"), index = "timepoint")
     
-    # Calculate features and save
+    #-------------------
+    # Calculate features
+    #-------------------
     
-    baseline <- try(
+    # Quantiles
+    
+    quantiles <- try(
       calculate_features(
         tsbl,
         feature_set = c("quantiles"),
@@ -87,9 +91,21 @@ calculate_uea_ucr_baseline <- function(problem){
       )
     )
     
-    if(inherits(baseline, "try-error")){
+    if(inherits(quantiles, "try-error")){
       return(NA) # Exit if the calculation errors else save the object
     } else{
+      
+      # Compute our new FFT + quantiles bespoke set
+      
+      fftquantiles <- calculate_features(
+        tsbl,
+        feature_set = c("fftquantiles"),
+        z_score = TRUE,
+        warn = FALSE,
+        seed = 123,
+        squared = TRUE
+      ) |> 
+        mutate(feature_set = "FFT (Mag^2 + Angle) + quantiles")
       
       # Pull FFT baseline from tsfresh for consistency
       
@@ -102,14 +118,51 @@ calculate_uea_ucr_baseline <- function(problem){
       
       stopifnot(length(unique(fft$names)) == 400)
       
-      # Make union baseline set
+      #-----------------------------------
+      # Make MECE variants we want to test
+      #-----------------------------------
       
-      union_set <- bind_rows(baseline, fft) |>
-        mutate(feature_set = "FFT + quantiles")
+      # 400 FFT coefficients from {tsfresh} + quantiles
+      
+      union_set <- bind_rows(quantiles, fft) |>
+        mutate(feature_set = "FFT (Re, Im, Mag, Angle) + quantiles")
+      
+      # Pull out individual components
+      
+      fft_re <- fft |>
+        filter(grepl('attr_"real"', names))
+      
+      fft_imag <- fft |>
+        filter(grepl('attr_"imag"', names))
+      
+      fft_abs <- fft |>
+        filter(grepl('attr_"abs"', names))
+      
+      fft_angle <- fft |>
+        filter(grepl('attr_"angle"', names))
+      
+      stopifnot(length(unique(fft_re$names)) == 100)
+      stopifnot(length(unique(fft_imag$names)) == 100)
+      stopifnot(length(unique(fft_abs$names)) == 100)
+      stopifnot(length(unique(fft_angle$names)) == 100)
+      
+      # Construct dual sets
+      
+      fft_quantiles_re_imag <- bind_rows(quantiles, fft_re, fft_imag) |>
+        mutate(feature_set = "FFT (Re, Im) + quantiles")
+      
+      fft_quantiles_abs_angle <- bind_rows(quantiles, fft_abs, fft_angle) |>
+        mutate(feature_set = "FFT (Mag, Angle) + quantiles")
+      
+      fft_abs_log <- fft_abs |>
+        mutate(values = log(values))
+      
+      fft_quantiles_log_abs_angle <- bind_rows(quantiles, fft_abs_log, fft_angle) |>
+        mutate(feature_set = "FFT (log(Mag), Angle) + quantiles")
       
       # Bind all as one and save
       
-      all_baseline <- bind_rows(baseline, fft, union_set)
+      all_baseline <- bind_rows(quantiles, fftquantiles, fft, union_set, fft_quantiles_re_imag, fft_quantiles_abs_angle, fft_quantiles_log_abs_angle)
       save(all_baseline, file = paste0("feature-calculations/baseline-features/", problem, ".Rda"))
     }
   }
@@ -117,6 +170,5 @@ calculate_uea_ucr_baseline <- function(problem){
 
 #--------------- Run the calculations ---------------
 
-list.files("data")[!list.files("data") %in% c("SmoothSubspace", "StarLightCurves", 
-                                              "Tools", "UWaveGestureLibraryZ")] |> # No theft features for these
+gsub("\\.Rda", "\\1", list.files("feature-calculations/features")) |>
   purrr::map(~calculate_uea_ucr_baseline(problem = .x))
