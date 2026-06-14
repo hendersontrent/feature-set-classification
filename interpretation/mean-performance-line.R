@@ -48,9 +48,7 @@ case_studies <- calcs |>
   mutate(flag = case_when(
     problem == "SyntheticControl" & feature_set == "Kats"  ~ TRUE,
     problem == "TwoPatterns" & feature_set == "Kats"       ~ TRUE,
-    problem == "Beef" & feature_set == "tsfresh"           ~ TRUE,
-    problem == "EthanolLevel" & feature_set == "tsfresh"   ~ TRUE,
-    problem == "Wine" & feature_set == "catch22"           ~ TRUE)) |>
+    problem == "FaceFour" & feature_set == "tsfresh"       ~ TRUE)) |>
   filter(flag) |>
   mutate(.mean = .mean * 100)
 
@@ -98,14 +96,14 @@ ggsave("output/mean-performance-line-plot.pdf", p, unit = "in", width = 16, heig
 # Variance of feature sets within problems
 
 accuracies |>
-  reframe(.mean = mean(accuracy), .by = c("problem", "feature_set")) |>
+  reframe(.mean = mean(accuracy, na.rm = TRUE), .by = c("problem", "feature_set")) |>
   reframe(.var = var(.mean), .by = "problem") |>
   reframe(.mean = mean(.var))
 
 # Variance of feature sets between problems
 
 accuracies |>
-  reframe(.mean = mean(accuracy), .by = c("feature_set", "problem")) |>
+  reframe(.mean = mean(accuracy, na.rm = TRUE), .by = c("feature_set", "problem")) |>
   reframe(.var = var(.mean), .by = "feature_set") |>
   reframe(.mean = mean(.var))
 
@@ -115,35 +113,7 @@ case_studies_diffs <- accuracies |>
   mutate(flag = case_when(
     problem == "SyntheticControl" & feature_set == "Kats"  ~ TRUE,
     problem == "TwoPatterns" & feature_set == "Kats"       ~ TRUE,
-    problem == "Beef" & feature_set == "tsfresh"           ~ TRUE,
-    problem == "EthanolLevel" & feature_set == "tsfresh"   ~ TRUE,
-    problem == "Wine" & feature_set == "catch22"           ~ TRUE,
+    problem == "FaceFour" & feature_set == "tsfresh"       ~ TRUE,
     TRUE                                                   ~ FALSE)) |>
-  filter(problem %in% c("SyntheticControl", "TwoPatterns", "Beef", "EthanolLevel", "Wine")) |>
-  reframe(.mean = mean(accuracy), .by = c("problem", "flag"))
-
-#---------------------- Compute proportion within 10% of best ----------------------
-
-best <- calcs |>
-  group_by(problem) |>
-  filter(.mean == max(.mean)) |>
-  ungroup() |>
-  dplyr::select(c(problem, .mean)) |>
-  rename(best_mean = .mean)
-
-worst <- calcs |>
-  group_by(problem) |>
-  filter(.mean == min(.mean)) |>
-  ungroup() |>
-  dplyr::select(c(problem, .mean)) |>
-  rename(worst_mean = .mean)
-
-both <- best |>
-  inner_join(worst, by = "problem") |>
-  distinct() |>
-  mutate(pc_10_bound = best_mean - (best_mean * 0.1)) |>
-  mutate(flag = ifelse(worst_mean > pc_10_bound, "Within 10%", "Not within 10%"))
-
-both |>
-  reframe(counter = n(), .by = "flag") |>
-  mutate(props = counter / sum(counter) * 100)
+  filter(problem %in% c("SyntheticControl", "TwoPatterns", "FaceFour", "EthanolLevel", "Wine")) |>
+  reframe(.mean = mean(accuracy, na.rm = TRUE), .by = c("problem", "flag"))
