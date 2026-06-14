@@ -85,7 +85,8 @@ linear_xg <- function(){
   
   accuracies3 <- accuracies |>
     inner_join(accuracies2) |>
-    mutate(.diff = accuracy_xg - accuracy_linear)
+    mutate(.diff = accuracy_xg - accuracy_linear) |>
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"))
   
   return(accuracies3)
 }
@@ -99,10 +100,10 @@ results <- linear_xg()
 # Compute average change due to XGBoost (i.e., a more complex, nonlinear classifier)
 
 results |>
-  reframe(.mean = mean(.diff))
+  reframe(.mean = mean(.diff, na.rm = TRUE))
 
 results |>
-  reframe(.mean = mean(.diff), .by = "feature_set") |>
+  reframe(.mean = mean(.diff, na.rm = TRUE), .by = "feature_set") |>
   arrange(-.mean)
 
 # Visualise as distributional change by feature set
@@ -147,72 +148,3 @@ p_dist <- results |>
 
 print(p_dist)
 ggsave("output/xgboost-vs-svm-halfeye.pdf", p_dist, width = 10, height = 10)
-
-# Visualise as population pyramid by feature set and problem
-
-long_results <- results |>
-  pivot_longer(
-    cols = c(accuracy_linear, accuracy_xg),
-    names_to = "classifier",
-    values_to = "accuracy"
-  ) |>
-  mutate(classifier = ifelse(classifier == "accuracy_linear", "Linear SVM", "XGBoost"))
-
-ci_data <- long_results |>
-  group_by(problem, feature_set, classifier) |>
-  summarise(
-    smean = Hmisc::smean.cl.normal(accuracy)[["Mean"]],
-    lower = Hmisc::smean.cl.normal(accuracy)[["Lower"]],
-    upper = Hmisc::smean.cl.normal(accuracy)[["Upper"]],
-    .groups = "drop"
-  ) |>
-  group_by(problem, feature_set) |>
-  mutate(winner = classifier[which.max(smean)]) |>
-  ungroup() |>
-  mutate(
-    status = ifelse(classifier == winner,
-                    ifelse(classifier == "Linear SVM", "Linear SVM (best)", "XGBoost (best)"),
-                    "Loser"),
-    bar_val   = ifelse(classifier == "Linear SVM", -smean, smean),
-    lower_bar = ifelse(classifier == "Linear SVM", -upper, lower),
-    upper_bar = ifelse(classifier == "Linear SVM", -lower, upper)
-  )
-
-problem_order <- ci_data |>
-  filter(classifier == "XGBoost") |>
-  summarise(avg = mean(smean), .by = "problem") |>
-  arrange(avg) |>
-  pull(problem)
-
-ci_data <- ci_data |>
-  mutate(problem = factor(problem, levels = problem_order))
-
-acc_max <- max(abs(ci_data$bar_val), na.rm = TRUE)
-acc_breaks <- seq(-acc_max, acc_max, length.out = 5)
-
-p <- ggplot(ci_data, aes(x = bar_val, y = problem, fill = status)) +
-  geom_col() +
-  geom_errorbarh(aes(xmin = lower_bar, xmax = upper_bar), height = 0.2, colour = "black") +
-  labs(x = "Mean classification accuracy (%)",
-       y = "Problem") +
-  scale_x_continuous(
-    breaks = acc_breaks,
-    labels = function(x) scales::percent(abs(x), accuracy = 1)
-  ) +
-  scale_fill_manual(
-    values = c(
-      "Linear SVM (best)" = "#D95F02FF",
-      "XGBoost (best)" = "#1B9E77FF",
-      "Loser" = "grey80"
-    ),
-    name = "Better classifier"
-  ) +
-  theme_bw() +
-  theme(legend.position = "bottom",
-        strip.background = element_blank(),
-        strip.text = element_text(face = "bold"),
-        panel.grid = element_blank()) +
-  facet_wrap(~feature_set)
-
-print(p)
-ggsave("output/xgboost-vs-svm-pyramid.pdf", p, width = 16, height = 28)
