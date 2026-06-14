@@ -106,7 +106,10 @@ results |>
   reframe(.mean = mean(.diff, na.rm = TRUE), .by = "feature_set") |>
   arrange(-.mean)
 
-# Visualise as distributional change by feature set
+#----------------------------
+# Visualise as distributional
+# difference by feature set
+#----------------------------
 
 pals <- palette.colors(10, "Tableau 10")
 
@@ -148,3 +151,33 @@ p_dist <- results |>
 
 print(p_dist)
 ggsave("output/xgboost-vs-svm-halfeye.pdf", p_dist, width = 8, height = 8)
+
+#-------------------------
+# Visualise as violin plot
+#-------------------------
+
+violin_pal <- c("Linear SVM" = pals[1],
+                "XGBoost" = pals[2])
+
+p_vi <- results |>
+  dplyr::select(c(feature_set, accuracy_linear, resample, problem, accuracy_xg)) |>
+  pivot_longer(cols = c("accuracy_linear", "accuracy_xg"), names_to = "classifier", values_to = "accuracy") |>
+  mutate(classifier = ifelse(classifier == "accuracy_linear", "Linear SVM", "XGBoost")) |>
+  ggplot(aes(x = classifier, y = accuracy)) +
+  geom_violin(aes(fill = classifier, colour = classifier)) +
+  geom_boxplot(colour = "black", width = .1, show.legend = FALSE) +
+  labs(x = "Classifier",
+       y = "Classification accuracy (%)",
+       colour = NULL,
+       fill = NULL) +
+  scale_y_continuous(labels = percent) +
+  scale_fill_manual(values = violin_pal) +
+  scale_colour_manual(values = violin_pal) +
+  theme_bw() +
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold")) +
+  facet_wrap(~feature_set, nrow = 3)
+
+print(p_vi)
+ggsave("output/xgboost-vs-svm-violin.pdf", p_vi, width = 8, height = 8)
