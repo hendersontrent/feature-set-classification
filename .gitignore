@@ -50,3 +50,4 @@ feature-calculations/baseline-features/*
 feature-calculations/fftquantiles/*
 a-b-plot.svg
 hierarchical-benchmarking/*
+architecture/*

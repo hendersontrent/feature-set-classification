@@ -22,35 +22,8 @@ for(i in files){
 }
 
 accuracies <- do.call("rbind", accuracies) |>
-  filter(feature_set != "timegp") # From another related project which used the same methodology
-
-# Get FFT + quantiles too
-
-# accuracies2 <- vector(mode = "list", length = length(files))
-# 
-# for(j in files){
-#   accuracies2[[match(j, files)]] <- read.csv(paste0("classification-models/results-fftquantiles/svm/", j))
-# }
-# 
-# accuracies2 <- do.call("rbind", accuracies2) |>
-#   filter(feature_set == "timegp")
-# 
-# # Bind together
-# 
-# accuracies <- bind_rows(accuracies, accuracies2)
-
-accuracies2 <- vector(mode = "list", length = length(files))
-
-for(j in files){
-  accuracies2[[match(j, files)]] <- read.csv(paste0("classification-models/results-baseline/xgboost/", j))
-}
-
-accuracies2 <- do.call("rbind", accuracies2) |>
-  filter(feature_set == "FFT + quantiles")
-
-# Bind together
-
-accuracies <- bind_rows(accuracies, accuracies2)
+  filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", 
+                            "TSFEL", "tsfresh", "FFT", "FFT (Mag^2 + Angle) + quantiles"))
 
 #---------------------- Calculations ----------------------
 
@@ -91,10 +64,13 @@ mypal <- c("catch22" = pals[8],
            "tsfeatures" = pals[5],
            "TSFEL" = pals[4],
            "tsfresh" = pals[3],
-           "FFT + quantiles" = "black")
+           "FFT (Mag^2 + Angle) + quantiles" = "black")
 
 p <- calcs |>
   mutate(.mean = .mean * 100) |>
+  mutate(feature_set = factor(feature_set, levels = c("catch22", "feasts", "Kats",
+                                                      "tsfeatures", "TSFEL", "tsfresh",
+                                                      "FFT (Mag^2 + Angle) + quantiles"))) |>
   ggplot(aes(x = reorder(problem, -orders), y = .mean, group = feature_set, colour = feature_set)) +
   geom_line(linewidth = 0.8) +
   geom_point(data = case_studies, size = 5, show.legend = FALSE) +
@@ -102,7 +78,10 @@ p <- calcs |>
        y = "Mean classification accuracy (%)",
        colour = NULL) +
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_colour_manual(values = mypal) +
+  scale_colour_manual(values = mypal,
+                      labels = function(x) {
+                        x <- gsub("Mag^2", "Mag²", x, fixed = TRUE)
+                      }) +
   theme_bw() +
   theme(legend.position = "bottom",
         axis.text.x = element_text(angle = 90),

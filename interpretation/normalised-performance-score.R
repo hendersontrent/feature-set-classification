@@ -52,15 +52,15 @@ cluster_problems <- function(data, problem_vector, z, b){
 
 #' Compute and visualise the normalised performance score
 #' 
-#' @param model_type \code{character} denoting the type of model that fit and whose results should be loaded. Can be one of \code{"glmnet"}, \code{"svm"}, or \code{"xgboost"}
+#' @param model_type \code{character} denoting the type of model that fit and whose results should be loaded. Can be one of \code{"svm"} or \code{"xgboost"}
 #' @return \code{ggplot} containing the NPS plot
 #' @author Trent Henderson
 #' 
 
-nps <- function(model_type = c("glmnet", "svm", "xgboost")){
+nps <- function(model_type = c("svm", "xgboost")){
   
   model_type <- match.arg(model_type)
-  stopifnot(model_type %in% c("glmnet", "svm", "xgboost"))
+  stopifnot(model_type %in% c("svm", "xgboost"))
   
   # Read in data
   
@@ -69,9 +69,7 @@ nps <- function(model_type = c("glmnet", "svm", "xgboost")){
   
   for(i in files){
     feature_sets <- read.csv(paste0("classification-models/results/", model_type, "/", i))
-    baseline_sets <- read.csv(paste0("classification-models/results-baseline/", model_type, "/", i))
-    all_sets <- bind_rows(feature_sets, baseline_sets)
-    accuracies[[match(i, files)]] <- all_sets
+    accuracies[[match(i, files)]] <- feature_sets
   }
   
   accuracies <- do.call("rbind", accuracies) |>
@@ -85,6 +83,7 @@ nps <- function(model_type = c("glmnet", "svm", "xgboost")){
   # Calculate using only feature sets
   
   benchmarks <- accuracies |>
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh")) |>
     reframe(.mean = mean(accuracy, na.rm = TRUE),
             .sd = sd(accuracy, na.rm = TRUE),
             .by = "problem")
@@ -107,46 +106,40 @@ nps <- function(model_type = c("glmnet", "svm", "xgboost")){
   benchmarks_sets <- accuracies |>
     reframe(.mean = mean(accuracy, na.rm = TRUE), .by = "feature_set")
   
+  # Mean NPS by set
+  
+  nps_sets <- z_scores |>
+    reframe(.mean = mean(z, na.rm = TRUE), .by = "feature_set") |>
+    arrange(desc(.mean))
+  
   #---------------------------------
   # Generate hierarchical clustering
   #---------------------------------
   
-  # top_set <- accuracies |>
-  #   reframe(.mean = mean(accuracy), .by = c("problem", "feature_set")) |>
-  #   group_by(problem) |>
-  #   slice_max(.mean) |>
-  #   ungroup() |>
-  #   filter(feature_set %in% c("FFT coefficients", "quantiles", "FFT + quantiles"))
-  
   baseline_z <- z_scores |>
-    filter(feature_set %in% c("FFT coefficients", "quantiles", "FFT + quantiles")) |>
+    filter(feature_set %in% c("quantiles", "FFT (Mag^2 + Angle) + quantiles", "FFT coefficients",                    
+                              "FFT (Re, Im, Mag, Angle) + quantiles", "FFT (Re, Im) + quantiles",
+                              "FFT (Mag, Angle) + quantiles", "FFT (log(Mag), Angle) + quantiles")) |>
     filter(z > 1) |>
-    #filter(problem %in% unique(top_set$problem)) |>
     group_by(problem) |>
     mutate(the_rank = dense_rank(-z)) |>
     ungroup() |>
     filter(the_rank == 1) |>
     dplyr::select(-c(the_rank))
   
-  # Problem vectors for each cluster
-
-  cluster_1_probs <- baseline_z |>
-    filter(feature_set == "quantiles") |>
-    pull(problem)
-
-  cluster_2_probs <- baseline_z |>
-    filter(feature_set == "FFT + quantiles") |>
-    pull(problem)
-
-  cluster_3_probs <- baseline_z |>
-    filter(feature_set == "FFT coefficients") |>
-    pull(problem)
-
-  # Data frames with z-scores for each cluster
-
-  cluster_1 <- cluster_problems(z_scores, cluster_1_probs, z_scores, benchmarks_sets)
-  cluster_2 <- cluster_problems(z_scores, cluster_2_probs, z_scores, benchmarks_sets)
-  cluster_3 <- cluster_problems(z_scores, cluster_3_probs, z_scores, benchmarks_sets)
+  uniques <- unique(baseline_z$feature_set)
+  baseline_storage <- vector(mode = "list", length = length(uniques))
+  
+  for(i in uniques){
+    tmp_probs <- baseline_z |>
+      filter(feature_set == i) |>
+      pull(problem)
+    
+    tmp_cluster <- cluster_problems(z_scores, tmp_probs, z_scores, benchmarks_sets)
+    baseline_storage[[match(i, uniques)]] <- tmp_cluster
+  }
+  
+  baseline_storage <- do.call("rbind", baseline_storage)
 
   # Cluster 4: Problems where baseline < mean
 
@@ -156,53 +149,67 @@ nps <- function(model_type = c("glmnet", "svm", "xgboost")){
 
   cluster_4 <- cluster_problems(z_scores, cluster_4, z_scores, benchmarks_sets)
 
-  # Joint hclust on all baseline > mean problems
+  # Order baseline problems by which baseline set won, then by within-group
+  # clustering (mirrors how baseline_storage was constructed)
 
-  baseline_order <- cluster_problems(z_scores, unique(baseline_z$problem), z_scores, benchmarks_sets)
-  joint_order <- rev(unique(baseline_order$problem))
-
-  cluster_3_levels <- joint_order[joint_order %in% cluster_3_probs]
-  cluster_2_levels <- joint_order[joint_order %in% cluster_2_probs]
-  cluster_1_levels <- joint_order[joint_order %in% cluster_1_probs]
+  baseline_problem_order <- unique(baseline_storage$problem)
 
   # Dynamic plot boundaries
 
   n4 <- length(unique(cluster_4$problem))
-  n_total <- n4 + length(joint_order)
+  n_total <- n4 + length(baseline_problem_order)
   boundary <- n4 + 0.5
 
   # Bind together
 
-  clusters <- bind_rows(cluster_1, cluster_2, cluster_3, cluster_4)
+  clusters <- bind_rows(baseline_storage, cluster_4)
   
   #----------
   # Draw plot
   #----------
-  
+
+  # Bold benchmark feature sets on the x-axis (order matches nps_sets$feature_set)
+
+  x_faces <- ifelse(nps_sets$feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"),
+                    "bold", "plain")
+
   p <- clusters |>
-    #mutate(value = ifelse(value < -3.5, -3.5, value)) |> # For visual clarity
+    mutate(value = ifelse(value < -3, -3, value)) |> # For visual clarity
     mutate(problem = factor(problem, levels = c(as.character(rev(unique(cluster_4$problem))),
-                                                as.character(cluster_3_levels),
-                                                as.character(cluster_2_levels),
-                                                as.character(cluster_1_levels)),
+                                                as.character(baseline_problem_order)),
                             ordered = TRUE)) |>
-    mutate(feature_set = factor(feature_set, levels = c("tsfresh", "tsfeatures", "TSFEL",
-                                                        "feasts", "Kats", "catch22",
-                                                        "FFT + quantiles", "FFT coefficients", "quantiles"))) |>
+    mutate(feature_set = factor(feature_set, levels = nps_sets$feature_set)) |>
     ggplot(aes(x = feature_set, y = problem, fill = value)) +
     geom_tile() +
-    geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = boundary, ymax = n_total + 0.5), fill = NA, colour = "black", linewidth = 1) + # baseline > mean
-    geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = 0.5, ymax = boundary), fill = NA, colour = "black", linewidth = 1) + # baseline < mean
+    
+    # Annotate regions
+    
+    geom_rect(aes(xmin = 0.5, xmax = 13.5, ymin = boundary, ymax = n_total + 0.5), fill = NA, colour = "black", linewidth = 1) + # baseline > 1
+    geom_rect(aes(xmin = 0.5, xmax = 13.5, ymin = 0.5, ymax = boundary), fill = NA, colour = "black", linewidth = 1) + # baseline < 1
+    geom_vline(aes(xintercept = 6.5), linetype = "dashed", colour = "black", linewidth =  0.6) +
+    
+    # Labels and colourmap formatting
+    
     labs(x = "Feature set",
          y = "Problem",
          fill = "Normalized performance score") +
     scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
-                         values = c(0, 1/5.5, 2/5.5, 3/5.5, 4/5.5, 4.5/5.5, 1),
-                         breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
-                         labels = c("-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2", "2.5"),
-                         limits = c(-3, 2.5)) +
+                         values = c(0, 1/5, 2/5, 3/5, 4/5, 4.5/5, 1),
+                         breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2),
+                         labels = c("≤-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2"),
+                         limits = c(-3, 2)) +
+    
+    # Clean up feature set names for visual clarity
+    
+    scale_x_discrete(labels = function(x) {
+      x <- gsub("Mag^2", "Mag²", x, fixed = TRUE)
+      gsub(" + quantiles", "\n+ quantiles", x, fixed = TRUE)
+    }) +
+    
+    # Format plot
+    
     theme_bw() +
-    coord_cartesian(xlim = c(1, 9), clip = "off") +
+    coord_cartesian(xlim = c(1, 13), clip = "off") +
     theme(legend.position = "bottom",
           legend.key.width = unit(2, "cm"),
           panel.grid = element_blank(),
@@ -210,12 +217,13 @@ nps <- function(model_type = c("glmnet", "svm", "xgboost")){
           axis.title = element_text(size = 12),
           legend.title = element_text(size = 12),
           legend.text = element_text(size = 11),
-          panel.border = element_blank())
+          panel.border = element_blank(),
+          axis.text.x = element_text(angle = 90, size = 11, face = x_faces))
   
-  # Side annotations
+  # Add side annotations for A and B
   
   label_data <- data.frame(x = rep(0.1, times = 2),
-                           y = c(127, n4 - 2),
+                           y = c(124, n4 - 2),
                            mylab = c("A", "B"))
 
   ann <- ggplot(data = label_data) +
