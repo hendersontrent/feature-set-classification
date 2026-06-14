@@ -187,7 +187,6 @@ h2h <- function(model_type = c("svm", "xgboost")){
   }
   
   results <- do.call("rbind", results) |>
-    filter(feature_set != "timegp") |>
     filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"))
   
   # Generate pairwise combinations and map over all of them

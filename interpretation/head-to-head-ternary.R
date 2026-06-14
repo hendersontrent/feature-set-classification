@@ -170,12 +170,12 @@ calculate_wins <- function(data, combn_data, rownum){
 
 #' Calculate pairwise comparisons and draw summary ternary graphic
 #' 
-#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"glmnet"} or \code{"svm"}
+#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"xgboost"} or \code{"svm"}
 #' @return \code{ggplot} containing the summary graphic
 #' @author Trent Henderson
 #' 
 
-ternary <- function(model_type = c("glmnet", "svm")){
+ternary <- function(model_type = c("xgboost", "svm")){
   
   model_type <- match.arg(model_type)
   
@@ -189,7 +189,7 @@ ternary <- function(model_type = c("glmnet", "svm")){
   }
   
   results <- do.call("rbind", results) |>
-    filter(feature_set != "timegp")
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"))
   
   # Generate pairwise combinations and map over all of them
   
@@ -255,6 +255,7 @@ ternary <- function(model_type = c("glmnet", "svm")){
   p_tern <- win_sum |>
     ggtern(aes(x = tie_pc, y = win_pc, z = loss_pc, colour = set1)) +
     geom_point(size = 5) +
+    geom_crosshair_tern() +
     labs(x = "Tie rate (%)", 
          y = "Win rate (%)", 
          z = "Loss rate (%)",
@@ -281,6 +282,6 @@ problem_summaries <- get_n()
 
 # Run comparisons
 
-p <- ternary(model_type = "svm")
+p <- ternary(model_type = "xgboost")
 print(p)
 ggsave("output/ternary.pdf", p, units = "in", height = 8, width = 8)
