@@ -173,6 +173,24 @@ nps <- function(model_type = c("svm", "xgboost")){
   x_faces <- ifelse(nps_sets$feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"),
                     "bold", "plain")
 
+  # Fill gradient. SVM scores extend higher than XGBoost, so the upper bound
+  # goes to 5 (colour stops are kept anchored to the same scores via `values`,
+  # which are positions in [0, 1] across the wider [-3, 5] span)
+
+  if (model_type == "svm"){
+    fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
+                                       values = c(0, 1/8, 2/8, 3/8, 4/8, 4.5/8, 1),
+                                       breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 4, 5),
+                                       labels = c("≤-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2", "3", "4", "5"),
+                                       limits = c(-3, 5))
+  } else{
+    fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
+                                       values = c(0, 1/5, 2/5, 3/5, 4/5, 4.5/5, 1),
+                                       breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2),
+                                       labels = c("≤-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2"),
+                                       limits = c(-3, 2))
+  }
+
   p <- clusters |>
     mutate(value = ifelse(value < -3, -3, value)) |> # For visual clarity
     mutate(problem = factor(problem, levels = c(as.character(rev(unique(cluster_4$problem))),
@@ -193,11 +211,7 @@ nps <- function(model_type = c("svm", "xgboost")){
     labs(x = "Feature set",
          y = "Problem",
          fill = "Normalized performance score") +
-    scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
-                         values = c(0, 1/5, 2/5, 3/5, 4/5, 4.5/5, 1),
-                         breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2),
-                         labels = c("≤-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2"),
-                         limits = c(-3, 2)) +
+    fill_scale +
     
     # Clean up feature set names for visual clarity
     
@@ -245,5 +259,5 @@ p_svm <- nps("svm")
 print(p_svm)
 p_xg <- nps("xgboost")
 print(p_xg)
-ggsave("output/normalised-performance-score.pdf", p_svm, units = "in", height = 19, width = 15)
+ggsave("output/normalised-performance-score-svm.pdf", p_svm, units = "in", height = 19, width = 15)
 ggsave("output/normalised-performance-score-xgboost.pdf", p_xg, units = "in", height = 19, width = 15)
