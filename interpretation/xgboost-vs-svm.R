@@ -137,7 +137,7 @@ p_dist <- results |>
   annotate("text", x = -0.20, y = 6.75, label = "Linear SVM better", fontface = "bold") +
   scale_fill_manual(values = mypal, guide = "none") +
   scale_colour_manual(values = mypal, guide = "none") +
-  scale_fill_ramp_continuous(from = "grey40", guide = "none") +
+  scale_fill_ramp_continuous(from = "grey70", guide = "none") +
   labs(
     x = "Difference in absolute classification accuracy\n(XGBoost - Linear SVM)",
     y = "Feature set"
@@ -147,4 +147,4 @@ p_dist <- results |>
         strip.text = element_text(face = "bold"))
 
 print(p_dist)
-ggsave("output/xgboost-vs-svm-halfeye.pdf", p_dist, width = 10, height = 10)
+ggsave("output/xgboost-vs-svm-halfeye.pdf", p_dist, width = 8, height = 8)
