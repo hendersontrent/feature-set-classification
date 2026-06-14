@@ -168,12 +168,12 @@ calculate_wins <- function(data, combn_data, rownum){
 
 #' Calculate pairwise comparisons and draw summary graphic
 #' 
-#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"glmnet"} or \code{"svm"}
+#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"svm"} or \code{"xgboost"}
 #' @return \code{ggplot} containing the summary graphic
 #' @author Trent Henderson
 #' 
 
-h2h <- function(model_type = c("glmnet", "svm")){
+h2h <- function(model_type = c("svm", "xgboost")){
   
   model_type <- match.arg(model_type)
 
@@ -187,7 +187,7 @@ h2h <- function(model_type = c("glmnet", "svm")){
   }
   
   results <- do.call("rbind", results) |>
-    filter(feature_set != "timegp")
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"))
   
   # Generate pairwise combinations and map over all of them
   
@@ -235,15 +235,15 @@ h2h <- function(model_type = c("glmnet", "svm")){
   if(model_type == "svm"){
     p <- p +
       scale_fill_gradient(low = "white", high = "#CA0020", na.value = "grey85",
-                          limits = c(0, 50),
-                          breaks = seq(from = 0, to = 50, by = 10),
-                          labels = seq(from = 0, to = 50, by = 10))
+                          limits = c(0, 45),
+                          breaks = seq(from = 0, to = 45, by = 5),
+                          labels = seq(from = 0, to = 45, by = 5))
   } else{
     p <- p +
       scale_fill_gradient(low = "white", high = "#CA0020", na.value = "grey85",
                           limits = c(0, 45),
-                          breaks = seq(from = 0, to = 50, by = 10),
-                          labels = seq(from = 0, to = 50, by = 10))
+                          breaks = seq(from = 0, to = 45, by = 5),
+                          labels = seq(from = 0, to = 45, by = 5))
   }
   
 p <- p +
@@ -251,7 +251,8 @@ p <- p +
     theme(legend.position = "bottom",
           panel.grid = element_blank(),
           axis.text = element_text(colour = "black"),
-          legend.key.size = unit(1, "cm"))
+          legend.key.size = unit(2, "cm"),
+          text = element_text(size = 16))
   
   return(p)
 }
@@ -266,4 +267,7 @@ problem_summaries <- get_n()
 
 p_svm <- h2h(model_type = "svm")
 print(p_svm)
-ggsave("output/head-to-head-matrix.pdf", p_svm, units = "in", height = 9, width = 9)
+p_xg <- h2h(model_type = "xgboost")
+print(p_xg)
+ggsave("output/head-to-head-matrix-svm.pdf", p_svm, units = "in", height = 9, width = 9)
+ggsave("output/head-to-head-matrix-xgboost.pdf", p_xg, units = "in", height = 9, width = 9)

@@ -14,15 +14,16 @@ library(ggplot2)
 
 # Read in data
 
-files <- list.files(paste0("classification-models/results/svm"))
+files <- list.files(paste0("classification-models/results/xgboost"))
 accuracies <- vector(mode = "list", length = length(files))
 
 for(i in files){
-  accuracies[[match(i, files)]] <- read.csv(paste0("classification-models/results/svm/", i))
+  accuracies[[match(i, files)]] <- read.csv(paste0("classification-models/results/xgboost/", i))
 }
 
 accuracies <- do.call("rbind", accuracies) |>
-  filter(feature_set != "timegp") # From another related project which used the same methodology
+  filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", 
+                            "TSFEL", "tsfresh", "FFT", "FFT (Mag^2 + Angle) + quantiles"))
 
 #---------------------- Calculations ----------------------
 
@@ -62,10 +63,14 @@ mypal <- c("catch22" = pals[8],
            "Kats" = pals[6],
            "tsfeatures" = pals[5],
            "TSFEL" = pals[4],
-           "tsfresh" = pals[3])
+           "tsfresh" = pals[3],
+           "FFT (Mag^2 + Angle) + quantiles" = "black")
 
 p <- calcs |>
   mutate(.mean = .mean * 100) |>
+  mutate(feature_set = factor(feature_set, levels = c("catch22", "feasts", "Kats",
+                                                      "tsfeatures", "TSFEL", "tsfresh",
+                                                      "FFT (Mag^2 + Angle) + quantiles"))) |>
   ggplot(aes(x = reorder(problem, -orders), y = .mean, group = feature_set, colour = feature_set)) +
   geom_line(linewidth = 0.8) +
   geom_point(data = case_studies, size = 5, show.legend = FALSE) +
@@ -73,7 +78,10 @@ p <- calcs |>
        y = "Mean classification accuracy (%)",
        colour = NULL) +
   scale_y_continuous(labels = function(x)paste0(x, "%")) + 
-  scale_colour_manual(values = mypal) +
+  scale_colour_manual(values = mypal,
+                      labels = function(x) {
+                        x <- gsub("Mag^2", "Mag²", x, fixed = TRUE)
+                      }) +
   theme_bw() +
   theme(legend.position = "bottom",
         axis.text.x = element_text(angle = 90),
