@@ -100,10 +100,10 @@ results <- linear_xg()
 # Compute average change due to XGBoost (i.e., a more complex, nonlinear classifier)
 
 results |>
-  reframe(.mean = mean(.diff, na.rm = TRUE))
+  reframe(.mean = mean(.diff, na.rm = TRUE) * 100)
 
 results |>
-  reframe(.mean = mean(.diff, na.rm = TRUE), .by = "feature_set") |>
+  reframe(.mean = mean(.diff, na.rm = TRUE) * 100, .by = "feature_set") |>
   arrange(-.mean)
 
 #----------------------------
