@@ -86,7 +86,7 @@ linear_xg <- function(){
   accuracies3 <- accuracies |>
     inner_join(accuracies2) |>
     mutate(.diff = accuracy_xg - accuracy_linear) |>
-    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"))
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh", "FFT (Mag^2 + Angle) + quantiles"))
   
   return(accuracies3)
 }
@@ -118,7 +118,8 @@ mypal <- c("catch22" = pals[8],
            "Kats" = pals[6],
            "tsfeatures" = pals[5],
            "TSFEL" = pals[4],
-           "tsfresh" = pals[3])
+           "tsfresh" = pals[3],
+           "FFT (Mag^2 + Angle) + quantiles" = pals[2])
 
 p_dist <- results |>
   #filter(.diff >= -0.5) |>
@@ -136,11 +137,19 @@ p_dist <- results |>
       ),
     side = "bottom", scale = 0.7, slab_linewidth = NA) +
   geom_vline(xintercept = 0, linetype = "dashed", colour = "black", linewidth = 0.8) +
-  annotate("text", x = 0.20, y = 6.75, label = "XGBoost better", fontface = "bold") +
-  annotate("text", x = -0.20, y = 6.75, label = "Linear SVM better", fontface = "bold") +
+  annotate("text", x = 0.20, y = 7.75, label = "XGBoost better", fontface = "bold") +
+  annotate("text", x = -0.20, y = 7.75, label = "Linear SVM better", fontface = "bold") +
   scale_fill_manual(values = mypal, guide = "none") +
   scale_colour_manual(values = mypal, guide = "none") +
   scale_fill_ramp_continuous(from = "grey70", guide = "none") +
+  
+  # Clean up feature set names for visual clarity
+  
+  scale_y_discrete(labels = function(x) {
+    x <- gsub("Mag^2", "Mag²", x, fixed = TRUE)
+    gsub(" + quantiles", "\n+ quantiles", x, fixed = TRUE)
+  }) +
+  
   labs(
     x = "Difference in absolute classification accuracy\n(XGBoost - Linear SVM)",
     y = "Feature set"
@@ -163,6 +172,7 @@ p_vi <- results |>
   dplyr::select(c(feature_set, accuracy_linear, resample, problem, accuracy_xg)) |>
   pivot_longer(cols = c("accuracy_linear", "accuracy_xg"), names_to = "classifier", values_to = "accuracy") |>
   mutate(classifier = ifelse(classifier == "accuracy_linear", "Linear SVM", "XGBoost")) |>
+  mutate(feature_set = ifelse(feature_set == "FFT (Mag^2 + Angle) + quantiles", "FFT (Mag² + Angle) + quantiles", feature_set)) |>
   ggplot(aes(x = classifier, y = accuracy)) +
   geom_violin(aes(fill = classifier, colour = classifier)) +
   geom_boxplot(colour = "black", width = .1, show.legend = FALSE) +

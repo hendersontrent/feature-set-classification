@@ -51,3 +51,5 @@ feature-calculations/fftquantiles/*
 a-b-plot.svg
 hierarchical-benchmarking/*
 architecture/*
+deprecated/*
+output/xgboost-linear-svm-mosaic.svg
