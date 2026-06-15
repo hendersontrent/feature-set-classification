@@ -136,7 +136,8 @@ calculate_wins <- function(data, combn_data, rownum){
     # Filter data
     
     tmp <- data |>
-      filter(feature_set %in% c(thesets$set1, thesets$set2))
+      filter(feature_set %in% c(thesets$set1, thesets$set2)) |>
+      filter(problem != "Fungi")
     
     # Calculate winner for each problem
     

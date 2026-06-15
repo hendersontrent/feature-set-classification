@@ -23,7 +23,8 @@ for(i in files){
 
 accuracies <- do.call("rbind", accuracies) |>
   filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", 
-                            "TSFEL", "tsfresh", "FFT", "FFT (Mag^2 + Angle) + quantiles"))
+                            "TSFEL", "tsfresh", "FFT", "FFT (Mag^2 + Angle) + quantiles")) |>
+  filter(problem != "Fungi")
 
 #---------------------- Calculations ----------------------
 
@@ -115,5 +116,5 @@ case_studies_diffs <- accuracies |>
     problem == "TwoPatterns" & feature_set == "Kats"       ~ TRUE,
     problem == "FaceFour" & feature_set == "tsfresh"       ~ TRUE,
     TRUE                                                   ~ FALSE)) |>
-  filter(problem %in% c("SyntheticControl", "TwoPatterns", "FaceFour", "EthanolLevel", "Wine")) |>
+  filter(problem %in% c("SyntheticControl", "TwoPatterns", "FaceFour")) |>
   reframe(.mean = mean(accuracy, na.rm = TRUE), .by = c("problem", "flag"))

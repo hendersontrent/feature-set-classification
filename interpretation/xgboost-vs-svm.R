@@ -14,7 +14,6 @@ library(ggplot2)
 library(ggdist)
 library(scales)
 library(Hmisc)
-library(correctR)
 
 #--------------- Define functions ---------------
 
@@ -86,7 +85,9 @@ linear_xg <- function(){
   accuracies3 <- accuracies |>
     inner_join(accuracies2) |>
     mutate(.diff = accuracy_xg - accuracy_linear) |>
-    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh", "FFT (Mag^2 + Angle) + quantiles"))
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", 
+                              "tsfresh", "FFT (Mag^2 + Angle) + quantiles")) |>
+    filter(problem != "Fungi")
   
   return(accuracies3)
 }
