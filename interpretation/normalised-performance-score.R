@@ -117,9 +117,7 @@ nps <- function(model_type = c("svm", "xgboost")){
   #---------------------------------
   
   baseline_z <- z_scores |>
-    filter(feature_set %in% c("quantiles", "FFT (Mag^2 + Angle) + quantiles", "FFT coefficients",                    
-                              "FFT (Re, Im, Mag, Angle) + quantiles", "FFT (Re, Im) + quantiles",
-                              "FFT (Mag, Angle) + quantiles", "FFT (log(Mag), Angle) + quantiles")) |>
+    filter(feature_set %in% c("quantiles", "FFT coef. (Mag^2 + Angle)", "FFT (Mag^2 + Angle) + quantiles")) |>
     filter(z > 1) |>
     group_by(problem) |>
     mutate(the_rank = dense_rank(-z)) |>
@@ -173,9 +171,7 @@ nps <- function(model_type = c("svm", "xgboost")){
   x_faces <- ifelse(nps_sets$feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"),
                     "bold", "plain")
 
-  # Fill gradient. SVM scores extend higher than XGBoost, so the upper bound
-  # goes to 5 (colour stops are kept anchored to the same scores via `values`,
-  # which are positions in [0, 1] across the wider [-3, 5] span)
+  # Fill gradient. SVM scores extend higher than XGBoost, so the upper bound goes to NPS = 5
 
   if (model_type == "svm"){
     fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
@@ -202,8 +198,8 @@ nps <- function(model_type = c("svm", "xgboost")){
     
     # Annotate regions
     
-    geom_rect(aes(xmin = 0.5, xmax = 13.5, ymin = boundary, ymax = n_total + 0.5), fill = NA, colour = "black", linewidth = 1) + # baseline > 1
-    geom_rect(aes(xmin = 0.5, xmax = 13.5, ymin = 0.5, ymax = boundary), fill = NA, colour = "black", linewidth = 1) + # baseline < 1
+    geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = boundary, ymax = n_total + 0.5), fill = NA, colour = "black", linewidth = 1) + # baseline > 1
+    geom_rect(aes(xmin = 0.5, xmax = 9.5, ymin = 0.5, ymax = boundary), fill = NA, colour = "black", linewidth = 1) + # baseline < 1
     geom_vline(aes(xintercept = 6.5), linetype = "dashed", colour = "black", linewidth =  0.6) +
     
     # Labels and colourmap formatting
@@ -223,7 +219,7 @@ nps <- function(model_type = c("svm", "xgboost")){
     # Format plot
     
     theme_bw() +
-    coord_cartesian(xlim = c(1, 13), clip = "off") +
+    coord_cartesian(xlim = c(1, 9), clip = "off") +
     theme(legend.position = "bottom",
           legend.key.width = unit(2, "cm"),
           panel.grid = element_blank(),

@@ -187,7 +187,7 @@ h2h <- function(model_type = c("svm", "xgboost")){
   }
   
   results <- do.call("rbind", results) |>
-    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"))
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh", "FFT (Mag^2 + Angle) + quantiles"))
   
   # Generate pairwise combinations and map over all of them
   
@@ -230,14 +230,26 @@ h2h <- function(model_type = c("svm", "xgboost")){
     geom_text(aes(label = my_lab), colour = "black", size = 5) +
     labs(x = "Comparison feature set",
          y = "Feature set (W-L)",
-         fill = "Number of wins")
+         fill = "Number of wins") +
+  
+  # Clean up feature set names for visual clarity
+  
+  scale_x_discrete(labels = function(x) {
+    x <- gsub("Mag^2", "Mag²", x, fixed = TRUE)
+    gsub(" + quantiles", "\n+ quantiles", x, fixed = TRUE)
+  }) +
+    
+    scale_y_discrete(labels = function(x) {
+      x <- gsub("Mag^2", "Mag²", x, fixed = TRUE)
+      gsub(" + quantiles", "\n+ quantiles", x, fixed = TRUE)
+    })
   
   if(model_type == "svm"){
     p <- p +
       scale_fill_gradient(low = "white", high = "#CA0020", na.value = "grey85",
-                          limits = c(0, 45),
-                          breaks = seq(from = 0, to = 45, by = 5),
-                          labels = seq(from = 0, to = 45, by = 5))
+                          limits = c(0, 55),
+                          breaks = seq(from = 0, to = 55, by = 5),
+                          labels = seq(from = 0, to = 55, by = 5))
   } else{
     p <- p +
       scale_fill_gradient(low = "white", high = "#CA0020", na.value = "grey85",

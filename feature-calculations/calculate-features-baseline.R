@@ -79,90 +79,39 @@ calculate_uea_ucr_baseline <- function(problem){
     # Calculate features
     #-------------------
     
-    # Quantiles
+    # Compute our new FFT + quantiles bespoke set
     
-    quantiles <- try(
-      calculate_features(
-        tsbl,
-        feature_set = c("quantiles"),
-        z_score = TRUE,
-        warn = FALSE,
-        seed = 123
-      )
-    )
+    fftquantiles <- calculate_features(
+      tsbl,
+      feature_set = c("fftquantiles"),
+      z_score = TRUE,
+      warn = FALSE,
+      seed = 123,
+      squared = TRUE
+    ) |> 
+      mutate(feature_set = "FFT (Mag^2 + Angle) + quantiles")
     
-    if(inherits(quantiles, "try-error")){
+    if(inherits(fftquantiles, "try-error")){
       return(NA) # Exit if the calculation errors else save the object
     } else{
       
-      # Compute our new FFT + quantiles bespoke set
+      # Partition to just quantiles and just FFT
       
-      fftquantiles <- calculate_features(
-        tsbl,
-        feature_set = c("fftquantiles"),
-        z_score = TRUE,
-        warn = FALSE,
-        seed = 123,
-        squared = TRUE
-      ) |> 
-        mutate(feature_set = "FFT (Mag^2 + Angle) + quantiles")
+      quantile_feats <- fftquantiles |>
+        filter(grepl("quantile", names)) |>
+        mutate(feature_set = "Quantiles")
       
-      # Pull FFT baseline from tsfresh for consistency
+      stopifnot(length(unique(quantile_feats$names)) == 101)
       
-      load(paste0("feature-calculations/features/", problem, ".Rda"))
+      fft_feats <- fftquantiles |>
+        filter(grepl("fft", names)) |>
+        mutate(feature_set = "FFT coef. (Mag^2 + Angle)")
       
-      fft <- features |>
-        filter(feature_set == "tsfresh") |>
-        filter(grepl("fft_coefficient", names)) |>
-        mutate(feature_set = "FFT coefficients")
-      
-      stopifnot(length(unique(fft$names)) == 400)
-      
-      #-----------------------------------
-      # Make MECE variants we want to test
-      #-----------------------------------
-      
-      # 400 FFT coefficients from {tsfresh} + quantiles
-      
-      union_set <- bind_rows(quantiles, fft) |>
-        mutate(feature_set = "FFT (Re, Im, Mag, Angle) + quantiles")
-      
-      # Pull out individual components
-      
-      fft_re <- fft |>
-        filter(grepl('attr_"real"', names))
-      
-      fft_imag <- fft |>
-        filter(grepl('attr_"imag"', names))
-      
-      fft_abs <- fft |>
-        filter(grepl('attr_"abs"', names))
-      
-      fft_angle <- fft |>
-        filter(grepl('attr_"angle"', names))
-      
-      stopifnot(length(unique(fft_re$names)) == 100)
-      stopifnot(length(unique(fft_imag$names)) == 100)
-      stopifnot(length(unique(fft_abs$names)) == 100)
-      stopifnot(length(unique(fft_angle$names)) == 100)
-      
-      # Construct dual sets
-      
-      fft_quantiles_re_imag <- bind_rows(quantiles, fft_re, fft_imag) |>
-        mutate(feature_set = "FFT (Re, Im) + quantiles")
-      
-      fft_quantiles_abs_angle <- bind_rows(quantiles, fft_abs, fft_angle) |>
-        mutate(feature_set = "FFT (Mag, Angle) + quantiles")
-      
-      fft_abs_log <- fft_abs |>
-        mutate(values = log(values))
-      
-      fft_quantiles_log_abs_angle <- bind_rows(quantiles, fft_abs_log, fft_angle) |>
-        mutate(feature_set = "FFT (log(Mag), Angle) + quantiles")
+      stopifnot(length(unique(fft_feats$names)) == 200)
       
       # Bind all as one and save
       
-      all_baseline <- bind_rows(quantiles, fftquantiles, fft, union_set, fft_quantiles_re_imag, fft_quantiles_abs_angle, fft_quantiles_log_abs_angle)
+      all_baseline <- bind_rows(fftquantiles, quantile_features, fft_feats)
       save(all_baseline, file = paste0("feature-calculations/baseline-features/", problem, ".Rda"))
     }
   }
