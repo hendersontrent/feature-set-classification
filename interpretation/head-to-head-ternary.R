@@ -189,7 +189,7 @@ ternary <- function(model_type = c("xgboost", "svm")){
   }
   
   results <- do.call("rbind", results) |>
-    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"))
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh", "FFT (Mag^2 + Angle) + quantiles"))
   
   # Generate pairwise combinations and map over all of them
   
@@ -243,7 +243,8 @@ ternary <- function(model_type = c("xgboost", "svm")){
              "Kats" = pals[6],
              "tsfeatures" = pals[5],
              "TSFEL" = pals[4],
-             "tsfresh" = pals[3])
+             "tsfresh" = pals[3],
+             "FFT (Mag² + Angle) + quantiles" = pals[2])
   
   centroid <- win_sum |>
     reframe(
@@ -253,6 +254,10 @@ ternary <- function(model_type = c("xgboost", "svm")){
     )
 
   p_tern <- win_sum |>
+    mutate(set1 = ifelse(set1 == "FFT (Mag^2 + Angle) + quantiles", "FFT (Mag² + Angle) + quantiles", set1)) |>
+    mutate(set1 = factor(set1, levels = c("catch22", "feasts", "Kats",
+                                          "tsfeatures", "TSFEL", "tsfresh",
+                                          "FFT (Mag² + Angle) + quantiles"))) |>
     ggtern(aes(x = tie_pc, y = win_pc, z = loss_pc, colour = set1)) +
     geom_point(size = 5) +
     geom_crosshair_tern() +
@@ -284,4 +289,7 @@ problem_summaries <- get_n()
 
 p <- ternary(model_type = "xgboost")
 print(p)
-ggsave("output/ternary.pdf", p, units = "in", height = 8, width = 8)
+p1 <- ternary(model_type = "svm")
+print(p1)
+ggsave("output/ternary-xgboost.pdf", p, units = "in", height = 8, width = 8)
+ggsave("output/ternary-svm.pdf", p1, units = "in", height = 8, width = 8)
