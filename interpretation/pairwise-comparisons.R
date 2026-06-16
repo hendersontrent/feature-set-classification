@@ -136,7 +136,8 @@ calculate_wins <- function(data, combn_data, rownum){
     # Filter data
     
     tmp <- data |>
-      filter(feature_set %in% c(thesets$set1, thesets$set2))
+      filter(feature_set %in% c(thesets$set1, thesets$set2)) |>
+      filter(problem != "Fungi")
     
     # Calculate winner for each problem
     
@@ -264,7 +265,7 @@ p <- p +
           panel.grid = element_blank(),
           axis.text = element_text(colour = "black"),
           legend.key.size = unit(2, "cm"),
-          text = element_text(size = 16))
+          text = element_text(size = 14))
   
   return(p)
 }

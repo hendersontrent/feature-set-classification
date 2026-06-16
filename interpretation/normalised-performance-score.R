@@ -171,14 +171,14 @@ nps <- function(model_type = c("svm", "xgboost")){
   x_faces <- ifelse(nps_sets$feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"),
                     "bold", "plain")
 
-  # Fill gradient. SVM scores extend higher than XGBoost, so the upper bound goes to NPS = 5
+  # Fill gradient. SVM scores extend higher than XGBoost, so the upper bound goes to NPS = 2.5
 
   if (model_type == "svm"){
     fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
-                                       values = c(0, 1/8, 2/8, 3/8, 4/8, 4.5/8, 1),
-                                       breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 4, 5),
-                                       labels = c("≤-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2", "3", "4", "5"),
-                                       limits = c(-3, 5))
+                                       values = c(0, 1/5.5, 2/5.5, 3/5.5, 4/5.5, 4.5/5.5, 1),
+                                       breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
+                                       labels = c("≤-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2", "2.5"),
+                                       limits = c(-3, 2.5))
   } else{
     fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
                                        values = c(0, 1/5, 2/5, 3/5, 4/5, 4.5/5, 1),
