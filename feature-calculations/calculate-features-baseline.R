@@ -111,7 +111,7 @@ calculate_uea_ucr_baseline <- function(problem){
       
       # Bind all as one and save
       
-      all_baseline <- bind_rows(fftquantiles, quantile_features, fft_feats)
+      all_baseline <- bind_rows(fftquantiles, quantile_feats, fft_feats)
       save(all_baseline, file = paste0("feature-calculations/baseline-features/", problem, ".Rda"))
     }
   }

@@ -14,11 +14,11 @@ library(ggplot2)
 
 # Read in data
 
-files <- list.files(paste0("classification-models/results/xgboost"))
+files <- list.files(paste0("classification-models/results/pyridge"))
 accuracies <- vector(mode = "list", length = length(files))
 
 for(i in files){
-  accuracies[[match(i, files)]] <- read.csv(paste0("classification-models/results/xgboost/", i))
+  accuracies[[match(i, files)]] <- read.csv(paste0("classification-models/results/pyridge/", i))
 }
 
 accuracies <- do.call("rbind", accuracies) |>
@@ -47,9 +47,9 @@ calcs <- calcs |>
 
 case_studies <- calcs |>
   mutate(flag = case_when(
-    problem == "SyntheticControl" & feature_set == "Kats"  ~ TRUE,
-    problem == "TwoPatterns" & feature_set == "Kats"       ~ TRUE,
-    problem == "FaceFour" & feature_set == "tsfresh"       ~ TRUE)) |>
+    problem == "SyntheticControl" & feature_set == "Kats"          ~ TRUE,
+    problem == "TwoPatterns" & feature_set == "Kats"               ~ TRUE,
+    problem == "UWaveGestureLibraryAll" & feature_set == "tsfresh" ~ TRUE)) |>
   filter(flag) |>
   mutate(.mean = .mean * 100)
 
@@ -66,6 +66,9 @@ mypal <- c("catch22" = pals[8],
            "FFT (Mag^2 + Angle) + quantiles" = "black")
 
 p <- calcs |>
+  group_by(problem) |>
+  mutate(flag = ifelse(all(is.na(.mean)), FALSE, TRUE)) |>
+  filter(flag) |>
   mutate(.mean = .mean * 100) |>
   mutate(feature_set = factor(feature_set, levels = c("catch22", "feasts", "Kats",
                                                       "tsfeatures", "TSFEL", "tsfresh",
@@ -98,23 +101,23 @@ ggsave("output/mean-performance-line-plot.pdf", p, unit = "in", width = 16, heig
 
 accuracies |>
   reframe(.mean = mean(accuracy, na.rm = TRUE), .by = c("problem", "feature_set")) |>
-  reframe(.var = var(.mean), .by = "problem") |>
-  reframe(.mean = mean(.var))
+  reframe(.var = var(.mean, na.rm = TRUE), .by = "problem") |>
+  reframe(.mean = mean(.var, na.rm = TRUE))
 
 # Variance of feature sets between problems
 
 accuracies |>
   reframe(.mean = mean(accuracy, na.rm = TRUE), .by = c("feature_set", "problem")) |>
-  reframe(.var = var(.mean), .by = "feature_set") |>
-  reframe(.mean = mean(.var))
+  reframe(.var = var(.mean, na.rm = TRUE), .by = "feature_set") |>
+  reframe(.mean = mean(.var, na.rm = TRUE))
 
 #---------------------- Calculate case study differentials ----------------------
 
 case_studies_diffs <- accuracies |>
   mutate(flag = case_when(
-    problem == "SyntheticControl" & feature_set == "Kats"  ~ TRUE,
-    problem == "TwoPatterns" & feature_set == "Kats"       ~ TRUE,
-    problem == "FaceFour" & feature_set == "tsfresh"       ~ TRUE,
-    TRUE                                                   ~ FALSE)) |>
+    problem == "SyntheticControl" & feature_set == "Kats"          ~ TRUE,
+    problem == "TwoPatterns" & feature_set == "Kats"               ~ TRUE,
+    problem == "UWaveGestureLibraryAll" & feature_set == "tsfresh" ~ TRUE,
+    TRUE                                                           ~ FALSE)) |>
   filter(problem %in% c("SyntheticControl", "TwoPatterns", "FaceFour")) |>
   reframe(.mean = mean(accuracy, na.rm = TRUE), .by = c("problem", "flag"))

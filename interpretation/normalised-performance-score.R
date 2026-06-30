@@ -34,7 +34,8 @@ cluster_problems <- function(data, problem_vector, z, b){
     filter(problem %in% problem_vector) |>
     dplyr::select(c(problem, feature_set, z)) |>
     pivot_wider(id_cols = "problem", names_from = "feature_set", values_from = "z") |>
-    tibble::column_to_rownames(var = "problem")
+    tibble::column_to_rownames(var = "problem") |>
+    drop_na()
 
   if(nrow(z_scores_mat) >= 2){
     row.order <- stats::hclust(stats::dist(z_scores_mat, method = "euclidean"), method = "average")$order
@@ -57,14 +58,14 @@ cluster_problems <- function(data, problem_vector, z, b){
 #' @author Trent Henderson
 #' 
 
-nps <- function(model_type = c("svm", "xgboost")){
+nps <- function(model_type = c("svm", "xgboost", "pyridge", "glmnet")){
   
   model_type <- match.arg(model_type)
-  stopifnot(model_type %in% c("svm", "xgboost"))
+  stopifnot(model_type %in% c("svm", "xgboost", "pyridge", "glmnet"))
   
   # Read in data
   
-  files <- list.files(paste0("classification-models/results/", model_type))
+  files <- list.files(paste0("classification-models/results/", model_type, "/"))
   accuracies <- vector(mode = "list", length = length(files))
   
   for(i in files){
@@ -143,6 +144,8 @@ nps <- function(model_type = c("svm", "xgboost")){
 
   cluster_4 <- z_scores |>
     filter(problem %ni% baseline_z$problem) |>
+    dplyr::select(c(problem)) |>
+    distinct() |>
     pull(problem)
 
   cluster_4 <- cluster_problems(z_scores, cluster_4, z_scores, benchmarks_sets)
@@ -172,8 +175,14 @@ nps <- function(model_type = c("svm", "xgboost")){
                     "bold", "plain")
 
   # Fill gradient. SVM scores extend higher than XGBoost, so the upper bound goes to NPS = 2.5
-
-  if (model_type == "svm"){
+  
+  if(model_type == "pyridge"){
+    fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
+                                       values = scales::rescale(c(-5, -3, -1, 0, 1, 2, 3), to = c(0, 1), from = c(-5, 3)),
+                                       breaks = c(-5, -4, -3, -2, -1, 0, 1, 2, 3),
+                                       labels = c("≤-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3"),
+                                       limits = c(-5, 3))
+  } else if (model_type == "svm"){
     fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
                                        values = c(0, 1/5.5, 2/5.5, 3/5.5, 4/5.5, 4.5/5.5, 1),
                                        breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
@@ -188,7 +197,8 @@ nps <- function(model_type = c("svm", "xgboost")){
   }
 
   p <- clusters |>
-    mutate(value = ifelse(value < -3, -3, value)) |> # For visual clarity
+    mutate(value = ifelse(value < -5, -5, value),
+           value = ifelse(value > 5, 5, value)) |> # For visual clarity
     mutate(problem = factor(problem, levels = c(as.character(rev(unique(cluster_4$problem))),
                                                 as.character(baseline_problem_order)),
                             ordered = TRUE)) |>
@@ -233,7 +243,7 @@ nps <- function(model_type = c("svm", "xgboost")){
   # Add side annotations for A and B
   
   label_data <- data.frame(x = rep(0.1, times = 2),
-                           y = c(124, n4 - 2),
+                           y = c(125, n4 - 2),
                            mylab = c("A", "B"))
 
   ann <- ggplot(data = label_data) +
@@ -251,9 +261,6 @@ nps <- function(model_type = c("svm", "xgboost")){
 
 #--------------- Generate plot ---------------
 
-p_svm <- nps("svm")
-print(p_svm)
-p_xg <- nps("xgboost")
-print(p_xg)
-ggsave("output/normalised-performance-score-svm.pdf", p_svm, units = "in", height = 19, width = 15)
-ggsave("output/normalised-performance-score-xgboost.pdf", p_xg, units = "in", height = 19, width = 15)
+p_pyridge <- nps("pyridge")
+print(p_pyridge)
+ggsave("output/normalised-performance-score-pyridge.pdf", p_pyridge, units = "in", height = 19, width = 15)

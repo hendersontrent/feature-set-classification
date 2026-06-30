@@ -174,7 +174,7 @@ calculate_wins <- function(data, combn_data, rownum){
 #' @author Trent Henderson
 #' 
 
-h2h <- function(model_type = c("svm", "xgboost")){
+h2h <- function(model_type = c("svm", "xgboost", "pyridge")){
   
   model_type <- match.arg(model_type)
 
@@ -188,7 +188,7 @@ h2h <- function(model_type = c("svm", "xgboost")){
   }
   
   results <- do.call("rbind", results) |>
-    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh", "FFT (Mag^2 + Angle) + quantiles"))
+    filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", "TSFEL", "tsfresh"))
   
   # Generate pairwise combinations and map over all of them
   
@@ -254,9 +254,9 @@ h2h <- function(model_type = c("svm", "xgboost")){
   } else{
     p <- p +
       scale_fill_gradient(low = "white", high = "#CA0020", na.value = "grey85",
-                          limits = c(0, 45),
-                          breaks = seq(from = 0, to = 45, by = 5),
-                          labels = seq(from = 0, to = 45, by = 5))
+                          limits = c(0, 50),
+                          breaks = seq(from = 0, to = 50, by = 5),
+                          labels = seq(from = 0, to = 50, by = 5))
   }
   
 p <- p +
@@ -278,9 +278,6 @@ problem_summaries <- get_n()
 
 # Run comparisons
 
-p_svm <- h2h(model_type = "svm")
-print(p_svm)
-p_xg <- h2h(model_type = "xgboost")
-print(p_xg)
-ggsave("output/head-to-head-matrix-svm.pdf", p_svm, units = "in", height = 9, width = 9)
-ggsave("output/head-to-head-matrix-xgboost.pdf", p_xg, units = "in", height = 9, width = 9)
+p_pyridge <- h2h(model_type = "pyridge")
+print(p_pyridge)
+ggsave("output/head-to-head-matrix-pyridge.pdf", p_pyridge, units = "in", height = 9, width = 9)

@@ -22,12 +22,11 @@ Scripts should be run in the following order:
 1. `get-uea-ucr-datasets.py` (Python)
 2. `feature-calculations/calculate-features.R` (R)
 3. `feature-calculations/calculate-features-baseline.R` (R)
-4. `classification-models/fit-models-defaults.R` (R)
-5. `interpretation/mean-performance-line.R` (R)
-6. `interpretation/normalised-performance-score.R` (R)
-7. `interpretation/pairwise-comparisons.R` (R)
-8. `interpretation/head-to-head-ternary.R` (R)
-9. `interpretation/xgboost-vs-svm.R` (R)
-10. `interpretation/xgboost-vs-svm-stat.R` (R)
+4. `classification-models/fit-models.R` (R)
+5. `classification-models/get-regularisation-strengths.R` (R)
+6. `interpretation/mean-performance-line.R` (R)
+7. `interpretation/normalised-performance-score.R` (R)
+8. `interpretation/pairwise-comparisons.R` (R)
+9. `interpretation/head-to-head-ternary.R` (R)
 
 Note that `feature-calculations/calculate-features.R` contains a call to [`theft::install_python_pkgs`](https://github.com/hendersontrent/theft/blob/main/R/installs.R) and [`theft::init_theft`](https://github.com/hendersontrent/theft/blob/main/R/init_theft.R) which automatically install the three Python-based time-series feature set libraries and load them into the R environment.
