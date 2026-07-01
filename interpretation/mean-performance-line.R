@@ -23,7 +23,7 @@ for(i in files){
 
 accuracies <- do.call("rbind", accuracies) |>
   filter(feature_set %in% c("catch22", "feasts", "tsfeatures", "Kats", 
-                            "TSFEL", "tsfresh", "FFT", "FFT (Mag^2 + Angle) + quantiles")) |>
+                            "TSFEL", "tsfresh", "FFT")) |>
   filter(problem != "Fungi")
 
 #---------------------- Calculations ----------------------
@@ -49,7 +49,7 @@ case_studies <- calcs |>
   mutate(flag = case_when(
     problem == "SyntheticControl" & feature_set == "Kats"          ~ TRUE,
     problem == "TwoPatterns" & feature_set == "Kats"               ~ TRUE,
-    problem == "UWaveGestureLibraryAll" & feature_set == "tsfresh" ~ TRUE)) |>
+    problem == "Beef" & feature_set == "tsfresh" ~ TRUE)) |>
   filter(flag) |>
   mutate(.mean = .mean * 100)
 
@@ -71,8 +71,7 @@ p <- calcs |>
   filter(flag) |>
   mutate(.mean = .mean * 100) |>
   mutate(feature_set = factor(feature_set, levels = c("catch22", "feasts", "Kats",
-                                                      "tsfeatures", "TSFEL", "tsfresh",
-                                                      "FFT (Mag^2 + Angle) + quantiles"))) |>
+                                                      "tsfeatures", "TSFEL", "tsfresh"))) |>
   ggplot(aes(x = reorder(problem, -orders), y = .mean, group = feature_set, colour = feature_set)) +
   geom_line(linewidth = 0.8) +
   geom_point(data = case_studies, size = 5, show.legend = FALSE) +
@@ -115,9 +114,9 @@ accuracies |>
 
 case_studies_diffs <- accuracies |>
   mutate(flag = case_when(
-    problem == "SyntheticControl" & feature_set == "Kats"          ~ TRUE,
-    problem == "TwoPatterns" & feature_set == "Kats"               ~ TRUE,
-    problem == "UWaveGestureLibraryAll" & feature_set == "tsfresh" ~ TRUE,
-    TRUE                                                           ~ FALSE)) |>
-  filter(problem %in% c("SyntheticControl", "TwoPatterns", "FaceFour")) |>
+    problem == "SyntheticControl" & feature_set == "Kats"  ~ TRUE,
+    problem == "TwoPatterns" & feature_set == "Kats"       ~ TRUE,
+    problem == "Beef" & feature_set == "tsfresh"           ~ TRUE,
+    TRUE                                                   ~ FALSE)) |>
+  filter(problem %in% c("SyntheticControl", "TwoPatterns", "Beef")) |>
   reframe(.mean = mean(accuracy, na.rm = TRUE), .by = c("problem", "flag"))

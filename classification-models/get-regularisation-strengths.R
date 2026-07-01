@@ -322,3 +322,8 @@ regularisation_strengths |>
           .min = min(C),
           .max = max(C),
           .by = "feature_set")
+
+regularisation_strengths |>
+  mutate(flag = ifelse(C < 1, TRUE, FALSE)) |>
+  reframe(.count = n(), .by = c("flag")) |>
+  mutate(pct = .count / sum(.count) * 100)
