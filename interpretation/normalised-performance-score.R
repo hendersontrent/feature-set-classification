@@ -53,7 +53,7 @@ cluster_problems <- function(data, problem_vector, z, b){
 
 #' Compute and visualise the normalised performance score
 #' 
-#' @param model_type \code{character} denoting the type of model that fit and whose results should be loaded. Can be one of \code{"svm"} or \code{"xgboost"}
+#' @param model_type \code{character} denoting the type of model that fit and whose results should be loaded
 #' @return \code{ggplot} containing the NPS plot
 #' @author Trent Henderson
 #' 
