@@ -170,12 +170,12 @@ calculate_wins <- function(data, combn_data, rownum){
 
 #' Calculate pairwise comparisons and draw summary ternary graphic
 #' 
-#' @param model_type \code{character} denoting the type of model to fit. Can be one of \code{"xgboost"} or \code{"svm"}
+#' @param model_type \code{character} denoting the type of model to fit
 #' @return \code{ggplot} containing the summary graphic
 #' @author Trent Henderson
 #' 
 
-ternary <- function(model_type = c("xgboost", "svm")){
+ternary <- function(model_type = c("pyridge", "xgboost-default")){
   
   model_type <- match.arg(model_type)
   
@@ -248,8 +248,8 @@ ternary <- function(model_type = c("xgboost", "svm")){
   
   centroid <- win_sum |>
     reframe(
-      tie_pc  = mean(tie_pc),
-      win_pc  = mean(win_pc),
+      tie_pc = mean(tie_pc),
+      win_pc = mean(win_pc),
       loss_pc = mean(loss_pc)
     )
 
@@ -287,9 +287,6 @@ problem_summaries <- get_n()
 
 # Run comparisons
 
-p <- ternary(model_type = "xgboost")
+p <- ternary(model_type = "pyridge")
 print(p)
-p1 <- ternary(model_type = "svm")
-print(p1)
-ggsave("output/ternary-xgboost.pdf", p, units = "in", height = 8, width = 8)
-ggsave("output/ternary-svm.pdf", p1, units = "in", height = 8, width = 8)
+ggsave("output/ternary-pyridge.pdf", p, units = "in", height = 8, width = 8)

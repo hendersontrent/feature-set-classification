@@ -58,10 +58,9 @@ cluster_problems <- function(data, problem_vector, z, b){
 #' @author Trent Henderson
 #' 
 
-nps <- function(model_type = c("svm", "xgboost", "pyridge", "glmnet")){
+nps <- function(model_type = c("pyridge", "xgboost-default")){
   
   model_type <- match.arg(model_type)
-  stopifnot(model_type %in% c("svm", "xgboost", "pyridge", "glmnet"))
   
   # Read in data
   
@@ -182,18 +181,12 @@ nps <- function(model_type = c("svm", "xgboost", "pyridge", "glmnet")){
                                        breaks = c(-5, -4, -3, -2, -1, 0, 1, 2, 3),
                                        labels = c("≤-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3"),
                                        limits = c(-5, 3))
-  } else if (model_type == "svm"){
-    fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
-                                       values = c(0, 1/5.5, 2/5.5, 3/5.5, 4/5.5, 4.5/5.5, 1),
-                                       breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2, 2.5),
-                                       labels = c("≤-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2", "2.5"),
-                                       limits = c(-3, 2.5))
   } else{
     fill_scale <- scale_fill_gradientn(colours = c("#0571B0", "#92C5DE", "white", "white", "white", "#F4A582", "#CA0020"),
-                                       values = c(0, 1/5, 2/5, 3/5, 4/5, 4.5/5, 1),
-                                       breaks = c(-3, -2.5, -2, -1, -0.5, 0, 0.5, 1, 2),
-                                       labels = c("≤-3", "-2.5", "-2", "-1", "-0.5", "0", "0.5", "1", "2"),
-                                       limits = c(-3, 2))
+                                       values = c(0, 1/7, 4/7, 5/7, 6/7, 6.5/7, 1),
+                                       breaks = c(-5, -4, -3, -2, -1, 0, 1, 2),
+                                       labels = c("≤-5", "-4", "-3", "-2", "-1", "0", "1", "2"),
+                                       limits = c(-5, 2))
   }
 
   p <- clusters |>
@@ -264,3 +257,7 @@ nps <- function(model_type = c("svm", "xgboost", "pyridge", "glmnet")){
 p_pyridge <- nps("pyridge")
 print(p_pyridge)
 ggsave("output/normalised-performance-score-pyridge.pdf", p_pyridge, units = "in", height = 19, width = 15)
+
+p_xgboost <- nps("xgboost-default")
+print(p_xgboost)
+ggsave("output/normalised-performance-score-xgboost.pdf", p_xgboost, units = "in", height = 19, width = 15)
