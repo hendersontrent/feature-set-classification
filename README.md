@@ -28,6 +28,5 @@ Scripts should be run in the following order:
 7. `interpretation/normalised-performance-score.R` (R)
 8. `interpretation/pairwise-comparisons.R` (R)
 9. `interpretation/head-to-head-ternary.R` (R)
-10. `interpretation/pyridge-vs-xgboost.R` (R)
 
 Note that `feature-calculations/calculate-features.R` contains a call to [`theft::install_python_pkgs`](https://github.com/hendersontrent/theft/blob/main/R/installs.R) and [`theft::init_theft`](https://github.com/hendersontrent/theft/blob/main/R/init_theft.R) which automatically install the three Python-based time-series feature set libraries and load them into the R environment.
